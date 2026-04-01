@@ -171,6 +171,14 @@
       text-align: left;
     }
 
+    .install-label {
+      color: #c9d1d9;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+
     /* ── Install row (inside card) ── */
     .install-row {
       display: flex;
@@ -411,9 +419,10 @@
     <div class="card f f5">
 
       <!-- Install command -->
+      <div class="install-label">install</div>
       <div class="install-row">
         <span class="install-dollar">$</span>
-        <span class="install-cmd">cargo install myro</span>
+        <span class="install-cmd">npm install -g myro</span>
         <button class="copy-btn" id="copy-btn">copy</button>
       </div>
 
@@ -425,9 +434,9 @@
       <div class="step">
         <span class="step-num">1</span>
         <div class="step-body">
-          install <a href="https://rustup.rs" target="_blank" rel="noopener">rust</a> if you haven't already
-          <div class="cmd" data-cmd="curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh">
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+          run <span class="hl">myro</span>
+          <div class="cmd" data-cmd="myro">
+            myro
             <span class="cmd-copy">&#x2398;</span>
           </div>
         </div>
@@ -435,24 +444,22 @@
 
       <div class="step">
         <span class="step-num">2</span>
-        <div class="step-body">
-          install <span class="hl">myro</span>
-          <div class="cmd" data-cmd="cargo install myro">
-            cargo install myro
-            <span class="cmd-copy">&#x2398;</span>
-          </div>
-        </div>
+        <div class="step-body">sign in with <a href="https://github.com" target="_blank" rel="noopener">github</a></div>
       </div>
 
       <div class="step">
         <span class="step-num">3</span>
-        <div class="step-body">
-          run it
-          <div class="cmd" data-cmd="myro">
-            myro
-            <span class="cmd-copy">&#x2398;</span>
-          </div>
-        </div>
+        <div class="step-body">connect your <a href="https://codeforces.com" target="_blank" rel="noopener">codeforces</a> account</div>
+      </div>
+
+      <div class="step">
+        <span class="step-num">4</span>
+        <div class="step-body">connect your LLM API key <span class="feat-detail">(bring your own key)</span></div>
+      </div>
+
+      <div class="step">
+        <span class="step-num">5</span>
+        <div class="step-body">start training</div>
       </div>
     </div>
 
@@ -495,7 +502,7 @@
     // Copy main install command
     const btn = document.getElementById('copy-btn');
     btn.addEventListener('click', () => {
-      navigator.clipboard.writeText('cargo install myro').then(() => {
+      navigator.clipboard.writeText('npm install -g myro').then(() => {
         btn.textContent = 'copied!';
         btn.classList.add('copied');
         setTimeout(() => {
