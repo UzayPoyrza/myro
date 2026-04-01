@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>myro</title>
-  <meta name="description" content="Myro is an adaptive competitive programming trainer. Coming soon.">
-  <meta name="theme-color" content="#030712">
-  <meta property="og:title" content="Myro">
-  <meta property="og:description" content="The shortest path to red.">
+  <title>myro — competitive programming trainer</title>
+  <meta name="description" content="Adaptive competitive programming trainer. ML-powered difficulty targeting, AI coaching, and a built-in vim editor — all in your terminal.">
+  <meta name="theme-color" content="#08090a">
+  <meta property="og:title" content="myro">
+  <meta property="og:description" content="The shortest path to red. Adaptive competitive programming trainer for your terminal.">
   <meta property="og:type" content="website">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80' fill='%23a78bfa'>◇</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,367 +16,502 @@
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     ::selection { background: #a78bfa30; color: #a78bfa; }
-    html, body { height: 100%; overflow: hidden; cursor: default; }
-    ::-webkit-scrollbar { display: none; }
-    html { scrollbar-width: none; }
+
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: #1b1f27 transparent;
+    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #1b1f27; border-radius: 3px; }
 
     body {
-      background: #08090a;
+      background: #06070a;
       font-family: 'IBM Plex Mono', monospace;
+      color: #c9d1d9;
       display: flex;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      position: relative;
+      padding: 4.5rem 1.5rem;
+      overflow-x: hidden;
     }
 
-    /* ── Full-page noise ── */
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Atmosphere ── */
     .noise {
       position: fixed;
       inset: 0;
-      z-index: 100;
+      z-index: 9000;
       pointer-events: none;
-      opacity: 0.03;
+      opacity: 0.028;
     }
     .noise svg { width: 100%; height: 100%; }
 
-    /* ── Full-page vignette ── */
     .vignette {
       position: fixed;
       inset: 0;
-      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.65) 100%);
-      z-index: 99;
+      background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.55) 100%);
       pointer-events: none;
+      z-index: 1;
     }
 
-    /* ── Terminal window ── */
-    .terminal {
+    .glow {
+      position: fixed;
+      top: 18%;
+      left: 50%;
+      width: 600px;
+      height: 500px;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, #a78bfa08 0%, transparent 65%);
+      filter: blur(60px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Page ── */
+    .page {
       position: relative;
       z-index: 10;
-      width: min(720px, 92vw);
-      background: #0d1117;
-      border-radius: 6px;
-      border: 1px solid #14181f;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-      overflow: hidden;
-      opacity: 0;
-      animation: terminalIn 0.4s ease-out 0.15s forwards;
-    }
-
-    @keyframes terminalIn {
-      from { opacity: 0; transform: scale(0.98); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    /* (no title bar) */
-
-    /* ── Screen ── */
-    .screen {
-      position: relative;
-      padding: clamp(1rem, 3vw, 1.6rem);
-      padding-bottom: clamp(1.5rem, 4vw, 2.4rem);
-    }
-
-    /* Static CRT scanlines */
-    .screen::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent 0px,
-        transparent 2px,
-        rgba(0, 0, 0, 0.05) 2px,
-        rgba(0, 0, 0, 0.05) 4px
-      );
-      pointer-events: none;
-      z-index: 50;
-    }
-
-    /* Sweeping scanline */
-    .sweep {
-      position: absolute;
-      left: 0;
       width: 100%;
-      height: 2px;
-      background: linear-gradient(90deg, transparent 0%, #a78bfa10 20%, #a78bfa18 50%, #a78bfa10 80%, transparent 100%);
-      z-index: 51;
-      pointer-events: none;
-      animation: sweep 7s linear infinite;
+      max-width: 560px;
+      text-align: center;
     }
 
-    @keyframes sweep {
-      0% { top: 0; }
-      100% { top: 100%; }
+    /* ── Nav ── */
+    .nav {
+      position: fixed;
+      top: 0;
+      right: 0;
+      padding: 1.2rem 1.8rem;
+      z-index: 8000;
     }
-
-    /* ── Content ── */
-    .content {
-      position: relative;
-      z-index: 10;
-      font-size: clamp(0.78rem, 1.6vw, 0.92rem);
-      line-height: 1.75;
-      color: #c9d1d9;
+    .nav a {
+      color: #484f58;
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      transition: color 0.25s;
     }
+    .nav a:hover { color: #8b949e; }
 
-    .line {
+    /* ── Staggered fade-in ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .f {
       opacity: 0;
-      transition: opacity 0.2s ease;
-      white-space: nowrap;
-      min-height: 1.75em;
+      animation: fadeUp 0.55s cubic-bezier(0.23, 1, 0.32, 1) forwards;
     }
-    .line.visible { opacity: 1; }
+    .f1 { animation-delay: 0.06s; }
+    .f2 { animation-delay: 0.14s; }
+    .f3 { animation-delay: 0.24s; }
+    .f4 { animation-delay: 0.36s; }
+    .f5 { animation-delay: 0.50s; }
+    .f6 { animation-delay: 0.62s; }
+    .f7 { animation-delay: 0.74s; }
+    .f8 { animation-delay: 0.84s; }
 
-    /* Terminal prompt */
-    .path { color: #f74c00; }
-    .dollar { color: #6e7681; }
-
-    /* Init lines */
-    .init-spinner { color: #a78bfa; display: inline-block; width: 1.2em; text-align: center; }
-    .init-dim { color: #6e7681; }
-    .init-done { color: #a78bfa; visibility: hidden; }
-
-    /* Centered brand area */
-    .center { text-align: center; }
-
-    .diamond {
-      font-size: 1.5rem;
+    /* ── Brand ── */
+    .brand-diamond {
+      font-size: 1.6rem;
       color: #a78bfa;
       display: inline-block;
-      text-shadow: 0 0 10px #a78bfa50, 0 0 25px #a78bfa20;
+      text-shadow: 0 0 12px #a78bfa50, 0 0 30px #a78bfa20;
+      margin-bottom: 0.4rem;
     }
 
-    .myro-text {
-      font-size: clamp(2.2rem, 7vw, 4.2rem);
+    .brand-name {
+      font-size: clamp(3rem, 11vw, 5rem);
       font-weight: 700;
-      letter-spacing: 0.3em;
-      text-indent: 0.3em;
+      letter-spacing: 0.28em;
+      text-indent: 0.28em;
       color: #a78bfa;
-      display: inline-block;
+      line-height: 1;
+      margin-bottom: 0.7rem;
+      text-shadow: 0 0 8px #a78bfa70, 0 0 24px #a78bfa35, 0 0 60px #a78bfa18, 0 0 120px #a78bfa0a;
     }
 
-    /* Glow animates in with the text */
-    #myro-line {
-      transition: none;
-    }
-    #myro-line.visible .myro-text {
-      animation: glowIn 1.2s ease-out forwards;
-    }
-
-    @keyframes glowIn {
-      0% {
-        opacity: 0;
-        text-shadow: 0 0 30px #a78bfaa0, 0 0 80px #a78bfa60, 0 0 140px #a78bfa30;
-      }
-      40% {
-        opacity: 1;
-        text-shadow: 0 0 20px #a78bfa90, 0 0 60px #a78bfa50, 0 0 120px #a78bfa25;
-      }
-      100% {
-        opacity: 1;
-        text-shadow: 0 0 7px #a78bfa80, 0 0 20px #a78bfa40, 0 0 50px #a78bfa20, 0 0 100px #a78bfa10;
-      }
-    }
-
-    .tagline { color: #8b949e; }
-    .tagline .red { color: #ef4444; }
-
-    /* Cursors */
-    .cursor {
+    .brand-tagline {
       color: #8b949e;
-      animation: blink 1s step-end infinite;
-      visibility: hidden;
+      font-size: clamp(0.82rem, 1.8vw, 0.95rem);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      margin-bottom: 2.1rem;
     }
-    .cursor.visible { visibility: visible; }
+    .brand-tagline .red {
+      color: #ef4444;
+      text-shadow: 0 0 14px #ef444440;
+    }
 
-    .cmd-cursor {
+    .brand-sub {
+      color: #6e7681;
+      font-size: 0.78rem;
+      margin-top: 0;
+      margin-bottom: 0.7rem;
+      letter-spacing: 0.02em;
+      line-height: 1.6;
+    }
+
+    .live-tag {
+      color: #a78bfa;
+      background: #a78bfa15;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+    }
+
+    /* ── Main card ── */
+    .card {
+      margin-top: 0;
+      background: #0c1018;
+      border: 1px solid #1b1f27;
+      border-radius: 12px;
+      padding: 1.8rem;
+      text-align: left;
+    }
+
+    /* ── Install row (inside card) ── */
+    .install-row {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      background: #0d1117;
+      border: 1px solid #a78bfa20;
+      border-radius: 8px;
+      padding: 0.9rem 1.2rem;
+      font-size: clamp(0.88rem, 2vw, 1.02rem);
+      transition: border-color 0.35s, box-shadow 0.35s;
+      box-shadow: 0 0 30px #a78bfa06;
+    }
+    .install-row:hover {
+      border-color: #a78bfa38;
+      box-shadow: 0 0 40px #a78bfa0c;
+    }
+
+    .install-dollar {
+      color: #a78bfa;
+      font-weight: 600;
+      flex-shrink: 0;
+      opacity: 0.6;
+    }
+    .install-cmd {
+      color: #e6edf3;
+      flex: 1;
+      user-select: all;
+      font-weight: 500;
+    }
+
+    .copy-btn {
+      flex-shrink: 0;
+      background: #a78bfa12;
+      border: 1px solid #a78bfa25;
+      border-radius: 5px;
+      color: #a78bfa;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 0.3rem 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.04em;
+    }
+    .copy-btn:hover {
+      background: #a78bfa20;
+      border-color: #a78bfa50;
+    }
+    .copy-btn.copied {
+      background: #3fb95012;
+      border-color: #3fb95040;
+      color: #3fb950;
+    }
+
+    /* ── Divider inside card ── */
+    .card-rule {
+      height: 1px;
+      background: #1b1f27;
+      margin: 1.4rem 0;
+      border: none;
+    }
+
+    /* ── Steps ── */
+    .steps-label {
       color: #c9d1d9;
-      animation: blink 1s step-end infinite;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1.2rem;
     }
 
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
+    .step {
+      display: flex;
+      gap: 0.9rem;
+      align-items: baseline;
+      margin-bottom: 1rem;
+    }
+    .step:last-child { margin-bottom: 0; }
+
+    .step-num {
+      color: #a78bfa;
+      font-size: 0.7rem;
+      font-weight: 600;
+      opacity: 0.6;
+      flex-shrink: 0;
+      width: 1rem;
+      text-align: right;
     }
 
-    .coming-soon {
+    .step-body {
+      font-size: 0.8rem;
+      color: #8b949e;
+      line-height: 1.7;
+    }
+
+    .step-body a, .step-body .hl {
+      color: #a78bfa;
+      opacity: 0.8;
+    }
+    .step-body a {
+      border-bottom: 1px dotted #a78bfa30;
+      transition: opacity 0.2s;
+    }
+    .step-body a:hover { opacity: 1; }
+
+    /* Command snippets inside steps */
+    .cmd {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #080a0f;
+      border: 1px solid #14181f;
+      border-radius: 5px;
+      padding: 0.3rem 0.65rem;
+      font-size: 0.78rem;
+      color: #c9d1d9;
+      margin-top: 0.35rem;
+      cursor: pointer;
+      transition: border-color 0.25s, background 0.25s;
+      position: relative;
+    }
+    .cmd:hover {
+      border-color: #a78bfa25;
+      background: #0a0d14;
+    }
+    .cmd.flash {
+      border-color: #3fb95040;
+    }
+    .cmd .cmd-copy {
+      color: #484f58;
+      font-size: 0.6rem;
+      margin-left: 0.3rem;
+      transition: color 0.2s;
+    }
+    .cmd:hover .cmd-copy { color: #6e7681; }
+    .cmd.flash .cmd-copy { color: #3fb950; }
+
+    /* ── Features ── */
+    .features {
+      margin-top: 2.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      text-align: left;
+    }
+
+    .feature {
+      display: flex;
+      gap: 0.9rem;
+      align-items: baseline;
+    }
+
+    .feat-mark {
+      color: #a78bfa;
+      font-size: 0.65rem;
+      flex-shrink: 0;
+      opacity: 0.4;
+    }
+
+    .feat-name {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #8b949e;
+    }
+
+    .feat-detail {
+      font-weight: 400;
+      color: #484f58;
+    }
+
+    /* ── Footer ── */
+    .foot {
+      margin-top: 2.8rem;
+      font-size: 0.68rem;
       color: #30363d;
-      letter-spacing: 0.1em;
-      font-size: 0.85em;
+      letter-spacing: 0.06em;
+      text-align: center;
+    }
+    .foot a {
+      color: #484f58;
+      transition: color 0.2s;
+    }
+    .foot a:hover { color: #8b949e; }
+    .foot .dot { margin: 0 0.4rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 520px) {
+      body { padding: 3rem 1.2rem; align-items: flex-start; }
+      .brand-name { letter-spacing: 0.18em; text-indent: 0.18em; }
+      .card { padding: 1.3rem; }
+      .install-row { padding: 0.8rem 1rem; }
+      .features { gap: 0.8rem; }
     }
 
-    /* Spacers */
-    .spacer { height: 1.75em; }
-    .spacer-lg { height: 2.8em; }
-
-    /* Responsive */
-    @media (max-width: 480px) {
-      .myro-text { letter-spacing: 0.2em; text-indent: 0.2em; }
+    @media (max-width: 360px) {
+      .install-row { flex-wrap: wrap; }
+      .copy-btn { margin-left: auto; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Full-page effects -->
+  <!-- Atmosphere -->
   <div class="noise">
     <svg xmlns="http://www.w3.org/2000/svg">
-      <filter id="noise">
-        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
-      </filter>
-      <rect width="100%" height="100%" filter="url(#noise)"/>
+      <filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter>
+      <rect width="100%" height="100%" filter="url(#n)"/>
     </svg>
   </div>
+  <div class="glow"></div>
   <div class="vignette"></div>
 
-  <!-- Terminal -->
-  <div class="terminal">
-    <div class="screen">
-      <div class="sweep"></div>
+  <!-- Nav -->
+  <div class="nav">
+    <a href="https://github.com/UzayPoyrza/myro" target="_blank" rel="noopener">github ↗</a>
+  </div>
 
-      <div class="content">
-        <!-- Prompt -->
-        <div class="line visible" id="prompt-line">
-          <span class="path">~</span> <span class="dollar">$</span> <span id="cmd-text"></span><span class="cmd-cursor" id="cmd-cursor">█</span>
+  <!-- Page -->
+  <div class="page">
+
+    <!-- Brand -->
+    <div class="f f1">
+      <div class="brand-diamond" id="diamond">◇</div>
+    </div>
+    <h1 class="brand-name f f2">myro</h1>
+    <p class="brand-tagline f f3">the shortest path to <span class="red">red</span>.</p>
+    <!-- Card -->
+    <div class="brand-sub f f4"><span class="live-tag">myro is now live!</span> train smarter from your terminal.</div>
+    <div class="card f f5">
+
+      <!-- Install command -->
+      <div class="install-row">
+        <span class="install-dollar">$</span>
+        <span class="install-cmd">cargo install myro</span>
+        <button class="copy-btn" id="copy-btn">copy</button>
+      </div>
+
+      <div class="card-rule"></div>
+
+      <!-- Steps -->
+      <div class="steps-label">get started</div>
+
+      <div class="step">
+        <span class="step-num">1</span>
+        <div class="step-body">
+          install <a href="https://rustup.rs" target="_blank" rel="noopener">rust</a> if you haven't already
+          <div class="cmd" data-cmd="curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh">
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+            <span class="cmd-copy">&#x2398;</span>
+          </div>
         </div>
+      </div>
 
-        <!-- Init sequence -->
-        <div class="line" id="init-1">
-          <span class="init-spinner" id="spin-1">◇</span> <span class="init-dim">training model loaded</span> <span class="init-done" id="done-1">✓</span>
+      <div class="step">
+        <span class="step-num">2</span>
+        <div class="step-body">
+          install <span class="hl">myro</span>
+          <div class="cmd" data-cmd="cargo install myro">
+            cargo install myro
+            <span class="cmd-copy">&#x2398;</span>
+          </div>
         </div>
-        <div class="line" id="init-2">
-          <span class="init-spinner" id="spin-2">◇</span> <span class="init-dim">challenge ready</span> <span class="init-done" id="done-2">✓</span>
-        </div>
+      </div>
 
-        <div class="spacer-lg"></div>
-
-        <!-- Brand -->
-        <div class="line center" id="diamond-line">
-          <span class="diamond" id="diamond">◇</span>
-        </div>
-
-        <div class="spacer"></div>
-
-        <div class="line center" id="myro-line">
-          <span class="myro-text">myro</span>
-        </div>
-
-        <div class="spacer"></div>
-
-        <div class="line center" id="tagline-line">
-          <span class="tagline" id="tagline"></span><span class="cursor" id="cursor">█</span>
-        </div>
-
-        <div class="spacer-lg"></div>
-
-        <div class="line center" id="coming-soon-line">
-          <span class="coming-soon">── coming soon ──</span>
+      <div class="step">
+        <span class="step-num">3</span>
+        <div class="step-body">
+          run it
+          <div class="cmd" data-cmd="myro">
+            myro
+            <span class="cmd-copy">&#x2398;</span>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Features -->
+    <div class="features f f6">
+      <div class="feature">
+        <span class="feat-mark">◇</span>
+        <span class="feat-name">adaptive training <span class="feat-detail">— ml picks problems at your skill edge</span></span>
+      </div>
+      <div class="feature">
+        <span class="feat-mark">◇</span>
+        <span class="feat-name">ai coach <span class="feat-detail">— socratic hints when you're stuck, never spoils</span></span>
+      </div>
+      <div class="feature">
+        <span class="feat-mark">◇</span>
+        <span class="feat-name">terminal ide <span class="feat-detail">— vim, test runner, codeforces submission</span></span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="foot f f7">
+      <a href="https://github.com/UzayPoyrza/myro" target="_blank" rel="noopener">github</a>
+      <span class="dot">·</span>
+      <span>agpl-3.0</span>
+    </div>
+
   </div>
 
   <script>
-    const $ = id => document.getElementById(id);
-    const show = el => el.classList.add('visible');
-
-    const cmdText = $('cmd-text');
-    const cmdCursor = $('cmd-cursor');
-    const diamondEl = $('diamond');
-    const taglineEl = $('tagline');
-    const cursorEl = $('cursor');
-
-    const command = 'myro';
-    let cmdIdx = 0;
-
-    // Phase 1: Type the command
-    function typeCommand() {
-      if (cmdIdx < command.length) {
-        cmdText.textContent += command[cmdIdx];
-        cmdIdx++;
-        setTimeout(typeCommand, 60 + Math.random() * 50);
-      } else {
-        cmdCursor.style.display = 'none';
-        setTimeout(runInit, 300);
-      }
-    }
-
-    // Spinner helper — cycles shapes, returns stop function
-    const spinShapes = ['\u25C8', '\u25C7', '\u25C8', '\u25C6'];
-    function startSpinner(el) {
-      let idx = 0;
-      const iv = setInterval(() => {
-        idx = (idx + 1) % spinShapes.length;
-        el.textContent = spinShapes[idx];
-      }, 120);
-      return () => { clearInterval(iv); el.textContent = '\u25C7'; };
-    }
-
-    // Phase 2: Init sequence
-    function runInit() {
-      // Line 1: training model loaded
-      show($('init-1'));
-      const stop1 = startSpinner($('spin-1'));
-      setTimeout(() => { stop1(); $('done-1').style.visibility = 'visible'; }, 700);
-
-      // Line 2: challenge ready
-      setTimeout(() => {
-        show($('init-2'));
-        const stop2 = startSpinner($('spin-2'));
-        setTimeout(() => { stop2(); $('done-2').style.visibility = 'visible'; }, 600);
-      }, 800);
-
-      // Then brand
-      setTimeout(showBrand, 1800);
-    }
-
-    // Phase 3: Brand reveal
-    function showBrand() {
-      show($('diamond-line'));
-      setTimeout(() => show($('myro-line')), 400);
-      setTimeout(typeTagline, 1100);
-    }
-
-    // Phase 4: Typewriter tagline
-    function typeTagline() {
-      const fullText = 'the shortest path to red.';
-      const redStart = fullText.indexOf('red');
-      let i = 0;
-
-      $('tagline-line').classList.add('visible');
-      cursorEl.classList.add('visible');
-
-      function tick() {
-        if (i > fullText.length) return;
-        const visible = fullText.slice(0, i);
-        let html;
-        if (i <= redStart) {
-          html = visible;
-        } else if (i <= redStart + 3) {
-          html = fullText.slice(0, redStart) + '<span class="red">' + visible.slice(redStart) + '</span>';
-        } else {
-          html = fullText.slice(0, redStart) + '<span class="red">red</span>' + visible.slice(redStart + 3);
-        }
-        taglineEl.innerHTML = html;
-        i++;
-        if (i <= fullText.length) {
-          setTimeout(tick, 50);
-        } else {
-          setTimeout(() => show($('coming-soon-line')), 900);
-        }
-      }
-      tick();
-    }
-
-    // Diamond cycle
+    // Diamond shape cycle
+    const diamond = document.getElementById('diamond');
     const shapes = ['\u25C8', '\u25C7', '\u25C8', '\u25C6'];
-    let shapeIdx = 0;
+    let idx = 0;
     setInterval(() => {
-      shapeIdx = (shapeIdx + 1) % shapes.length;
-      diamondEl.textContent = shapes[shapeIdx];
+      idx = (idx + 1) % shapes.length;
+      diamond.textContent = shapes[idx];
     }, 800);
 
-    // Go
-    setTimeout(typeCommand, 500);
+    // Copy main install command
+    const btn = document.getElementById('copy-btn');
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText('cargo install myro').then(() => {
+        btn.textContent = 'copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'copy';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+
+    // Click-to-copy on all .cmd snippets
+    document.querySelectorAll('.cmd').forEach(el => {
+      el.addEventListener('click', () => {
+        const text = el.getAttribute('data-cmd');
+        navigator.clipboard.writeText(text).then(() => {
+          el.classList.add('flash');
+          const icon = el.querySelector('.cmd-copy');
+          const orig = icon.innerHTML;
+          icon.innerHTML = '&#x2713;';
+          setTimeout(() => {
+            el.classList.remove('flash');
+            icon.innerHTML = orig;
+          }, 1500);
+        });
+      });
+    });
   </script>
 </body>
 </html>
