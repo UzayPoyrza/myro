@@ -1,0 +1,33 @@
+[scenario]
+name = "Aggressive Cows — greedy without binary search"
+problem = "cf-760B"
+route = 0
+trigger = "user idle for 45s"
+elapsed_secs = 150
+observations_found = 0
+
+[scenario.code]
+text = """
+n, k = map(int, input().split())
+stalls = list(map(int, input().split()))
+stalls.sort()
+
+# Try to spread cows evenly
+gap = (stalls[-1] - stalls[0]) // (k - 1)
+placed = 1
+last = stalls[0]
+for s in stalls[1:]:
+    if s - last >= gap:
+        placed += 1
+        last = s
+if placed >= k:
+    print(gap)
+else:
+    print(gap - 1)
+"""
+
+[expect]
+state = "moving_away"
+min_confidence = 0.4
+must_be_socratic = true
+banned_patterns = ["lo = ", "hi = ", "while lo"]

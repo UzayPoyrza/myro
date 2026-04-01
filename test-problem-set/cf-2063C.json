@@ -1,0 +1,138 @@
+{
+  "contest_id": 2063,
+  "index": "C",
+  "title": "Remove Exactly Two",
+  "difficulty": 1600,
+  "tags": [
+    "brute force",
+    "graphs",
+    "greedy",
+    "sortings",
+    "trees"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given a tree of n vertices. You must perform the following operation exactly twice: select a vertex v, then remove all edges incident to v and also the vertex v. Find the maximum number of connected components after performing the operation exactly twice. The graph with 0 vertices has 0 connected components.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases t (1 <= t <= 10^4). The first line of each test case contains a single integer n (2 <= n <= 2 * 10^5). Each of the next n-1 lines contains two integers u_i and v_i, denoting the two vertices connected by an edge (1 <= u_i, v_i <= n, u_i != v_i). It is guaranteed that the given edges form a tree. The sum of n over all test cases does not exceed 2 * 10^5.",
+  "output_spec": "For each test case, output the maximum number of connected components on a separate line.",
+  "examples": [
+    {
+      "input": "3\n2\n1 2\n4\n1 2\n2 3\n2 4\n7\n1 2\n1 3\n2 4\n4 5\n5 6\n5 7",
+      "output": "0\n2\n4"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Enumerate first vertex, fast lookup for second",
+      "description": "Fix the first removed vertex v, then efficiently find the best second vertex u to maximize total components. The answer formula depends on whether u and v are adjacent, so handle both cases per fixed v.",
+      "skill_tags": [
+        "trees",
+        "greedy",
+        "sorting"
+      ],
+      "observations": [
+        {
+          "title": "Removing a vertex from a tree creates deg(v) components",
+          "description": "In a tree, removing a single vertex v and all its incident edges splits the tree into exactly deg(v) connected components (one for each subtree that was attached to v). This is because a tree has no cycles, so each neighbor of v belongs to a separate component after removal.",
+          "hints": {
+            "nudge": "Think about what a tree looks like around a vertex v. How many pieces does it break into when v is removed?",
+            "question": "A tree has no cycles. If vertex v has deg(v) neighbors, after removing v and its edges, can any two of those neighbors still be connected?",
+            "formal": "Removing v from the tree produces exactly deg(v) connected components: one rooted at each former neighbor of v. This is because the unique path between any two neighbors of v passed through v."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "Two removals: the adjacency correction",
+          "description": "After removing vertices v and u, the total number of connected components is deg(v) + deg(u) - 1 if v and u are NOT adjacent, or deg(v) + deg(u) - 2 if they ARE adjacent. The -1 accounts for the component that u was in (which gets split rather than being a new addition). The extra -1 for adjacent pairs accounts for the edge between them being counted in both degrees.",
+          "hints": {
+            "nudge": "After removing v, you get deg(v) components. Now removing u from one of those components adds more. But how many more depends on whether u lost an edge to v.",
+            "question": "If u was a neighbor of v, how many edges does u have in the graph after v is already removed? How does that differ from the case where u was not a neighbor of v?",
+            "formal": "After removing v: deg(v) components. Removing u from one of these components: that component splits into deg_remaining(u) pieces and itself disappears. If u is not adjacent to v, deg_remaining(u) = deg(u), net gain = deg(u) - 1, total = deg(v) + deg(u) - 1. If adjacent, deg_remaining(u) = deg(u) - 1, total = deg(v) + deg(u) - 2."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "Fix v, find the best u by considering two cases",
+          "description": "For a fixed vertex v, the optimal second vertex u is either: (1) the non-neighbor of v with the highest degree, giving deg(v) + deg(u) - 1, or (2) the neighbor of v with the highest degree, giving deg(v) + deg(u) - 2. Take the maximum over both cases. Then take the maximum over all choices of v.",
+          "hints": {
+            "nudge": "For a fixed v, the best u is either v's highest-degree neighbor or the highest-degree non-neighbor. Can you find both efficiently?",
+            "question": "If you knew the global maximum degree vertex, would that always be the best u? What goes wrong if that vertex happens to be v itself or a neighbor of v?",
+            "formal": "For fixed v, compute: case1 = deg(v) + max{deg(u) : u is a neighbor of v} - 2, case2 = deg(v) + max{deg(u) : u is not v and not a neighbor of v} - 1. Answer for this v = max(case1, case2). Global answer = max over all v."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Find the best non-neighbor in O(1) using a global sorted structure",
+          "description": "The best neighbor of v is found by scanning v's adjacency list. The best non-neighbor requires more care. Keep a globally sorted list of all degrees. For vertex v, remove v itself and all its neighbors from consideration. The best remaining element is the answer. Since you only need the maximum, keep the top few global degrees and check which ones survive the exclusion.",
+          "hints": {
+            "nudge": "Sorting all degrees globally lets you quickly find the maximum. But you need to exclude v and its neighbors. What if the global maximum happens to be one of them?",
+            "question": "If you maintain the degrees in sorted order and the top-degree vertex is a neighbor of v, you skip it and try the next one. How many can you skip at most?",
+            "formal": "Sort all vertex degrees. For each v, to find max deg among non-neighbors: walk from the top of the sorted list, skipping v and any neighbor of v. Alternatively, maintain a sorted list minus v's neighborhood using the global sorted array. Since you iterate over each v and only skip its neighbors, the total work is O(sum of degrees) = O(n)."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Total complexity is O(n) per test case",
+          "description": "For each vertex v, finding the best neighbor is O(deg(v)) by scanning the adjacency list. Finding the best non-neighbor from the global sorted list takes at most O(deg(v) + 1) skips in the worst case (skipping v and all its neighbors). Summing over all v, the total work is O(sum of deg(v)) = O(n) since the tree has n-1 edges. With the initial sort of degrees costing O(n log n), the overall complexity is O(n log n).",
+          "hints": {
+            "nudge": "Each vertex v requires checking at most deg(v) + 1 candidates from the sorted list. What is the sum of deg(v) over all vertices in a tree?",
+            "question": "In a tree with n vertices and n-1 edges, the sum of all degrees is 2(n-1). How does this bound the total amount of work across all choices of v?",
+            "formal": "Sorting degrees: O(n log n). Main loop: for each v, scan neighbors for case1 in O(deg(v)), and scan the global sorted list skipping at most deg(v)+1 entries for case2. Total: O(sum deg(v)) = O(2(n-1)) = O(n). Overall: O(n log n)."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    },
+    {
+      "name": "Enumerate all pairs via adjacency lists",
+      "description": "Observe that the only pairs where adjacency matters are actual neighbors in the tree. For non-adjacent pairs the formula is simple. Check all adjacent pairs explicitly and compare against the best non-adjacent pair.",
+      "skill_tags": [
+        "trees",
+        "greedy",
+        "sorting"
+      ],
+      "observations": [
+        {
+          "title": "Removing a vertex from a tree creates deg(v) components",
+          "description": "Removing a vertex v and its edges from a tree splits it into deg(v) connected components, one per neighbor of v.",
+          "hints": {
+            "nudge": "A tree has no cycles. What happens to the neighbors of v when v is deleted?",
+            "question": "If v has 4 neighbors in a tree, how many connected pieces remain after v is removed? Why?",
+            "formal": "A tree is connected and acyclic. Removing v cuts the unique path between any two of its neighbors, creating exactly deg(v) disjoint subtrees."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "Formula splits into adjacent vs non-adjacent cases",
+          "description": "For two removed vertices v and u, the resulting component count is deg(v) + deg(u) - 1 if they are not adjacent, or deg(v) + deg(u) - 2 if they are adjacent. So the adjacency penalty is exactly 1.",
+          "hints": {
+            "nudge": "After removing both vertices, the total should relate to their degrees. But does it matter if they were connected?",
+            "question": "If v and u are adjacent, u's effective degree in the residual graph after removing v is deg(u) - 1. How does this change the component count formula?",
+            "formal": "Non-adjacent: components = deg(v) + deg(u) - 1. Adjacent: components = deg(v) + deg(u) - 2. The difference arises because the edge (v,u) is counted in both degrees but only separates one pair of subtrees."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Best non-adjacent pair uses the two highest-degree vertices",
+          "description": "Among all non-adjacent pairs, the answer is maximized by picking the two vertices with the highest degrees, provided they are not adjacent. If the top two are adjacent, you must also consider pairing each of them with the third-highest-degree vertex.",
+          "hints": {
+            "nudge": "For non-adjacent pairs, the formula is just deg(v) + deg(u) - 1 with no penalty. So you want the two largest degrees. But what if those two vertices happen to be neighbors?",
+            "question": "If you sort all vertices by degree, the top two give the best non-adjacent answer unless they are adjacent. How many alternatives do you need to check?",
+            "formal": "Sort vertices by degree descending. The best non-adjacent pair is among the top 3 vertices (at most): try (1st, 2nd), (1st, 3rd), (2nd, 3rd) and take the best non-adjacent one. This works because at most one pair among the top 3 can be adjacent."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Check all adjacent pairs explicitly in O(n)",
+          "description": "There are exactly n-1 edges in the tree, so there are only n-1 adjacent pairs. For each edge (u, v), compute deg(u) + deg(v) - 2. Track the maximum across all edges. Compare this with the best non-adjacent result to get the final answer.",
+          "hints": {
+            "nudge": "How many adjacent pairs exist in a tree? Is it feasible to check them all?",
+            "question": "A tree with n vertices has n-1 edges. If you iterate over every edge and compute the adjacent-pair formula, what is the time complexity?",
+            "formal": "For each edge (u,v) in the tree, compute deg(u) + deg(v) - 2. The best adjacent pair is max over all edges. The final answer is max(best_adjacent, best_non_adjacent). Total work: O(n) for edges plus O(n log n) or O(n) for finding top non-adjacent pair."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

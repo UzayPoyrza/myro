@@ -1,0 +1,73 @@
+{
+  "contest_id": 760,
+  "index": "B",
+  "title": "Aggressive Cows",
+  "difficulty": 1900,
+  "tags": [
+    "binary search",
+    "greedy"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You have n stalls at positions x_1, ..., x_n along a line. You want to place k cows in stalls such that the minimum distance between any two cows is maximized. Find this maximum possible minimum distance.",
+  "input_spec": "The first line contains two integers n and k (2 <= k <= n <= 10^5). The second line contains n distinct integers x_i (0 <= x_i <= 10^9).",
+  "output_spec": "Print the largest minimum distance.",
+  "examples": [
+    {
+      "input": "5 3\n1 2 4 8 9",
+      "output": "3"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Binary search on the answer",
+      "description": "Binary search on the minimum distance d. For each candidate d, greedily check if k cows can be placed with pairwise distance >= d.",
+      "skill_tags": [
+        "binary-search",
+        "greedy"
+      ],
+      "observations": [
+        {
+          "title": "Monotonic feasibility",
+          "description": "If you can place k cows with min distance d, you can also place them with any distance < d. This monotonicity enables binary search.",
+          "hints": {
+            "nudge": "Is there a monotonic relationship between the distance and feasibility?",
+            "question": "If placing cows with min gap d works, does min gap d-1 also work? What does this monotonicity suggest?",
+            "formal": "Feasibility is monotonically decreasing: feasible(d) implies feasible(d') for all d' < d. Binary search on d to find the maximum feasible value."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "Greedy check function",
+          "description": "To check if distance d is feasible: sort stalls, place first cow at stalls[0], then greedily place each next cow at the first stall >= last + d.",
+          "hints": {
+            "nudge": "Given a candidate distance d, how would you check if it's achievable?",
+            "question": "If stalls are sorted and you want gaps >= d, where should you place the first cow? The second?",
+            "formal": "Sort stalls. Place cow at stalls[0]. For each next cow, find first stall >= last_position + d. If you place >= k cows, d is feasible."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Binary search bounds",
+          "description": "lo = 1 (minimum possible distance), hi = (max_position - min_position) / (k-1) or simply max_position - min_position.",
+          "hints": {
+            "nudge": "What's the smallest and largest possible answer?",
+            "question": "The minimum distance is at least 1. What's the theoretical maximum? How do you set hi?",
+            "formal": "lo = 1, hi = (stalls[n-1] - stalls[0]). Binary search while lo <= hi: mid = (lo+hi)/2, if feasible(mid) then lo = mid+1 else hi = mid-1. Answer = hi."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "Sort stalls first",
+          "description": "The greedy check requires stalls to be sorted. Sort them once before binary search begins.",
+          "hints": {
+            "nudge": "Does the order of stalls matter for the greedy check?",
+            "question": "Can you greedily place cows if stalls are in random order? What preprocessing helps?",
+            "formal": "Sort the stall positions O(n log n) once. Then each feasibility check is O(n) and binary search does O(log(max_dist)) checks."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

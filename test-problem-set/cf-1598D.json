@@ -1,0 +1,73 @@
+{
+  "contest_id": 1598,
+  "index": "D",
+  "title": "Training Session",
+  "difficulty": 1700,
+  "tags": [
+    "combinatorics",
+    "data structures",
+    "geometry",
+    "implementation",
+    "math"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Monocarp is the coach of the Berland State University programming teams. He decided to compose a problemset for a training session for his teams. Monocarp has $$$n$$$ problems that none of his students have seen yet. The $$$i$$$-th problem has a topic $$$a_i$$$ (an integer from $$$1$$$ to $$$n$$$) and a difficulty $$$b_i$$$ (an integer from $$$1$$$ to $$$n$$$). All problems are different, that is, there are no two tasks that have the same topic and difficulty at the same time. Monocarp decided to select exactly $$$3$$$ problems from $$$n$$$ problems for the problemset. The problems should satisfy at least one of two conditions (possibly, both): the topics of all three selected problems are different; the difficulties of all three selected problems are different. Your task is to determine the number of ways to select three problems for the problemset.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 50000$$$) --- the number of testcases. The first line of each testcase contains an integer $$$n$$$ ($$$3 \\le n \\le 2 \\cdot 10^5$$$) --- the number of problems that Monocarp have. In the $$$i$$$-th of the following $$$n$$$ lines, there are two integers $$$a_i$$$ and $$$b_i$$$ ($$$1 \\le a_i, b_i \\le n$$$) --- the topic and the difficulty of the $$$i$$$-th problem. It is guaranteed that there are no two problems that have the same topic and difficulty at the same time. The sum of $$$n$$$ over all testcases doesn't exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "Print the number of ways to select three training problems that meet either of the requirements described in the statement.",
+  "examples": [
+    {
+      "input": "2\n4\n2 4\n3 4\n2 1\n1 3\n5\n1 5\n2 4\n3 3\n4 2\n5 1",
+      "output": "3\n10"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Complementary counting via bad triplets",
+      "description": "Count all C(n,3) triplets, then subtract the bad ones where both a repeated topic and a repeated difficulty exist. Each bad triplet has a unique 'bridge' problem connecting the other two.",
+      "skill_tags": ["math", "data-structures", "implementation"],
+      "observations": [
+        {
+          "title": "Use complementary counting: total minus bad",
+          "description": "Directly counting valid triplets is hard because the condition is a disjunction (all-distinct-topics OR all-distinct-difficulties). It is much easier to count the complement: triplets that are BAD, meaning they have neither all-distinct topics nor all-distinct difficulties. Then answer = C(n,3) - bad.",
+          "hints": {
+            "nudge": "The condition involves an OR of two properties. Is it easier to count triplets that satisfy the condition, or those that violate it?",
+            "question": "A triplet is bad if it fails both conditions. What does it mean concretely for a triplet to have a repeated topic AND a repeated difficulty?",
+            "formal": "A triplet is bad iff at least two problems share a topic AND at least two share a difficulty. Answer = C(n,3) - (number of bad triplets). C(n,3) = n*(n-1)*(n-2)/6."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "A bad triplet has a unique bridge problem",
+          "description": "In any bad triplet, there must be a problem that shares its topic with one of the other two AND shares its difficulty with the other. This 'bridge' problem is unique within the triplet, because if two problems both bridged, all three would share a topic and a difficulty, which is impossible since all (a_i, b_i) pairs are distinct.",
+          "hints": {
+            "nudge": "In a bad triplet, two share a topic and two share a difficulty. Can the same pair share both? What does that force about the structure?",
+            "question": "If problems p, q, r form a bad triplet with a_p = a_q and b_p = b_r, which problem is the 'link' between the topic-match and the difficulty-match? Can there be more than one such link?",
+            "formal": "In a bad triplet, exactly one problem i shares its topic a_i with one other and its difficulty b_i with the third. This bridge is unique because two bridges would require two problems with identical (a, b), contradicting the distinctness constraint."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Count bad triplets by iterating over bridges",
+          "description": "For each problem i acting as the bridge, count how many problems share its topic (call this ca[a_i]) and how many share its difficulty (cb[b_i]). Problem i can be paired with any of (ca[a_i] - 1) same-topic partners and any of (cb[b_i] - 1) same-difficulty partners, giving (ca[a_i] - 1) * (cb[b_i] - 1) bad triplets with i as the bridge.",
+          "hints": {
+            "nudge": "If you know problem i is the bridge, what two independent choices determine the bad triplet?",
+            "question": "Problem i needs one partner sharing topic a_i and one sharing difficulty b_i. How many ways can you choose those two partners, given the frequency counts?",
+            "formal": "Let ca[t] = number of problems with topic t, cb[d] = number with difficulty d. For bridge i, bad triplets = (ca[a_i] - 1) * (cb[b_i] - 1). Total bad = sum over all i."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Precompute frequency arrays for O(n) summation",
+          "description": "Build frequency arrays ca[] and cb[] in a single pass over the input. Then the answer is computed in one more pass: C(n,3) minus the sum of (ca[a_i]-1)*(cb[b_i]-1) over all problems i. Total time is O(n) per test case.",
+          "hints": {
+            "nudge": "You need ca[a_i] and cb[b_i] for every problem. How can you precompute these efficiently?",
+            "question": "After one pass to build frequency counts, how many operations does it take to sum the bad triplet contributions?",
+            "formal": "Pass 1: for each problem i, increment ca[a_i] and cb[b_i]. Pass 2: accumulate bad += (ca[a_i]-1)*(cb[b_i]-1). Answer = n*(n-1)*(n-2)/6 - bad. Use 64-bit integers to avoid overflow."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

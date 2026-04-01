@@ -1,0 +1,101 @@
+{
+  "contest_id": 1968,
+  "index": "G2",
+  "title": "Division + LCP (hard version)",
+  "difficulty": 2200,
+  "tags": [
+    "binary search",
+    "brute force",
+    "data structures",
+    "dp",
+    "hashing",
+    "math",
+    "string suffix structures",
+    "strings"
+  ],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "This is the hard version of the problem. In this version $$$l\\le r$$$. You are given a string $$$s$$$. For a fixed $$$k$$$, consider a division of $$$s$$$ into exactly $$$k$$$ continuous substrings $$$w_1,\\dots,w_k$$$. Let $$$f_k$$$ be the maximal possible $$$LCP(w_1,\\dots,w_k)$$$ among all divisions. $$$LCP(w_1,\\dots,w_m)$$$ is the length of the Longest Common Prefix of the strings $$$w_1,\\dots,w_m$$$. For example, if $$$s=abababcab$$$ and $$$k=4$$$, a possible division is $$$\\color{red}{ab}\\color{blue}{ab}\\color{orange}{abc}\\color{green}{ab}$$$. The $$$LCP(\\color{red}{ab},\\color{blue}{ab},\\color{orange}{abc},\\color{green}{ab})$$$ is $$$2$$$, since $$$ab$$$ is the Longest Common Prefix of those four strings. Note that each substring consists of a continuous segment of characters and each character belongs to exactly one substring. Your task is to find $$$f_l,f_{l+1},\\dots,f_r$$$.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) --- the number of test cases. The first line of each test case contains two integers $$$n$$$, $$$l$$$, $$$r$$$ ($$$1 \\le l \\le r \\le n \\le 2 \\cdot 10^5$$$) --- the length of the string and the given range. The second line of each test case contains string $$$s$$$ of length $$$n$$$, all characters are lowercase English letters. It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$2\\cdot 10^5$$$.",
+  "output_spec": "For each test case, output $$$r-l+1$$$ values: $$$f_l,\\dots,f_r$$$.",
+  "examples": [
+    {
+      "input": "7\n3 1 3\naba\n3 2 3\naaa\n7 1 5\nabacaba\n9 1 6\nabababcab\n10 1 10\naaaaaaawac\n9 1 9\nabafababa\n7 2 7\nvvzvvvv",
+      "output": "3 1 0\n1 1\n7 3 1 1 0\n9 2 2 2 0 0\n10 3 2 1 1 1 1 1 0 0\n9 3 2 1 1 0 0 0 0\n2 2 1 1 1 0"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Z-function with sqrt decomposition",
+      "description": "Use the Z-function to efficiently count how many non-overlapping occurrences of s[0..len-1] appear as prefixes of suffixes. Split the k-values into two regimes at sqrt(n): for small k, binary search on the prefix length; for small lengths, greedily count occurrences and record the answer. Propagate answers downward since f_k >= f_{k+1}.",
+      "skill_tags": [
+        "strings",
+        "binary-search",
+        "math",
+        "implementation"
+      ],
+      "observations": [
+        {
+          "title": "The LCP of the division pieces must be a prefix of s itself",
+          "description": "Since the first substring w_1 starts at position 0, the common prefix of all k pieces must match s[0..len-1] for whatever length len we achieve. Every other piece w_i also starts with s[0..len-1]. This means we are looking for non-overlapping occurrences of the prefix s[0..len-1] within s that cover the entire string when used as starting points of k continuous substrings.",
+          "hints": {
+            "nudge": "The first piece w_1 starts at the beginning of s. What does that force the common prefix to be?",
+            "question": "If all k pieces share a common prefix of length len, and w_1 = s[0..something], what substring must every piece begin with?",
+            "formal": "The LCP of w_1, ..., w_k has length len only if every w_i starts with s[0..len-1]. Since w_1 begins at index 0, the common prefix is always a prefix of s. So f_k = max len such that we can partition s into k continuous parts each starting with s[0..len-1]."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "The Z-function identifies where prefix matches occur",
+          "description": "The Z-function z[i] gives the length of the longest substring starting at position i that matches a prefix of s. Position i can serve as the start of a piece with common prefix of length len if and only if z[i] >= len (with z[0] defined as n by convention). Computing the Z-array takes O(n) time and gives all the information needed about prefix matches.",
+          "hints": {
+            "nudge": "You need to know, for each position i, the longest prefix of s that matches s[i..]. What standard string algorithm computes exactly this?",
+            "question": "What does z[i] >= len tell you about position i as a potential start of a division piece with LCP len?",
+            "formal": "Compute z[0..n-1] where z[i] = length of longest common prefix of s and s[i..]. Set z[0] = n. Position i is a valid start of a piece with prefix length len iff z[i] >= len. Count of valid starts for a given len is |{i : z[i] >= len}|."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Greedy counting: the maximum number of pieces for a fixed prefix length",
+          "description": "For a fixed prefix length len, we greedily scan left to right: start the first piece at position 0 (which always works since z[0] = n >= len), then jump to position 0 + len and scan forward until we find the next position j with z[j] >= len, start the next piece there, and repeat. The count of pieces found this way is the maximum number of parts achievable with common prefix len. Call this count g(len).",
+          "hints": {
+            "nudge": "Once you fix the prefix length, you want to pack as many non-overlapping pieces as possible. What strategy maximizes the count?",
+            "question": "If you start a piece at position i with prefix length len, the earliest the next piece can start is position i + len. Should you always take the earliest valid next start? Why?",
+            "formal": "Greedy: set pos = 0, count = 0. While pos < n: if z[pos] >= len, increment count and set pos += len; else set pos += 1. g(len) = count. This is optimal because starting each piece as early as possible leaves the most room for subsequent pieces."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "For small k (k <= sqrt(n)): binary search on the prefix length",
+          "description": "When k is small, f_k can be large (up to n/k). For each k from 1 to sqrt(n), binary search for the largest len such that g(len) >= k. Each evaluation of g(len) takes O(n) time, and the binary search has O(log n) iterations, so the total for all small k is O(sqrt(n) * n * log(n)). This is too slow by itself but handles the small-k regime efficiently when combined with the other regime.",
+          "hints": {
+            "nudge": "f_k is non-increasing in k, and g(len) is non-increasing in len. If you fix k, can you binary search on len?",
+            "question": "For a fixed k, g(len) >= k is a monotone condition on len (true for small len, false for large len). What search technique exploits this?",
+            "formal": "For each k in [1, sqrt(n)]: binary search on len in [0, n/k]. Check g(len) >= k. The largest valid len is f_k. Cost per k: O(n log n). Total for all k <= sqrt(n): O(sqrt(n) * n log n). With n = 2*10^5, sqrt(n) ~ 450, this is about 4 * 10^10 log-factor operations -- tight but feasible given simple inner loops, or can be optimized."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "For small len (len <= sqrt(n)): enumerate lengths and record g(len)",
+          "description": "When the prefix length is small (len <= sqrt(n)), computing g(len) for each such len takes O(n) per length, totaling O(n * sqrt(n)). For each len, g(len) tells us the maximum number of pieces achievable, so we can set ans[g(len)] = max(ans[g(len)], len). This fills in answers for large k values (where the optimal prefix length is short) without needing binary search.",
+          "hints": {
+            "nudge": "For large k, the achievable prefix length f_k must be small (at most n/k). If k > sqrt(n), then f_k <= sqrt(n). Can you iterate over short prefix lengths instead of over large k values?",
+            "question": "If you compute g(len) for every len from 1 to sqrt(n), you get a (len, max_k) pair. How do you turn these pairs into answers for each k?",
+            "formal": "For each len in [1, sqrt(n)]: compute k_max = g(len) in O(n). Set ans[k_max] = max(ans[k_max], len). After processing all small lengths, the ans array has entries for the exact k that each small length achieves maximally. The propagation step (next observation) fills in the rest."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Propagate answers: f_k >= f_{k+1} gives a suffix maximum",
+          "description": "Since more pieces can only decrease or maintain the LCP (splitting more finely cannot help), we have f_k >= f_{k+1}. After computing ans[k] from both regimes, propagate from right to left: ans[k] = max(ans[k], ans[k+1]). This ensures that if a prefix length len achieves g(len) = K pieces, it also provides a valid answer for all k <= K, filling in any gaps left by the two regimes.",
+          "hints": {
+            "nudge": "If you can split s into K pieces each starting with a prefix of length len, can you also split it into fewer pieces with the same or longer common prefix?",
+            "question": "The answer array should be non-increasing: f_1 >= f_2 >= ... >= f_n. If you have computed some entries but not others, how do you fill gaps?",
+            "formal": "f_k is non-increasing because any valid k-division can be coarsened into a (k-1)-division by merging two adjacent pieces (preserving the LCP). After setting ans[k] from both regimes, sweep from k = n-1 down to 1: ans[k] = max(ans[k], ans[k+1]). Then output ans[l], ans[l+1], ..., ans[r]."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "contest_id": 1909,
+  "index": "B",
+  "title": "Make Almost Equal With Mod",
+  "difficulty": 1200,
+  "tags": [
+    "bitmasks",
+    "constructive algorithms",
+    "math",
+    "number theory"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "You are given an array $$$a_1, a_2, \\dots, a_n$$$ of distinct positive integers. You have to do the following operation exactly once: choose a positive integer $$$k$$$; for each $$$i$$$ from $$$1$$$ to $$$n$$$, replace $$$a_i$$$ with $$$a_i \\text{ mod } k$$$. Find a value of $$$k$$$ such that $$$1 \\leq k \\leq 10^{18}$$$ and the array $$$a_1, a_2, \\dots, a_n$$$ contains exactly $$$2$$$ distinct values at the end of the operation. It can be shown that, under the constraints of the problem, at least one such $$$k$$$ always exists. If there are multiple solutions, you can print any of them.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 500$$$). The first line of each test case contains a single integer $$$n$$$ ($$$2 \\le n \\le 100$$$) — the length of the array. The second line contains $$$n$$$ integers $$$a_1, a_2, \\ldots, a_n$$$ ($$$1 \\le a_i \\le 10^{17}$$$) — the initial state of the array. It is guaranteed that all the $$$a_i$$$ are distinct.",
+  "output_spec": "For each test case, output a single integer: a value of $$$k$$$ ($$$1 \\leq k \\leq 10^{18}$$$) such that the array $$$a_1, a_2, \\dots, a_n$$$ contains exactly $$$2$$$ distinct values at the end of the operation.",
+  "examples": [
+    {
+      "input": "5\n4\n8 15 22 30\n5\n60 90 98 120 308\n6\n328 769 541 986 215 734\n5\n1000 2000 7000 11000 16000\n2\n2 1",
+      "output": "7\n30\n3\n5000\n1000000000000000000"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Binary bit scanning with powers of 2",
+      "description": "Observe that a_i mod 2^j keeps only the last j bits of each number. Scan bit positions from the lowest upward: find the first bit j where not all numbers share the same bit value. Then k = 2^(j+1) yields exactly 2 distinct remainders.",
+      "skill_tags": [
+        "dp",
+        "constructive",
+        "math"
+      ],
+      "observations": [
+        {
+          "title": "Think about what mod does to binary representations",
+          "description": "Taking a_i mod 2^j is equivalent to extracting the last j bits of a_i in binary. This is because 2^j in binary is a 1 followed by j zeros, and the remainder when dividing by it is precisely the j least-significant bits. This connects the modular arithmetic to bitwise operations.",
+          "hints": {
+            "nudge": "What happens when the modulus is a power of 2? How does that relate to the binary form of the numbers?",
+            "question": "If k = 2^j, what does a_i mod k look like in terms of the binary digits of a_i?",
+            "formal": "a_i mod 2^j equals the number formed by the lowest j bits of a_i. Equivalently, a_i mod 2^j = a_i AND (2^j - 1), where AND is bitwise-and."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "At j=0 everyone agrees; at j=58 everyone disagrees",
+          "description": "When j = 0 (i.e., k = 1), every a_i mod 1 = 0, so there is 1 distinct value. When j is large enough that 2^j exceeds all a_i (j = 58 suffices since a_i <= 10^17 < 2^57), a_i mod 2^j = a_i, and since all a_i are distinct there are n distinct values. The number of distinct values grows monotonically from 1 to n as j increases.",
+          "hints": {
+            "nudge": "What are the extreme cases? What happens if k is very small versus very large?",
+            "question": "How many distinct values does a_i mod 1 produce? How about a_i mod (10^18)? As you go from one extreme to the other, how does the count of distinct values change?",
+            "formal": "At k = 1: all remainders are 0, giving 1 distinct value. At k = 2^58 > max(a_i): all remainders equal the original a_i, giving n distinct values. Since adding one more bit can only split groups (never merge), the distinct count is non-decreasing in j."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Transition from 1 to 2 distinct values happens at a specific bit",
+          "description": "Since the count of distinct values goes from 1 (at j=0) to n (at j=58) and is non-decreasing, there must exist some smallest j where the count jumps from 1 to at least 2. At that bit position, some numbers have bit j equal to 0 and others have bit j equal to 1, while all lower bits were identical across all numbers. This means k = 2^(j+1) produces exactly 2 distinct remainders.",
+          "hints": {
+            "nudge": "If all numbers look the same in their lowest j bits, but adding one more bit creates a difference, how many groups does that create?",
+            "question": "If bit j is the first bit where not all a_i agree, how many distinct values does a_i mod 2^(j+1) produce? Could it be more than 2?",
+            "formal": "Let j be the lowest bit where not all a_i share the same value. For bits 0..j-1, all a_i are identical. Bit j splits the numbers into two groups (bit=0 vs bit=1). So a_i mod 2^(j+1) takes exactly 2 distinct values: one with bit j = 0 and one with bit j = 1, with identical lower bits."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Scan bits from lowest to highest to find the splitting bit",
+          "description": "To find the first disagreeing bit, iterate j from 0 upward. At each j, check whether bit j of all a_i has the same value. The first j where both 0-bits and 1-bits appear among the a_i is the answer bit. Output k = 2^(j+1). This requires at most 58 iterations, each scanning the array once.",
+          "hints": {
+            "nudge": "How can you efficiently check whether all numbers agree on a particular bit?",
+            "question": "For a given bit position j, how do you determine whether all a_i have the same j-th bit? What do you output once you find the first disagreement?",
+            "formal": "For j = 0, 1, 2, ..., 57: compute b_i = (a_i >> j) AND 1 for each i. If not all b_i are equal (i.e., both 0 and 1 appear), output k = 2^(j+1) and stop. Correctness follows from the previous observation. Time complexity: O(n * 58)."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    }
+  ]
+}

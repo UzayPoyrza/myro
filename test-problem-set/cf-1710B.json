@@ -1,0 +1,83 @@
+{
+  "contest_id": 1710,
+  "index": "B",
+  "title": "Rain",
+  "difficulty": 2100,
+  "tags": [
+    "binary search",
+    "data structures",
+    "greedy",
+    "implementation",
+    "math"
+  ],
+  "time_limit": "4 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are the owner of a harvesting field which can be modeled as an infinite line, whose positions are identified by integers. It will rain for the next $$$n$$$ days. On the $$$i$$$-th day, the rain will be centered at position $$$x_i$$$ and it will have intensity $$$p_i$$$. Due to these rains, some rainfall will accumulate; let $$$a_j$$$ be the amount of rainfall accumulated at integer position $$$j$$$. Initially $$$a_j$$$ is $$$0$$$, and it will increase by $$$\\max(0,p_i-|x_i-j|)$$$ after the $$$i$$$-th day's rain. A flood will hit your field if, at any moment, there is a position $$$j$$$ with accumulated rainfall $$$a_j \\gt m$$$. You can use a magical spell to erase exactly one day's rain, i.e., setting $$$p_i=0$$$. For each $$$i$$$ from $$$1$$$ to $$$n$$$, check whether in case of erasing the $$$i$$$-th day's rain there is no flood.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\leq t \\leq 10^4$$$). The description of the test cases follows. The first line of each test case contains two integers $$$n$$$ and $$$m$$$ ($$$1 \\leq n \\leq 2 \\cdot 10^5$$$, $$$1 \\leq m \\leq 10^9$$$) — the number of rainy days and the maximal accumulated rainfall with no flood occurring. Then $$$n$$$ lines follow. The $$$i$$$-th of these lines contains two integers $$$x_i$$$ and $$$p_i$$$ ($$$1 \\leq x_i,p_i \\leq 10^9$$$) — the position and intensity of the $$$i$$$-th day's rain. The sum of $$$n$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case, output a binary string $$$s$$$ length of $$$n$$$. The $$$i$$$-th character of $$$s$$$ is 1 if after erasing the $$$i$$$-th day's rain there is no flood, while it is 0 , if after erasing the $$$i$$$-th day's rain the flood still happens.",
+  "examples": [
+    {
+      "input": "43 61 55 53 42 31 35 22 51 610 66 124 51 612 55 59 78 3",
+      "output": "001\n11\n00\n100110"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Difference array + rotated-quadrant intersection",
+      "description": "Compute accumulated rainfall at key positions using a second-order difference array on sorted events. For each position where flooding occurs, derive a constraint on which rains could fix it (a 45-degree rotated half-plane in (x, p) space). Intersect all such constraints into a single region and check each rain against it.",
+      "skill_tags": ["math", "sorting", "greedy", "implementation"],
+      "observations": [
+        {
+          "title": "The accumulated rainfall is piecewise linear and peaks only at rain centers",
+          "description": "Each rain i contributes a triangle centered at x_i with height p_i. The total accumulated rainfall a_j is a sum of such triangles and is therefore piecewise linear, with slope changes only at positions x_i - p_i, x_i, and x_i + p_i. Critically, the global maximum of a_j can always be found at one of the center positions x_i. This means you only need to evaluate a_j at O(n) key positions rather than across the entire infinite line.",
+          "hints": {
+            "nudge": "What shape does a single rain event contribute to the accumulated rainfall function? Where are the only positions where the slope can change?",
+            "question": "If the total rainfall function is piecewise linear and its slope only changes at positions derived from rain events, where should you look for the maximum value?",
+            "formal": "Each rain adds max(0, p_i - |x_i - j|), a triangle with apex at x_i. The sum is piecewise linear with breakpoints at {x_i - p_i, x_i, x_i + p_i}. The maximum of a piecewise linear function on integers occurs at a breakpoint, and specifically at one of the centers x_i."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Use a second-order difference array to evaluate rainfall at key positions",
+          "description": "Each rain contributes a triangle shape: the first derivative of the contribution increases by +1 at x_i - p_i, decreases by -2 at x_i, and increases by +1 at x_i + p_i. By recording these second-difference events, sorting them, and sweeping left to right while maintaining a running first derivative and accumulated value, you can compute a_j at every key position in O(n log n) time.",
+          "hints": {
+            "nudge": "The contribution of each rain to the accumulated function is a triangle. How can you represent adding many triangles efficiently using differences?",
+            "question": "If you define d1_j = a_j - a_{j-1} and d2_j = d1_j - d1_{j-1}, what does each rain event do to d2? How many entries does it affect?",
+            "formal": "For rain (x_i, p_i), add: d2[x_i - p_i + 1] += 1, d2[x_i + 1] -= 2, d2[x_i + p_i + 1] += 1. Sort all events by position, then sweep: maintain running d1 (first derivative) and a (value). At each event position, advance a by d1 * (gap) then update d1 by d2. This computes a_j at all key positions in O(n log n)."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "An invalid position constrains which rains can fix it via a rotated half-plane",
+          "description": "If position j has a_j > m (a flood), then erasing rain i fixes position j if and only if the contribution of rain i at j is at least a_j - m, i.e., p_i - |x_i - j| >= a_j - m. Rearranging, this defines a region in (x, p) space: in the rotated coordinate system u = x + p, v = p - x, the constraint becomes u >= j + (a_j - m) AND v >= (a_j - m) - j. This is a quadrant (intersection of two axis-aligned half-planes) in the rotated coordinates.",
+          "hints": {
+            "nudge": "For a specific flooding position j, what algebraic condition on (x_i, p_i) must hold for rain i to contribute enough to fix it?",
+            "question": "Write out the inequality p_i - |x_i - j| >= a_j - m. Split into the two cases x_i >= j and x_i < j. What shape does this region form in the (x, p) plane?",
+            "formal": "The condition p_i - |x_i - j| >= a_j - m splits into: (1) x_i + p_i >= j + (a_j - m) and (2) p_i - x_i >= (a_j - m) - j. Setting u = x + p and v = p - x, the constraint is u >= U_j and v >= V_j, a quadrant in (u, v) space with corner at (U_j, V_j) = (j + (a_j - m), (a_j - m) - j)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The intersection of all flood constraints remains a single quadrant",
+          "description": "Each flooding position j produces a quadrant constraint u >= U_j, v >= V_j. The intersection of multiple such quadrant constraints is simply u >= max(U_j) and v >= max(V_j), which is still a single quadrant. So you can sweep through all flooding positions, maintaining just two running maximums, and end up with a single combined constraint that a rain must satisfy to fix ALL flooding positions simultaneously.",
+          "hints": {
+            "nudge": "If you have two regions, each defined by u >= some_value AND v >= some_value, what does their intersection look like?",
+            "question": "If erasing rain i must fix every flooding position, and each flooding position gives a lower bound on u_i and v_i, what is the combined constraint?",
+            "formal": "The intersection of quadrants {u >= U_j, v >= V_j} for all invalid j is {u >= max_j(U_j), v >= max_j(V_j)}. Maintain U_max and V_max across all flooding positions. Rain i can prevent all floods iff x_i + p_i >= U_max AND p_i - x_i >= V_max."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Coordinate doubling avoids fractional arithmetic",
+          "description": "The rotated coordinate transform and the gap computations in the sweep can produce half-integer values. By multiplying all x_i and p_i (and m) by 2 at the start, all intermediate values remain integers. This avoids floating-point errors entirely.",
+          "hints": {
+            "nudge": "When you perform the 45-degree rotation, do the coordinates stay integers? How can you ensure they do?",
+            "question": "If the midpoint between two rain centers is not an integer, how does that affect your sweep computation? What simple scaling fixes this?",
+            "formal": "Multiply all x_i, p_i, and m by 2 at input time. The rotated coordinates u = x + p and v = p - x are then always even integers, and all sweep computations remain in integers. Divide by 2 is never needed since comparisons are scale-invariant."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

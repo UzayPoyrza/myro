@@ -1,0 +1,97 @@
+{
+  "contest_id": 1770,
+  "index": "D",
+  "title": "Koxia and Game",
+  "difficulty": 2000,
+  "tags": [
+    "constructive algorithms",
+    "data structures",
+    "dfs and similar",
+    "dsu",
+    "flows",
+    "games",
+    "graph matchings",
+    "graphs",
+    "implementation"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Koxia and Mahiru are playing a game with three arrays $$$a$$$, $$$b$$$, and $$$c$$$ of length $$$n$$$. Each element of $$$a$$$, $$$b$$$ and $$$c$$$ is an integer between $$$1$$$ and $$$n$$$ inclusive. The game consists of $$$n$$$ rounds. In the $$$i$$$-th round, they perform the following moves: Let $$$S$$$ be the multiset $$$\\{a_i, b_i, c_i\\}$$$. Koxia removes one element from the multiset $$$S$$$ by her choice. Mahiru chooses one integer from the two remaining in the multiset $$$S$$$. Let $$$d_i$$$ be the integer Mahiru chose in the $$$i$$$-th round. If $$$d$$$ is a permutation$$$^\\dagger$$$, Koxia wins. Otherwise, Mahiru wins. Currently, only the arrays $$$a$$$ and $$$b$$$ have been chosen. As an avid supporter of Koxia, you want to choose an array $$$c$$$ such that Koxia will win. Count the number of such $$$c$$$, modulo $$$998\\,244\\,353$$$. Note that Koxia and Mahiru both play optimally. $$$^\\dagger$$$ A permutation of length $$$n$$$ is an array consisting of $$$n$$$ distinct integers from $$$1$$$ to $$$n$$$ in arbitrary order. For example, $$$[2,3,1,5,4]$$$ is a permutation, but $$$[1,2,2]$$$ is not a permutation ($$$2$$$ appears twice in the array), and $$$[1,3,4]$$$ is also not a permutation ($$$n=3$$$ but there is $$$4$$$ in the array).",
+  "input_spec": "Each test consists of multiple test cases. The first line contains a single integer $$$t$$$ ($$$1 \\leq t \\leq 2 \\cdot 10^4$$$) — the number of test cases. The description of test cases follows. The first line of each test case contains a single integer $$$n$$$ ($$$1 \\leq n \\leq {10}^5$$$) — the size of the arrays. The second line of each test case contains $$$n$$$ integers $$$a_1, a_2, \\dots, a_n$$$ ($$$1 \\leq a_i \\leq n$$$). The third line of each test case contains $$$n$$$ integers $$$b_1, b_2, \\dots, b_n$$$ ($$$1 \\leq b_i \\leq n$$$). It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$${10}^5$$$.",
+  "output_spec": "Output a single integer — the number of $$$c$$$ makes Koxia win, modulo $$$998\\,244\\,353$$$.",
+  "examples": [
+    {
+      "input": "231 2 21 3 353 3 1 3 44 5 2 5 5",
+      "output": "6\n0"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Graph modeling with DSU",
+      "description": "Reduce the game to selecting p_i from {a_i, b_i} to form a permutation, model this as a graph where each index i is an edge between a_i and b_i, analyze connected components using DSU, and count valid arrays c by multiplying contributions per component.",
+      "skill_tags": ["graphs", "data-structures", "constructive", "math"],
+      "observations": [
+        {
+          "title": "Koxia must eliminate choice: the two remaining elements must be equal",
+          "description": "Since Mahiru plays optimally and wants to prevent d from being a permutation, Koxia can only guarantee a specific d_i value if the two elements she leaves in S are identical. Working backwards from round n, each d_i is uniquely forced. Therefore Koxia wins if and only if for every round i, c_i can be chosen so that S = {a_i, b_i, c_i} contains a duplicate, letting Koxia remove the odd one out.",
+          "hints": {
+            "nudge": "Think about what happens in the last round. If Mahiru has two distinct values to choose from, can she always spoil the permutation?",
+            "question": "If Koxia leaves two different values for Mahiru in round n, Mahiru picks whichever ruins the permutation. What must Koxia do to guarantee d_n?",
+            "formal": "In each round, Koxia must make the two remaining elements equal so Mahiru has no real choice. This means c_i must equal either a_i or b_i, and d_i is the other value. Equivalently, we must pick p_i from {a_i, b_i} for each i such that p forms a permutation of [1..n]."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Reduction to choosing p_i from {a_i, b_i} to form a permutation",
+          "description": "By the forced-choice argument, Koxia wins iff we can build an array p where p_i is either a_i or b_i, and p is a permutation of {1,...,n}. Once p is determined, we set c_i = p_i (the value Koxia wants Mahiru to pick), and Koxia removes the third element. The number of winning c arrays equals the number of such permutations p, multiplied by any freedom in the c_i values themselves.",
+          "hints": {
+            "nudge": "Given that d_i is forced, what does c_i need to be? And what happens to the removed element -- does it matter what it is?",
+            "question": "If p_i is the value Mahiru is forced to pick, what must c_i equal? And for the element Koxia removes, does the problem constrain it beyond being in [1,n]?",
+            "formal": "Set c_i = p_i so two elements in {a_i, b_i, c_i} are equal (c_i matches one of them). Koxia removes the non-matching one, Mahiru picks p_i. When a_i = b_i, then p_i = a_i is forced and c_i can be any value in [1,n] -- but actually c_i must equal a_i = b_i for the duplicate condition, so c_i is free to be anything since the multiset already has a duplicate."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Model as a graph: each index i is an edge between nodes a_i and b_i",
+          "description": "Build a graph on nodes {1,...,n} where for each index i, we add an edge between a_i and b_i. Choosing p_i = a_i means node a_i is 'used' by index i; choosing p_i = b_i means node b_i is used. For p to be a permutation, each node must be used exactly once. This is equivalent to finding a perfect matching-like orientation of the edges in this graph.",
+          "hints": {
+            "nudge": "Each index i gives a choice between two values. This sounds like edges in a graph connecting two candidate values. What does the permutation condition mean on this graph?",
+            "question": "If you create a graph where index i is an edge (a_i, b_i), what must be true about each node's degree and the selection for p to be a permutation?",
+            "formal": "Build graph G on vertex set {1,...,n} with n edges (one per index). For p to be a permutation, each vertex v must be chosen as p_i by exactly one edge incident to v. Each connected component with k vertices must have exactly k edges (one cycle), forming a unicyclic graph."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Each connected component must be unicyclic (exactly k vertices and k edges)",
+          "description": "A connected component with k vertices and fewer than k edges is a tree (k-1 edges), which cannot assign each vertex exactly once since there aren't enough edges. More than k edges means some vertex must be assigned twice. So each component must have exactly k vertices and k edges, meaning it contains exactly one cycle. If any component violates this, the answer is 0.",
+          "hints": {
+            "nudge": "In a connected graph with k vertices, how many edges do you need for each vertex to be 'covered' exactly once by an edge assignment?",
+            "question": "A tree on k vertices has k-1 edges. Can you orient k-1 edges to cover all k vertices? What structure has exactly k edges on k vertices?",
+            "formal": "A connected component on k vertices needs exactly k edges so that each vertex is the chosen endpoint of exactly one edge. This means k vertices, k edges, so exactly one cycle. A component with fewer edges (tree) cannot cover all vertices; more edges makes it impossible. Use DSU: when merging, track if adding an edge creates a second cycle (answer becomes 0)."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "The cycle determines the assignment; each unicyclic component contributes a factor",
+          "description": "In a unicyclic component, the edges on the cycle can be oriented in exactly 2 ways (clockwise or counterclockwise), each giving a valid assignment. The tree edges hanging off the cycle are then forced. However, if any edge on the cycle has a_i = b_i (a self-loop), that edge's orientation is forced, so the component contributes only 1 way instead of 2. When a_i = b_i for an index i, c_i can be any value in [1,n], contributing a factor of n to the count for each such index.",
+          "hints": {
+            "nudge": "Once you know the cycle in a component, how many ways can you orient the cycle edges? What about the tree edges?",
+            "question": "A cycle of length L can be traversed in 2 directions. Does each direction give a valid assignment? And when a_i = b_i (a self-loop), how does that affect the cycle?",
+            "formal": "For each unicyclic component: the cycle can be oriented in 2 ways, giving 2 valid permutation-assignments. Tree edges off the cycle are forced. If the cycle contains a self-loop (a_i = b_i), orientation is forced, contributing factor 1. For each self-loop index, c_i is free in [1,n], contributing a multiplicative factor of n. Total answer = product over all components of their contribution, times n^(number of self-loop indices), modulo 998244353."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Implement with DSU to detect components and count in O(n alpha(n))",
+          "description": "Use a Disjoint Set Union (DSU) structure. Process each index i: if a_i and b_i are already in the same component, this edge closes a cycle. If the component already had a cycle, a second cycle makes the answer 0. Track per-component whether it has a cycle and whether that cycle includes a self-loop. The final answer is the product of each component's contribution (2 if the cycle has no self-loop, 1 if it does) times n raised to the number of self-loops, all modulo 998244353.",
+          "hints": {
+            "nudge": "You need to efficiently track connected components and detect cycles. What data structure is ideal for incremental edge additions with connectivity queries?",
+            "question": "When you process edge (a_i, b_i) and find a_i and b_i are already connected, what does that mean? How do you track the number of cycles per component with DSU?",
+            "formal": "Initialize DSU on {1,...,n}. For each i: if find(a_i) == find(b_i), this is the cycle-closing edge -- if the component already has a cycle, output 0. Otherwise mark it as having a cycle. If a_i == b_i, mark the component's cycle as containing a self-loop and multiply the answer by n (for the free c_i). Finally, answer = product over components of (1 if self-loop cycle, 2 otherwise), times n^(self-loop count), mod 998244353."
+          },
+          "skill_tag": "data-structures"
+        }
+      ]
+    }
+  ]
+}

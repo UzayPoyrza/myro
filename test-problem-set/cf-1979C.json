@@ -1,0 +1,77 @@
+{
+  "contest_id": 1979,
+  "index": "C",
+  "title": "Earning on Bets",
+  "difficulty": 1200,
+  "tags": ["constructive algorithms", "number theory", "math"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You have been offered to play a game. In this game, there are $$$n$$$ possible outcomes, and for each of them, you must bet a certain integer amount of coins. In the event that the $$$i$$$-th outcome turns out to be winning, you will receive back the amount of coins equal to your bet on that outcome, multiplied by $$$k_i$$$. Note that exactly one of the $$$n$$$ outcomes will be winning. Your task is to determine how to distribute the coins in such a way that you will come out ahead in the event of any winning outcome. More formally, the total amount of coins you bet on all outcomes must be strictly less than the number of coins received back for each possible winning outcome.",
+  "input_spec": "Each test consists of multiple test cases. The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — the number of test cases. The description of the test cases follows. The first line of each test case contains a single integer $$$n$$$ ($$$1 \\le n \\le 50$$$) — the number of outcomes. The second line of each test case contains $$$n$$$ integers $$$k_1,k_2,\\ldots,k_n$$$ ($$$2 \\le k_i \\le 20$$$) — the multiplier for the amount of coins if the $$$i$$$-th outcome turns out to be winning. It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case, output $$$-1$$$ if there is no way to distribute the coins as required. Otherwise, output $$$n$$$ integers $$$x_1, x_2,\\ldots, x_n$$$ ($$$1 \\le x_i \\le 10^{9}$$$) — your bets on the outcomes. It can be shown that if a solution exists, there is always a solution that satisfies these constraints. If there are multiple suitable solutions, output any of them.",
+  "examples": [
+    {
+      "input": "633 2 723 355 5 5 5 567 9 3 17 9 1336 3 259 4 6 8 3",
+      "output": "27 41 12 \n1 1 \n-1\n1989 1547 4641 819 1547 1071 \n-1\n8 18 12 9 24"
+    }
+  ],
+  "routes": [
+    {
+      "name": "LCM construction with feasibility check",
+      "description": "Express the winning condition algebraically to derive sum(1/k_i) < 1 as the feasibility condition. Use the LCM of all k_i as the total bet to construct integer bets directly.",
+      "skill_tags": ["math", "number-theory", "constructive"],
+      "observations": [
+        {
+          "title": "Reformulate the constraint in terms of total bet S",
+          "description": "Let S = sum of all bets. The requirement k_i * x_i > S for every i means each individual bet must satisfy x_i > S / k_i. This shifts the problem from searching for absolute bet values to understanding proportional relationships between each bet and the total.",
+          "hints": {
+            "nudge": "What does the winning condition k_i * x_i > S tell you about the minimum size of each bet relative to the total?",
+            "question": "If you let S denote the total amount bet, can you write a lower bound on x_i in terms of S and k_i?",
+            "formal": "From k_i * x_i > S, we get x_i > S / k_i. Each bet must exceed the fraction S / k_i of the total."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Summing the lower bounds gives a feasibility condition",
+          "description": "Since each x_i must exceed S / k_i and the sum of all x_i equals S, we need sum(S / k_i) < S. Dividing both sides by S yields sum(1 / k_i) < 1. This is the necessary and sufficient condition for a solution to exist.",
+          "hints": {
+            "nudge": "You know each x_i > S / k_i. What happens when you add up all these lower bounds?",
+            "question": "If you sum the inequality x_i > S / k_i over all i, the left side is S. What does the right side simplify to, and what does the resulting inequality mean?",
+            "formal": "S = sum(x_i) > sum(S / k_i) = S * sum(1 / k_i). Dividing by S > 0 gives 1 > sum(1 / k_i). If sum(1 / k_i) >= 1, no valid distribution exists and the answer is -1."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Choose S = LCM(k_1, ..., k_n) to make all bets integers",
+          "description": "If we set the total bet S equal to the least common multiple of all the multipliers, then S / k_i is guaranteed to be a positive integer for every i. This eliminates the need to deal with fractions or rounding and directly gives valid integer bets.",
+          "hints": {
+            "nudge": "You need x_i to be at least S / k_i, and x_i must be an integer. What choice of S makes S / k_i automatically an integer for all i?",
+            "question": "What is the smallest positive integer that is divisible by every k_i simultaneously? How does using it as S help?",
+            "formal": "Let L = LCM(k_1, k_2, ..., k_n). Set S = L. Then x_i = L / k_i is a positive integer for every i, and k_i * x_i = L = S, which is not strictly greater. However, the feasibility condition sum(x_i) < S handles this: we set x_i = L / k_i and verify that sum(L / k_i) < L."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Verify the sum and output the answer",
+          "description": "Compute x_i = LCM / k_i for each i. If sum(x_i) < LCM, output the x_i values as the bets. Each outcome i then returns k_i * x_i = LCM > sum(x_i), satisfying the strict inequality. If sum(x_i) >= LCM, output -1.",
+          "hints": {
+            "nudge": "You have computed LCM and all the x_i = LCM / k_i. What single check remains before you can output?",
+            "question": "After setting x_i = LCM / k_i, what is k_i * x_i? Compare that to sum(x_j) -- when is the condition met?",
+            "formal": "For each i, k_i * x_i = k_i * (LCM / k_i) = LCM. The total bet is sum(x_j) = sum(LCM / k_j). The condition LCM > sum(LCM / k_j) is equivalent to sum(1 / k_j) < 1. If satisfied, output x_i; otherwise output -1."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "LCM stays within bounds given the constraints",
+          "description": "With k_i between 2 and 20 and at most 50 outcomes, the LCM is at most LCM(2, 3, ..., 20) = 232792560, which fits in a 32-bit integer and well within the 10^9 output limit. Each x_i = LCM / k_i is also within bounds since k_i >= 2.",
+          "hints": {
+            "nudge": "Could the LCM become too large for the output constraints? Think about the range of k_i values.",
+            "question": "What is the worst-case LCM when all k_i are distinct values from 2 to 20? Does LCM(2, 3, ..., 20) fit within 10^9?",
+            "formal": "LCM(2, 3, ..., 20) = 232792560 < 10^9. Since each k_i is in [2, 20], the LCM of any subset is at most 232792560. Each x_i = LCM / k_i <= 232792560 / 2 = 116396280 < 10^9, satisfying the output constraint."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

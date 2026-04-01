@@ -1,0 +1,16 @@
+[package]
+name = "myro-cf"
+version = "0.1.0"
+edition = "2021"
+description = "Shared Codeforces API client and types"
+license = "AGPL-3.0"
+
+[dependencies]
+tokio = { version = "1", features = ["time"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "cookies"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+scraper = "0.22"
+regex = "1"
+rand = "0.8"

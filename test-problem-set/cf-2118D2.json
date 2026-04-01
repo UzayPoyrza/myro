@@ -1,0 +1,97 @@
+{
+  "contest_id": 2118,
+  "index": "D2",
+  "title": "Red Light, Green Light (Hard version)",
+  "difficulty": 2200,
+  "tags": [
+    "binary search",
+    "brute force",
+    "data structures",
+    "dfs and similar",
+    "dp",
+    "graphs",
+    "implementation",
+    "math",
+    "number theory"
+  ],
+  "time_limit": "4 seconds",
+  "memory_limit": "512 megabytes",
+  "description": "This is the hard version of the problem. The only difference is the constraint on k and the total sum of n and q across all test cases. You are given a strip of length 10^15 and a constant k. There are exactly n cells that contain a traffic light; each has a position p_i and an initial delay d_i for which d_i < k. The i-th traffic light works the following way: it shows red at the l*k + d_i-th second, where l is a non-negative integer, and it shows green otherwise. At second 0, you are initially positioned at some cell on the strip, facing the positive direction. At each second, you perform the following actions in order: If the current cell contains a red traffic light, you turn around. Move one cell in the direction you are currently facing. You are given q different starting positions. For each one, determine whether you will eventually leave the strip within 10^100 seconds.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases t (1 <= t <= 2*10^5). The first line of each test case contains two integers n, k (1 <= n <= 2*10^5 and 1 <= k <= 10^15) -- the number of traffic lights and the length of the period. The second line contains n integers p_1, ..., p_n (1 <= p_1 < p_2 < ... < p_n <= 10^15) -- the positions of the traffic lights. The third line contains n integers d_1, ..., d_n (0 <= d_i < k) -- the delays of the traffic lights. The fourth line contains one integer q (1 <= q <= 2*10^5). The fifth line contains q integers a_1, ..., a_q (1 <= a_i <= 10^15) -- the starting positions. It is guaranteed that the sum of n and q over all test cases does not exceed 2*10^5.",
+  "output_spec": "For each test case, output q lines. Each line should contain YES if you will eventually leave the strip and NO otherwise.",
+  "examples": [
+    {
+      "input": "42 21 41 031 2 39 41 2 3 4 5 6 7 8 93 2 1 0 1 3 3 1 152 5 6 7 84 21 2 3 40 0 0 041 2 3 43 41 2 33 1 131 2 3",
+      "output": "YES\nNO\nYES\nYES\nYES\nYES\nNO\nNO\nYES\nYES\nNO\nNO\nYES\nNO\nYES"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Diagonal grouping + functional graph with memoization",
+      "description": "Model movement as diagonals in (position, time) space, group traffic lights by residue class to enable binary-search for the next collision, build a functional graph on (traffic light, direction) states, and detect cycles via memoization across queries.",
+      "skill_tags": ["binary-search", "graphs", "math", "data-structures"],
+      "observations": [
+        {
+          "title": "Movement traces diagonals in position-time space",
+          "description": "When moving in the positive direction, position increases by 1 each second, so (position - time) remains constant along a trajectory. When moving in the negative direction, position decreases by 1 each second, so (position + time) remains constant. A collision with traffic light i happens when the trajectory's invariant matches the light's red-time pattern. In the positive direction, you collide with light i when (d_i - p_i) mod k equals (t - x) mod k, where t is time and x is position. In the negative direction, you collide when (d_i + p_i) mod k equals (t + x) mod k.",
+          "hints": {
+            "nudge": "Plot the person's movement on a position vs. time grid. What shape does each segment of motion trace?",
+            "question": "If you are at position x at time t moving in the positive direction, what quantity stays constant? When does a traffic light at position p_i with delay d_i show red at the exact moment you arrive?",
+            "formal": "Positive direction: position = x + (time - t), so time - position = t - x is invariant. Light i is red at times l*k + d_i. You arrive at p_i at time t + (p_i - x). Collision iff t + (p_i - x) = l*k + d_i for some l, i.e., (d_i - p_i) mod k = (t - x) mod k. Negative direction: time + position = t + x is invariant, and collision iff (d_i + p_i) mod k = (t + x) mod k."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Group traffic lights by residue class to find next collision",
+          "description": "Since collision depends on (d_i - p_i) mod k for positive direction and (d_i + p_i) mod k for negative direction, group all traffic lights by these residue values. Within each group, store the positions in sorted order. Given your current position and direction, compute which residue class you will collide with, then binary search within that group for the nearest traffic light ahead of you in the current direction.",
+          "hints": {
+            "nudge": "You know exactly which residue class your trajectory will hit. Among all lights in that class, which one do you reach first?",
+            "question": "If you are moving in the positive direction from position x, you need the light with the smallest p_i > x in the matching residue group. What data structure and operation gives you this efficiently?",
+            "formal": "Build two maps: pos_group[(d_i - p_i) mod k] -> sorted list of positions, neg_group[(d_i + p_i) mod k] -> sorted list of positions. For positive direction from position x with invariant r = (t - x) mod k: look up pos_group[r], binary search for smallest p_i > x. For negative direction from position x with invariant r = (t + x) mod k: look up neg_group[r], binary search for largest p_i < x. Each lookup is O(log n)."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "Each collision deterministically maps to the next state",
+          "description": "When you collide with traffic light i while moving in the positive direction, you turn around and start moving in the negative direction from position i. The new trajectory has a new invariant, and the next collision is uniquely determined by (light index, direction). This means the system forms a functional graph: each state (light i, direction d) has exactly one successor state. If you reach a state you have visited before, you are in a cycle and will never escape.",
+          "hints": {
+            "nudge": "After bouncing off a specific traffic light in a specific direction, is the subsequent trajectory always the same regardless of when you arrived?",
+            "question": "If two different starting positions both result in hitting traffic light i from the positive direction, do they follow the same path from that point onward? What kind of graph does this create?",
+            "formal": "After colliding with light i moving positively, you are at position p_i moving negatively. The invariant for the new trajectory is determined solely by (p_i, d_i, k). So the next collision depends only on (i, direction). This gives a functional graph on at most 2n states. A state with no next collision (you leave the strip) is a terminal. The question is: does a given starting trajectory reach a terminal or enter a cycle?"
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Precompute the functional graph on 2n states",
+          "description": "Before processing queries, build the entire functional graph. For each traffic light i and each direction (positive/negative), compute the next state using the binary search from the grouped residue structure. Each of the 2n states maps to either another state or to an escape (no further collision). This precomputation costs O(n log n) total.",
+          "hints": {
+            "nudge": "Rather than simulating each query from scratch, can you precompute the successor of every possible bounce?",
+            "question": "How many distinct (traffic light, direction) pairs exist? For each one, how do you find where the trajectory goes next?",
+            "formal": "For each i in [1..n] and dir in {+, -}: compute the diagonal invariant after bouncing off light i in direction dir, look up the matching residue group, binary search for the next light. Store next[(i, dir)] = (j, dir') or ESCAPE. Total: O(n log n) for all lookups."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Classify states via DFS: escape vs. cycle",
+          "description": "Once the functional graph is built, classify each state as either eventually-escaping or trapped-in-cycle. Traverse from each unvisited state following successor edges. If you reach a known-escaping state or a terminal (escape), mark the entire chain as escaping. If you revisit a state in the current chain, you have found a cycle: mark those states as trapped. This is a standard DFS-based classification on a functional graph and runs in O(n).",
+          "hints": {
+            "nudge": "In a functional graph (each node has out-degree exactly 1), how do you find which nodes reach a terminal versus which are on a cycle?",
+            "question": "If you follow successor pointers from a state and revisit a state you have seen in this traversal, what does that tell you? How do you propagate this classification efficiently?",
+            "formal": "Use three-color DFS (unvisited, in-progress, resolved). Follow the chain from each unvisited node. If we reach a resolved node, propagate its classification back. If we reach an in-progress node, everything from there to the current node is a cycle (trapped). Everything before the cycle in the chain inherits the cycle's classification (trapped). Terminal nodes are classified as escaping. Total time: O(n) since each node is visited at most twice."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Answer queries by finding the first collision from each starting position",
+          "description": "For each query starting position a, you begin at position a at time 0 moving in the positive direction. Compute the diagonal invariant (0 - a) mod k, look up the matching residue group, and binary search for the first traffic light to the right. If there is none, the answer is YES (you walk off the strip). Otherwise, you land on a precomputed state (light j, negative direction), and the answer is YES if that state is classified as escaping, NO if it is trapped. Each query is answered in O(log n).",
+          "hints": {
+            "nudge": "The starting trajectory is just another diagonal. How do you connect it to the precomputed functional graph?",
+            "question": "From starting position a moving right, you use the same binary search as before to find the first collision. Once you know which traffic light you hit first, how do you get the answer?",
+            "formal": "For query position a: invariant r = (0 - a) mod k = (-a) mod k. Look up pos_group[r], binary search for smallest p_j > a. If none exists: output YES. Otherwise, state (j, negative) is entered. Output the precomputed classification of that state. Total per query: O(log n). Overall: O((n + q) log n)."
+          },
+          "skill_tag": "binary-search"
+        }
+      ]
+    }
+  ]
+}

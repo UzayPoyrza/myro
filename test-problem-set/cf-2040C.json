@@ -1,0 +1,149 @@
+{
+  "contest_id": 2040,
+  "index": "C",
+  "title": "Ordered Permutations",
+  "difficulty": 1600,
+  "tags": [
+    "combinatorics",
+    "constructive algorithms",
+    "greedy",
+    "math",
+    "bitmasks"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Consider a permutation p_1, p_2, ..., p_n of integers from 1 to n. We can introduce the following sum for it: S(p) = sum over all 1 <= l <= r <= n of min(p_l, p_{l+1}, ..., p_r). Let us consider all permutations of length n with the maximum possible value of S(p). Output the k-th of them in lexicographical order, or report that there are less than k of them.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases t (1 <= t <= 10^4). The only line of each test case contains two integers n and k (1 <= n <= 2*10^5; 1 <= k <= 10^12) -- the length of the permutation and the index number of the desired permutation. It is guaranteed that the sum of n over all test cases does not exceed 2*10^5.",
+  "output_spec": "For each test case, if there are less than k suitable permutations, print -1. Otherwise, print the k-th suitable permutation.",
+  "examples": [
+    {
+      "input": "6\n3 2\n3 3\n4 11\n4 6\n6 39\n7 34",
+      "output": "1 3 2\n2 3 1\n-1\n2 4 3 1\n-1\n2 3 4 5 7 6 1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Recursive endpoint placement with binary indexing",
+      "description": "Recognize that the minimum value in any range dominates S(p), so the global minimum (value 1) should be placed at an endpoint to minimize how many subarrays it 'pollutes'. This creates a recursive structure where each successive smallest value is placed at an endpoint, yielding exactly 2^(n-1) optimal permutations. The k-th permutation is then determined by reading k-1 in binary.",
+      "skill_tags": [
+        "greedy",
+        "math",
+        "constructive",
+        "dp"
+      ],
+      "observations": [
+        {
+          "title": "Value 1 is the min of every subarray containing it",
+          "description": "The value 1, being the smallest element, forces min = 1 for every subarray [l..r] that includes its position. Any subarray not containing 1 has a min of at least 2. To maximize S(p), we want as few subarrays as possible to be 'stuck' with min = 1. This means minimizing the number of subarrays that cross the position where 1 is placed.",
+          "hints": {
+            "nudge": "What happens to the min of a subarray when it includes the position of value 1?",
+            "question": "If 1 is placed at position i, how many subarrays [l..r] contain position i? Express this in terms of i and n. When is this count minimized?",
+            "formal": "The number of subarrays containing position i is i * (n - i + 1). The subarrays not containing i contribute min >= 2. To maximize S(p), we want to maximize the contribution from subarrays that avoid 1, so we minimize the number of subarrays that include 1's position. i * (n - i + 1) is minimized when i = 1 or i = n."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Placing 1 at an endpoint creates two independent subproblems",
+          "description": "When 1 is placed at position 1, the subarrays entirely within [2..n] form an independent subproblem on the remaining n-1 values {2, 3, ..., n}. Similarly if 1 is placed at position n. The subproblem is structurally identical: maximize S(p) for a permutation of n-1 elements. The next decision is where to place value 2 (the new smallest) within the remaining range, which again should go at an endpoint of that range.",
+          "hints": {
+            "nudge": "After placing 1 at position 1, what subproblem remains for positions 2 through n?",
+            "question": "Once 1 is at an endpoint, the remaining positions hold values {2, ..., n}. If you subtract 1 from each, you get a permutation of {1, ..., n-1}. Does the same argument about placing the minimum at an endpoint apply recursively?",
+            "formal": "Placing 1 at position 1 means subarrays in [2..n] have their mins determined solely by the arrangement of {2, ..., n}. Since min over any subarray in [2..n] is independent of position 1, maximizing S(p) requires maximizing the sub-sum for [2..n]. The same greedy logic applies: value 2 should go at position 2 or position n. This recurses until all values are placed."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Each step has exactly 2 choices, giving 2^(n-1) optimal permutations",
+          "description": "At each recursive level, the current smallest remaining value can be placed at the left or right endpoint of the remaining range. There are n-1 such binary choices (the last value has only one position left). This gives exactly 2^(n-1) distinct optimal permutations. If k > 2^(n-1), the answer is -1.",
+          "hints": {
+            "nudge": "How many choices do you make in total, and how many options are there at each step?",
+            "question": "If there are n-1 binary decisions and 1 forced placement, how many total optimal permutations exist? When should you output -1?",
+            "formal": "At each of the n-1 levels (placing values 1 through n-1 into a shrinking range), there are 2 choices: left end or right end. The n-th value fills the only remaining slot. Total count = 2^(n-1). Output -1 if k > 2^(n-1). Note: when n >= 62, 2^(n-1) exceeds 10^12, so -1 is only possible for small n."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The k-th permutation is determined by the binary representation of k-1",
+          "description": "Since each of the n-1 decisions is binary, the optimal permutations correspond naturally to (n-1)-bit binary numbers. The first permutation (k=1) corresponds to 0...0 (always choose left), the second (k=2) to 0...01, and so on. Specifically, write k-1 in binary with n-1 bits. The i-th bit (from the most significant) determines whether the i-th smallest value goes to the left endpoint (bit 0) or right endpoint (bit 1).",
+          "hints": {
+            "nudge": "You have a sequence of n-1 binary decisions. What is a natural way to map the k-th sequence to a number?",
+            "question": "If 'left' = 0 and 'right' = 1, and you have n-1 decisions, the sequences are binary strings of length n-1 in lexicographic order. What binary string corresponds to the k-th sequence?",
+            "formal": "Map each sequence of decisions to a binary number: decision 1 is the most significant bit, decision n-1 is the least significant bit. Lexicographic order of the resulting permutations matches numeric order of these binary numbers. The k-th permutation (1-indexed) corresponds to the binary representation of k-1 with n-1 bits."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Construct the permutation with two pointers",
+          "description": "Maintain two pointers, left = 1 and right = n, representing the endpoints of the remaining range. Also track the current value to place, starting at 1. For each bit of k-1 (from the most significant to the least significant): if the bit is 0, place the current value at position left and increment left; if the bit is 1, place it at position right and decrement right. After processing all n-1 bits, place value n at the single remaining position.",
+          "hints": {
+            "nudge": "You know whether each value goes left or right. How do you translate that into actual positions in the output array?",
+            "question": "If value 1 goes left, it occupies position 1 and the range shrinks to [2..n]. If value 2 then goes right, it occupies position n and the range shrinks to [2..n-1]. What data structure tracks the available range efficiently?",
+            "formal": "Initialize left = 1, right = n, val = 1. Convert k-1 to binary with n-1 bits. For bit i from most significant to least significant: if bit = 0, set p[left] = val, left++; if bit = 1, set p[right] = val, right++. After the loop, set p[left] = n (left == right at this point). Output p[1..n]."
+          },
+          "skill_tag": "constructive"
+        }
+      ]
+    },
+    {
+      "name": "Contribution analysis with divide-and-conquer counting",
+      "description": "Analyze the contribution of each value to S(p), showing that optimal permutations have a specific recursive structure. Count optimal permutations by reasoning about the branching factor at each level, then decode k into a sequence of left/right placements.",
+      "skill_tags": [
+        "math",
+        "math",
+        "constructive"
+      ],
+      "observations": [
+        {
+          "title": "Contribution of value v depends on how many subarrays it is the minimum of",
+          "description": "Each value v contributes v * (number of subarrays where v is the minimum). To maximize S(p), we want large values to be the minimum of many subarrays and small values to be the minimum of few subarrays. The value 1 is always the minimum whenever it appears in a subarray, so it 'wastes' potential contribution from larger values.",
+          "hints": {
+            "nudge": "Rewrite S(p) by grouping terms by which value is the minimum of each subarray, rather than summing over subarrays directly.",
+            "question": "If you define c(v) = number of subarrays where v is the minimum, then S(p) = sum of v * c(v). To maximize this sum, should large values have large or small c(v)?",
+            "formal": "S(p) = sum_{v=1}^{n} v * c(v), where c(v) = |{(l,r) : min(p_l,...,p_r) = v}|. Since sum of c(v) is fixed at n*(n+1)/2, this is maximized when larger v have larger c(v). The smallest value, 1, should have the smallest c(v)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Minimizing c(1) requires placing 1 at an endpoint",
+          "description": "Value 1 is the minimum of every subarray containing it. If 1 is at position i, then c(1) = i * (n - i + 1). To minimize c(1), place 1 at position 1 or position n, giving c(1) = n. Any interior position gives c(1) > n, which is strictly worse.",
+          "hints": {
+            "nudge": "The product i * (n - i + 1) is a quadratic in i. Where is it minimized on {1, 2, ..., n}?",
+            "question": "Compute i * (n - i + 1) for i = 1, i = 2, and i = n. Which values of i give the smallest product?",
+            "formal": "i * (n - i + 1) = n*i - i^2 + i. On the integers {1, ..., n}, this quadratic is minimized at the boundary: i = 1 or i = n, both giving value n. For i = 2, it gives 2*(n-1) > n when n >= 3."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The recursive structure yields a complete binary tree of choices",
+          "description": "After placing 1 at an endpoint, the remaining n-1 values in the remaining n-1 positions form an identical subproblem. At each level, 2 choices (left or right endpoint) lead to 2^(n-1) total optimal permutations. This is a complete binary tree of depth n-1, where each leaf is one optimal permutation.",
+          "hints": {
+            "nudge": "If you draw a tree where each node has two children (left-place and right-place), how many leaves does a tree of depth n-1 have?",
+            "question": "Each level of recursion reduces the problem size by 1 and offers 2 choices. How many leaves does this recursion tree have? How does that connect to counting optimal permutations?",
+            "formal": "The recursion tree has depth n-1 (levels 1 through n-1) with branching factor 2 at each level. At level n (base case), one position remains. Total leaves = 2^(n-1). Each leaf corresponds to a unique optimal permutation."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Lexicographic order maps left-choice before right-choice",
+          "description": "Placing the current smallest value at the left endpoint produces a lexicographically smaller permutation than placing it at the right endpoint. This is because the left position gets a smaller value earlier in the array. So in the binary tree, the left subtree (left-placement) contains all lexicographically earlier permutations than the right subtree (right-placement). Each subtree has exactly half the permutations.",
+          "hints": {
+            "nudge": "If value v goes to position 1 versus position n, which choice puts a smaller number earlier in the array?",
+            "question": "Consider two permutations that differ in where value 1 is placed: position 1 vs position n. Which one is lexicographically smaller and why? How many optimal permutations start with each choice?",
+            "formal": "Placing v at the left endpoint means p[left] = v (a small value early). Placing v at the right endpoint means p[right] = v (leaving a larger value at position left in the future). The left-choice produces all 2^(remaining-1) lexicographically smaller permutations. So the first 2^(n-2) permutations have value 1 at position 1, and the next 2^(n-2) have value 1 at position n."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Decode k by halving the search space at each level",
+          "description": "To find the k-th permutation: at each level, the left subtree contains 2^(remaining-2) permutations. If k <= 2^(remaining-2), go left (place at left endpoint). Otherwise, subtract 2^(remaining-2) from k and go right (place at right endpoint). This is equivalent to reading the bits of k-1 from most significant to least significant. Build the permutation using two pointers tracking the shrinking range.",
+          "hints": {
+            "nudge": "At each decision point, how many permutations does each branch contain? How do you decide which branch k falls into?",
+            "question": "If there are 2^d permutations remaining and you split into two halves of 2^(d-1), how do you determine whether the k-th permutation is in the left or right half? What do you do to k afterward?",
+            "formal": "Let remaining = n - 1. For each level: half = 2^(remaining - 1). If k <= half, place current value at left pointer, left++. Else, place at right pointer, right--, and set k -= half. Decrement remaining. After n-1 levels, place value n at the single remaining position. Equivalently, write k-1 in binary with n-1 bits and read bits left to right."
+          },
+          "skill_tag": "constructive"
+        }
+      ]
+    }
+  ]
+}

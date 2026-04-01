@@ -1,0 +1,33 @@
+[scenario]
+name = "Coin Change — all observations found, correct bottom-up DP"
+problem = "cf-996B"
+route = 0
+trigger = "user idle for 30s"
+elapsed_secs = 300
+observations_found = 3
+
+[scenario.obs_states]
+0 = "found"
+1 = "found"
+2 = "found"
+
+[scenario.code]
+text = """
+n, S = map(int, input().split())
+coins = list(map(int, input().split()))
+INF = float('inf')
+dp = [INF] * (S + 1)
+dp[0] = 0
+for i in range(1, S + 1):
+    for c in coins:
+        if i >= c and dp[i - c] + 1 < dp[i]:
+            dp[i] = dp[i - c] + 1
+print(dp[S] if dp[S] != INF else -1)
+"""
+
+[expect]
+state = "found"
+obs_id = "cf:996B:route:1:obs:3"
+min_confidence = 0.7
+must_be_socratic = false
+banned_patterns = []

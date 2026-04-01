@@ -1,0 +1,3 @@
+[workspace]
+resolver = "2"
+members = ["crates/myro-api", "crates/myro-cf", "crates/myro-coach", "crates/myro-predict", "crates/myro-tui", "crates/myro-bench"]

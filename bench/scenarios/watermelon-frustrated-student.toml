@@ -1,0 +1,27 @@
+[scenario]
+name = "Watermelon — frustrated student keeps failing test 3 (w=2 edge case)"
+problem = "cf-4A"
+route = 0
+trigger = "user idle for 45s"
+elapsed_secs = 180
+observations_found = 1
+
+[scenario.obs_states]
+0 = "found"
+
+[scenario.code]
+text = """
+w = int(input())
+print("YES" if w % 2 == 0 else "NO")
+"""
+
+[[scenario.recent_messages]]
+role = "user"
+content = "I KEEP getting wrong answer on test 3!! This problem is broken, w=2 should obviously be YES since 2 is even!"
+
+[expect]
+state = "approaching"
+obs_id = "cf:4A:route:1:obs:2"
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["w > 2", "w == 2", "w != 2"]

@@ -1,0 +1,55 @@
+{
+  "contest_id": 282,
+  "index": "A",
+  "title": "Bit++",
+  "difficulty": 800,
+  "tags": ["implementation"],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "You are given n statements in the Bit++ programming language. There is a variable x which starts at 0. Each statement is one of: \"++X\", \"X++\", \"--X\", or \"X--\". The first two increment x by 1, and the last two decrement x by 1. Determine the final value of x after all statements are executed.",
+  "input_spec": "The first line contains an integer n (1 <= n <= 150) -- the number of statements. Each of the next n lines contains a single statement (\"++X\", \"X++\", \"--X\", or \"X--\").",
+  "output_spec": "Print the final value of x.",
+  "examples": [
+    {"input": "1\n++X", "output": "1"},
+    {"input": "2\n++X\n--X", "output": "0"}
+  ],
+  "routes": [
+    {
+      "name": "Check for + or -",
+      "description": "For each statement, determine if it's an increment or decrement by looking for the '+' or '-' character.",
+      "skill_tags": ["implementation", "strings"],
+      "observations": [
+        {
+          "title": "Only two operations matter",
+          "description": "Despite four different statement forms, there are only two effects: increment (+1) or decrement (-1). The prefix vs postfix distinction doesn't matter here.",
+          "hints": {
+            "nudge": "Do you need to distinguish between prefix and postfix forms?",
+            "question": "What is the actual difference between ++X and X++ in this problem? Does it affect the result?",
+            "formal": "Both ++X and X++ add 1 to x. Both --X and X-- subtract 1 from x. Only the sign matters, not the position."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Detect the sign character",
+          "description": "Each statement is exactly 3 characters. You can check if the statement contains '+' to determine increment, or '-' for decrement.",
+          "hints": {
+            "nudge": "What character distinguishes increment statements from decrement statements?",
+            "question": "If you look at any position in the 3-character string, can you find '+' or '-'? Which position is easiest?",
+            "formal": "Check if '+' is in the statement (or check statement[1] which is always the operator). If '+', add 1; if '-', subtract 1."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Accumulate and output",
+          "description": "Start x at 0, apply each operation, and print the final value.",
+          "hints": {
+            "nudge": "What is the initial value of x?",
+            "question": "How do you keep a running total as you process each statement?",
+            "formal": "x = 0. For each statement: if '+' in statement: x += 1 else: x -= 1. Print x."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

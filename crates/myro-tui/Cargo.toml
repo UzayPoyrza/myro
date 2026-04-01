@@ -1,0 +1,39 @@
+[package]
+name = "myro-tui"
+version = "0.1.0"
+edition = "2021"
+description = "Terminal-native competitive programming trainer"
+license = "AGPL-3.0"
+
+[lib]
+name = "myro_tui"
+path = "src/lib.rs"
+
+[[bin]]
+name = "myro"
+path = "src/main.rs"
+
+[dependencies]
+myro-api = { path = "../myro-api" }
+myro-cf = { path = "../myro-cf" }
+myro-coach = { path = "../myro-coach" }
+myro-predict = { path = "../myro-predict" }
+ratatui = "0.30"
+crossterm = "0.29"
+edtui = { version = "0.11", features = ["syntax-highlighting"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+base64 = "0.22"
+dirs = "6"
+rand = "0.8"
+toml = "0.8"
+chrono = "0.4"
+rusqlite = { version = "0.32", features = ["bundled"] }
+lz4_flex = "0.11"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "blocking"] }
+semver = "1"
+sha2 = "0.10"
+tar = "0.4"
+flate2 = "1"

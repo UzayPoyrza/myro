@@ -1,0 +1,85 @@
+{
+  "contest_id": 1697,
+  "index": "C",
+  "title": "awoo's Favorite Problem",
+  "difficulty": 1400,
+  "tags": [
+    "binary search",
+    "constructive algorithms",
+    "data structures",
+    "greedy",
+    "implementation",
+    "strings",
+    "two pointers"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given two strings $$$s$$$ and $$$t$$$, both of length $$$n$$$. Each character in both string is ' a ', ' b ' or ' c '. In one move, you can perform one of the following actions: choose an occurrence of \" ab \" in $$$s$$$ and replace it with \" ba \"; choose an occurrence of \" bc \" in $$$s$$$ and replace it with \" cb \". You are allowed to perform an arbitrary amount of moves (possibly, zero). Can you change string $$$s$$$ to make it equal to $$$t$$$?",
+  "input_spec": "The first line contains a single integer $$$q$$$ ($$$1 \\le q \\le 10^4$$$) — the number of testcases. The first line of each testcase contains a single integer $$$n$$$ ($$$1 \\le n \\le 10^5$$$) — the length of strings $$$s$$$ and $$$t$$$. The second line contains string $$$s$$$ of length $$$n$$$. Each character is ' a ', ' b ' or ' c '. The third line contains string $$$t$$$ of length $$$n$$$. Each character is ' a ', ' b ' or ' c '. The sum of $$$n$$$ over all testcases doesn't exceed $$$10^5$$$.",
+  "output_spec": "For each testcase, print \" YES \" if you can change string $$$s$$$ to make it equal to string $$$t$$$ by performing an arbitrary amount of moves (possibly, zero). Otherwise, print \" NO \".",
+  "examples": [
+    {
+      "input": "53cabcab1ab6abbabcbbaacb10bcaabababccbbababaac2baab",
+      "output": "YES\nNO\nYES\nYES\nNO"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Invariant analysis with two-pointer matching",
+      "description": "Identify what the swap operations can and cannot change. The operations let 'a' pass right over 'b' and 'c' pass left over 'b', but 'a' and 'c' can never pass each other. Use this to derive necessary and sufficient conditions, then verify them with a two-pointer scan skipping 'b's.",
+      "skill_tags": ["greedy", "two-pointers", "strings"],
+      "observations": [
+        {
+          "title": "The count of each character is invariant",
+          "description": "Both operations 'ab' -> 'ba' and 'bc' -> 'cb' are swaps of adjacent characters -- they never create or destroy any character. Therefore s and t must have the same count of 'a', 'b', and 'c' respectively. In particular, checking that the 'b' counts match is a quick first filter.",
+          "hints": {
+            "nudge": "Do the operations ever change the total number of a's, b's, or c's in the string?",
+            "question": "Each operation swaps two adjacent characters. What quantity is preserved by any swap? What does that mean for the character frequencies of s versus t?",
+            "formal": "Both 'ab' -> 'ba' and 'bc' -> 'cb' permute adjacent characters without introducing or removing any character. Hence for every letter x in {a, b, c}, count(s, x) = count(t, x) is a necessary condition."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "The relative order of 'a' and 'c' is invariant",
+          "description": "'a' can only swap with 'b' (moving right past it), and 'c' can only swap with 'b' (moving left past it). There is no operation that swaps 'a' with 'c'. Therefore, if you remove all 'b's from both strings, the remaining sequences of a's and c's must be identical.",
+          "hints": {
+            "nudge": "Try to move an 'a' past a 'c' using the allowed operations. Can you do it?",
+            "question": "If you delete every 'b' from s and from t, what must be true about the two resulting strings? Why can no sequence of moves change this?",
+            "formal": "No operation involves an 'a' adjacent to a 'c', so the subsequence of non-'b' characters is an invariant of the rewrite system. Removing all 'b's from s and t must yield the same string."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "'a' can only move rightward (to larger indices)",
+          "description": "The operation 'ab' -> 'ba' moves 'a' one position to the right (past a 'b'). There is no operation that moves 'a' to the left. So when matching the i-th 'a' in s with the i-th 'a' in t (ignoring 'b's), the position of 'a' in s must be less than or equal to its position in t.",
+          "hints": {
+            "nudge": "In 'ab' -> 'ba', which direction does the 'a' move? Is there any way to move it the other direction?",
+            "question": "If s has an 'a' at index 5 and t needs that 'a' at index 3, can any sequence of moves achieve this? What constraint does this impose?",
+            "formal": "The only operation involving 'a' is 'ab' -> 'ba', which increases a's index by 1. Since 'a' can only move right, for each matched pair of a's (i-th 'a' in s at position p_s, i-th 'a' in t at position p_t), we require p_s <= p_t."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "'c' can only move leftward (to smaller indices)",
+          "description": "The operation 'bc' -> 'cb' moves 'c' one position to the left (past a 'b'). There is no operation that moves 'c' to the right. So when matching the i-th 'c' in s with the i-th 'c' in t, the position of 'c' in s must be greater than or equal to its position in t.",
+          "hints": {
+            "nudge": "In 'bc' -> 'cb', which direction does the 'c' move? Can it ever go the other way?",
+            "question": "If s has a 'c' at index 2 and t needs that 'c' at index 6, can any sequence of moves achieve this? What constraint does this impose?",
+            "formal": "The only operation involving 'c' is 'bc' -> 'cb', which decreases c's index by 1. Since 'c' can only move left, for each matched pair of c's (i-th 'c' in s at position p_s, i-th 'c' in t at position p_t), we require p_s >= p_t."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Two-pointer scan skipping 'b's verifies all conditions at once",
+          "description": "Use two pointers i and j on s and t respectively. Advance each pointer past 'b' characters. When both point to non-'b' characters, check: (1) they must be the same letter, (2) if the letter is 'a' then i <= j, and (3) if the letter is 'c' then i >= j. If any check fails, output NO. If both pointers reach the end together, output YES. This runs in O(n) time.",
+          "hints": {
+            "nudge": "You need to match up the non-'b' characters in order. What traversal technique lets you walk two sequences in lockstep?",
+            "question": "If you skip 'b's in both s and t using two pointers, what three things do you check each time you find a non-'b' character in both?",
+            "formal": "Initialize i = j = 0. While i < n and j < n: skip s[i] = 'b' (i++), skip t[j] = 'b' (j++). If both valid: if s[i] != t[j], return NO. If s[i] = 'a' and i > j, return NO. If s[i] = 'c' and i < j, return NO. Advance both. At the end, both must be exhausted. Total time O(n)."
+          },
+          "skill_tag": "two-pointers"
+        }
+      ]
+    }
+  ]
+}

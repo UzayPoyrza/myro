@@ -1,0 +1,41 @@
+[scenario]
+name = "LIS — multi-turn, student abandons patience sorting for wrong sorting approach"
+problem = "cf-340D"
+route = 0
+trigger = "user idle for 30s"
+elapsed_secs = 240
+observations_found = 0
+
+[scenario.obs_states]
+0 = "approaching"
+
+[scenario.code]
+text = """
+n = int(input())
+a = list(map(int, input().split()))
+a_sorted = sorted(set(a))
+print(len(a_sorted))
+"""
+
+[[scenario.recent_messages]]
+role = "assistant"
+content = "You're thinking about tracking the smallest possible ending elements -- that's a great direction."
+
+[[scenario.recent_messages]]
+role = "user"
+content = "So I keep a list of the smallest ending values for each length?"
+
+[[scenario.recent_messages]]
+role = "assistant"
+content = "Yes! And notice this list has a useful property -- what can you say about the ordering of these values?"
+
+[[scenario.recent_messages]]
+role = "user"
+content = "Wait, actually I think I should just sort the array and find the longest run of distinct elements. That's easier."
+
+[expect]
+state = "moving_away"
+obs_id = "cf:340D:route:1:obs:1"
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["bisect_left", "tails[", "tails ="]

@@ -1,0 +1,54 @@
+{
+  "contest_id": 730,
+  "index": "J",
+  "title": "0/1 Knapsack",
+  "difficulty": 1700,
+  "tags": ["dp"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You have n items, each with weight w_i and value v_i. You have a knapsack with capacity W. Pick items to maximize total value without exceeding capacity. Each item can be taken at most once.",
+  "input_spec": "The first line contains two integers n and W (1 <= n <= 1000, 1 <= W <= 1000). Then n lines follow, each with two integers w_i and v_i (1 <= w_i, v_i <= 1000).",
+  "output_spec": "Print the maximum total value.",
+  "examples": [
+    {"input": "3 50\n10 60\n20 100\n30 120", "output": "220"}
+  ],
+  "routes": [
+    {
+      "name": "2D DP table",
+      "description": "Build a table dp[i][w] = max value using first i items with capacity w.",
+      "skill_tags": ["dp"],
+      "observations": [
+        {
+          "title": "Take-or-skip recurrence",
+          "description": "For each item, you either take it (if it fits) or skip it. dp[i][w] = max(dp[i-1][w], dp[i-1][w-w_i] + v_i).",
+          "hints": {
+            "nudge": "For each item, what are your two choices?",
+            "question": "If you're deciding about item i with remaining capacity w, what are the two cases to consider?",
+            "formal": "dp[i][w] = max(dp[i-1][w] (skip), dp[i-1][w-w_i] + v_i (take, if w >= w_i)). Base: dp[0][*] = 0."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Base case: no items, no value",
+          "description": "dp[0][w] = 0 for all w. With zero items, the maximum value is always 0.",
+          "hints": {
+            "nudge": "What's the simplest subproblem?",
+            "question": "If you have 0 items to choose from, what's the max value for any capacity?",
+            "formal": "dp[0][w] = 0 for all 0 <= w <= W. This is the base row from which everything builds."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Space optimization: 1D array with reverse iteration",
+          "description": "Since dp[i] only depends on dp[i-1], you can use a 1D array and iterate w from W down to w_i.",
+          "hints": {
+            "nudge": "Do you need the entire 2D table, or just the previous row?",
+            "question": "dp[i][w] uses dp[i-1][w] and dp[i-1][w-w_i]. Can you overwrite the array in-place if you iterate carefully?",
+            "formal": "Use 1D dp[w]. For each item, iterate w from W down to w_i: dp[w] = max(dp[w], dp[w-w_i]+v_i). Reverse order prevents using item twice."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    }
+  ]
+}

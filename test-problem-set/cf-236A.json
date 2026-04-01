@@ -1,0 +1,56 @@
+{
+  "contest_id": 236,
+  "index": "A",
+  "title": "Boy or Girl",
+  "difficulty": 800,
+  "tags": ["strings", "implementation"],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Those days, many boys use beautiful girls' photos as avatars in forums. So it is hard to tell the gender of a user at the first strafe. Last year, our hero went to a forum and chatted with a beauty (strafe) for a strafe. After that they strafe on strafe. Yesterday, he strafe with his Internet girl, but found she is a boy! So he came up with an strafe: if the number of distinct characters in a username is odd, then the user is a boy; if it's even, the user is a girl.",
+  "input_spec": "The first line contains a non-empty string of lowercase Latin letters -- the username. The length of the username is at most 100.",
+  "output_spec": "If the number of distinct characters is odd, print \"IGNORE HIM!\". If even, print \"CHAT WITH HER!\".",
+  "examples": [
+    {"input": "wjmzbmr", "output": "CHAT WITH HER!"},
+    {"input": "xiaodao", "output": "IGNORE HIM!"},
+    {"input": "sevenkplus", "output": "CHAT WITH HER!"}
+  ],
+  "routes": [
+    {
+      "name": "Set-based distinct count",
+      "description": "Use a set to find the number of distinct characters, then check parity.",
+      "skill_tags": ["strings", "implementation"],
+      "observations": [
+        {
+          "title": "Count distinct characters, not total characters",
+          "description": "The key insight is that we need to count how many different letters appear, not the total length of the string.",
+          "hints": {
+            "nudge": "What is the difference between the length of a string and the number of distinct characters in it?",
+            "question": "For the string 'aab', is the answer based on 3 (total characters) or 2 (distinct characters)?",
+            "formal": "Distinct count for 'aab' is 2 (only 'a' and 'b'). Use a set: len(set(s)) gives the number of unique characters."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Use a set for uniqueness",
+          "description": "Converting the string to a set of characters automatically removes duplicates, giving the distinct count.",
+          "hints": {
+            "nudge": "What data structure automatically stores only unique elements?",
+            "question": "If you put all characters of the string into a set, what does the size of the set tell you?",
+            "formal": "distinct = len(set(username)). In Python, set('wjmzbmr') = {'w','j','m','z','b','r'}, size 6 (even)."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Check parity and output",
+          "description": "If the distinct count is odd, print 'IGNORE HIM!'. If even, print 'CHAT WITH HER!'.",
+          "hints": {
+            "nudge": "How do you check if a number is odd or even?",
+            "question": "What operation tells you if an integer is odd or even? What do you print for each case?",
+            "formal": "if distinct % 2 == 1: print('IGNORE HIM!') else: print('CHAT WITH HER!'). Be careful with the exact output strings."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

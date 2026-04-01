@@ -1,0 +1,114 @@
+{
+  "contest_id": 1661,
+  "index": "B",
+  "title": "Getting Zero",
+  "difficulty": 1300,
+  "tags": ["bitmasks", "brute force", "dfs and similar", "dp", "graphs", "greedy", "shortest paths"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Suppose you have an integer $$$v$$$. In one operation, you can: either set $$$v = (v + 1) \\bmod 32768$$$ or set $$$v = (2 \\cdot v) \\bmod 32768$$$. You are given $$$n$$$ integers $$$a_1, a_2, \\dots, a_n$$$. What is the minimum number of operations you need to make each $$$a_i$$$ equal to $$$0$$$?",
+  "input_spec": "The first line contains the single integer $$$n$$$ ($$$1 \\le n \\le 32768$$$) — the number of integers. The second line contains $$$n$$$ integers $$$a_1, a_2, \\dots, a_n$$$ ($$$0 \\le a_i  \\lt  32768$$$).",
+  "output_spec": "Print $$$n$$$ integers. The $$$i$$$-th integer should be equal to the minimum number of operations required to make $$$a_i$$$ equal to $$$0$$$.",
+  "examples": [
+    {
+      "input": "4\n19 32764 10240 49",
+      "output": "14 4 4 15"
+    }
+  ],
+  "routes": [
+    {
+      "name": "BFS shortest path",
+      "description": "Model each value in [0, 32767] as a node in a graph with two outgoing edges (+1 mod 32768 and *2 mod 32768). Run BFS from 0 backward (or forward from each value) to find the minimum number of operations.",
+      "skill_tags": ["graphs", "bfs", "shortest-paths"],
+      "observations": [
+        {
+          "title": "The state space is a small directed graph",
+          "description": "Each possible value v in [0, 32767] is a node. From each node there are exactly two edges: one to (v+1) mod 32768 and one to (2v) mod 32768. Finding the minimum operations to reach 0 is a shortest-path problem on this graph.",
+          "hints": {
+            "nudge": "What does the set of all reachable values look like? How many distinct states are there?",
+            "question": "If you think of each value 0..32767 as a node and each operation as an edge, what kind of graph do you get? What algorithm finds shortest paths when all edges have weight 1?",
+            "formal": "Build a directed graph on 32768 nodes. Node v has edges to (v+1) mod 32768 and (2v) mod 32768, each with weight 1. BFS from any starting node finds the minimum operations to reach node 0."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Reverse BFS from 0 solves all queries at once",
+          "description": "Instead of running BFS from each a_i individually, reverse all edges and run a single BFS starting from node 0. This computes the minimum distance from every node to 0 in one pass, answering all n queries simultaneously.",
+          "hints": {
+            "nudge": "You have up to 32768 queries. Is there a way to avoid running BFS 32768 times?",
+            "question": "If you reverse the edge directions, what does BFS from 0 tell you? What are the reverse operations of +1 and *2?",
+            "formal": "Reverse edges: node u has an incoming edge from w if (w+1) mod 32768 = u or (2w) mod 32768 = u. BFS from 0 on the reversed graph gives dist[v] = minimum operations from v to 0. Answer each query in O(1)."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "Forward BFS also works since the state space is small",
+          "description": "Since there are only 32768 possible values, even a forward BFS from each starting value would visit at most 32768 nodes total (with memoization). Alternatively, a single forward BFS exploring all 32768 nodes computes the answer for every possible input.",
+          "hints": {
+            "nudge": "How large is the state space? Is it feasible to compute the answer for every possible starting value?",
+            "question": "If you BFS forward from every node and cache results, how many total states are visited? Can you precompute a dist[] array for all 32768 values?",
+            "formal": "Initialize dist[0] = 0 and dist[v] = infinity for v > 0. Use BFS (or process nodes in BFS order): for each visited node v, relax neighbors (v+1) mod 32768 and (2v) mod 32768. Total work is O(32768). Look up dist[a_i] per query."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "Edge weights are uniform so BFS gives optimal distances",
+          "description": "Both operations cost exactly 1 step, making this an unweighted graph. BFS on unweighted graphs finds shortest paths, so no priority queue or Dijkstra is needed.",
+          "hints": {
+            "nudge": "Do the two operations have different costs?",
+            "question": "When all edge weights are equal, what is the simplest shortest-path algorithm? Why is BFS sufficient here?",
+            "formal": "Since both +1 and *2 cost exactly 1 operation, the graph is unweighted. BFS processes nodes in order of increasing distance, guaranteeing the first time a node is reached is via a shortest path. Time complexity: O(32768)."
+          },
+          "skill_tag": "shortest-paths"
+        }
+      ]
+    },
+    {
+      "name": "Greedy enumeration of adds then doublings",
+      "description": "Observe that an optimal strategy consists of some number of +1 operations followed by some number of *2 operations. Enumerate all valid (cntAdd, cntMul) pairs and take the minimum total.",
+      "skill_tags": ["greedy", "math"],
+      "observations": [
+        {
+          "title": "Reaching zero means making v divisible by 2^15",
+          "description": "Since 32768 = 2^15, the operation (2v) mod 32768 zeros out v when 2v is a multiple of 32768. More generally, v * 2^k mod 2^15 = 0 exactly when v * 2^k is divisible by 2^15. So the goal is to reach a value whose repeated doubling eventually produces a multiple of 2^15.",
+          "hints": {
+            "nudge": "What is special about the number 32768? How does that relate to the doubling operation?",
+            "question": "If v * 2^k mod 2^15 = 0, what does that tell you about the prime factorization of v * 2^k?",
+            "formal": "32768 = 2^15. The value (v * 2^k) mod 2^15 = 0 iff 2^15 divides v * 2^k. If v has exactly m factors of 2 (i.e., v = 2^m * odd), then we need k >= 15 - m doublings after removing the odd part."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Optimal play is always adds first, then doublings",
+          "description": "Interleaving adds and doublings is never better than doing all adds first and then all doublings. Adding 1 before doubling affects the value more efficiently than adding 1 after doubling, because doubling amplifies the effect of prior additions.",
+          "hints": {
+            "nudge": "Does the order of operations matter? Could interleaving +1 and *2 ever be strictly better than grouping them?",
+            "question": "If you do one +1 then one *2, you get 2(v+1). If you do one *2 then one +1, you get 2v+1. Which helps you reach 0 faster and why?",
+            "formal": "Adding before doubling gives (v + a) * 2^k mod 2^15. Adding after doubling gives v * 2^k + (some increments). Since we want divisibility by 2^15, concentrating adds at the start to maximize factors of 2 in (v + a) is optimal. Any interleaved strategy can be rearranged to adds-then-doubles with equal or fewer total operations."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Bound the search: at most 15 adds and 15 doublings",
+          "description": "You never need more than 15 additions because adding 1 exactly 32768 times cycles v back to itself (mod 32768), and within that range you can reach 0 directly or reach a power of 2. Similarly, 15 doublings suffice because any nonzero value multiplied by 2^15 is 0 mod 2^15.",
+          "hints": {
+            "nudge": "What is the maximum number of adds or doublings you would ever need?",
+            "question": "If you start from any v and double 15 times, what happens? How many additions could possibly help before those doublings?",
+            "formal": "For any v, (v + a) * 2^15 mod 2^15 = 0 regardless of a. So cntMul <= 15 always suffices. With 15 doublings, any cntAdd from 0 to 15 covers enough range. The total never exceeds 30, but the true minimum is at most 15 (since 15 doublings alone always work)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Enumerate all (cntAdd, cntMul) pairs",
+          "description": "For each value v, iterate cntAdd from 0 to 15 and cntMul from 0 to 15. Check if ((v + cntAdd) << cntMul) mod 32768 == 0. If so, cntAdd + cntMul is a candidate answer. Take the minimum over all valid pairs.",
+          "hints": {
+            "nudge": "Given the bounds, how would you check every possible strategy?",
+            "question": "How many (cntAdd, cntMul) pairs are there to check? What condition determines whether a pair reaches 0?",
+            "formal": "for cntAdd in 0..=15: for cntMul in 0..=15: if ((v + cntAdd) << cntMul) % 32768 == 0: ans = min(ans, cntAdd + cntMul). This is O(16 * 16) = O(256) per query, O(256n) total."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

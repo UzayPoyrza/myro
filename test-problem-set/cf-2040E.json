@@ -1,0 +1,133 @@
+{
+  "contest_id": 2040,
+  "index": "E",
+  "title": "Control of Randomness",
+  "difficulty": 2100,
+  "tags": [
+    "combinatorics",
+    "dfs and similar",
+    "dp",
+    "graphs",
+    "greedy",
+    "math",
+    "probabilities",
+    "trees"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given a tree with $$$n$$$ vertices. Let's place a robot in some vertex $$$v \\ne 1$$$, and suppose we initially have $$$p$$$ coins. Consider the following process, where in the $$$i$$$-th step (starting from $$$i = 1$$$): If $$$i$$$ is odd, the robot moves to an adjacent vertex in the direction of vertex $$$1$$$; Else, $$$i$$$ is even. You can either pay one coin (if there are some left) and then the robot moves to an adjacent vertex in the direction of vertex $$$1$$$, or not pay, and then the robot moves to an adjacent vertex chosen uniformly at random . The process stops as soon as the robot reaches vertex $$$1$$$. Let $$$f(v, p)$$$ be the minimum possible expected number of steps in the process above if we spend our coins optimally. Answer $$$q$$$ queries, in the $$$i$$$-th of which you have to find the value of $$$f(v_i, p_i)$$$, modulo $$$998\\,244\\,353$$$.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 10^3$$$). The description of the test cases follows. The first line of each test case contains two integers $$$n$$$ and $$$q$$$ ($$$2 \\le n \\le 2 \\cdot 10^3$$$; $$$1 \\le q \\le 2 \\cdot 10^3$$$) — the number of vertices in the tree and the number of queries. The next $$$n - 1$$$ lines contain the edges of the tree, one edge per line. The next $$$q$$$ lines contain two integers $$$v_i$$$ and $$$p_i$$$ ($$$2 \\le v_i \\le n$$$; $$$0 \\le p_i \\le n$$$).",
+  "output_spec": "For each test case, print $$$q$$$ integers: the values of $$$f(v_i, p_i)$$$ modulo $$$998\\,244\\,353$$$.",
+  "examples": [
+    {
+      "input": "2\n4 4\n1 2\n2 3\n2 4\n2 0\n3 0\n4 0\n3 1\n12 10\n1 2\n2 3\n2 4\n1 5\n5 6\n6 7\n6 8\n6 9\n8 10\n10 11\n10 12\n6 0\n9 0\n10 0\n11 0\n3 1\n7 1\n10 1\n12 1\n12 2\n11 1",
+      "output": "1\n6\n6\n2\n4\n9\n8\n15\n2\n3\n6\n9\n5\n5"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Path decomposition with greedy coin spending",
+      "description": "Observe that the unique path from v to root determines the problem structure. Classify each ancestor by whether the robot arrives on an odd or even step. At even-step ancestors where the robot does not pay, the expected additional cost depends on the degree of that vertex. Collect these costs along the path and greedily spend coins at the most expensive vertices.",
+      "skill_tags": [
+        "trees",
+        "greedy",
+        "math",
+        "math"
+      ],
+      "observations": [
+        {
+          "title": "The path from v to root is fixed and step parity alternates along it",
+          "description": "In a tree there is exactly one path from v to vertex 1. The robot always moves toward vertex 1 on odd steps (deterministically) and faces a choice on even steps. Since steps alternate odd/even starting from step 1, the vertices along the path from v toward the root are visited at alternating step parities. The vertices visited at even steps are the ones where randomness matters.",
+          "hints": {
+            "nudge": "There is only one path from v to 1 in a tree. How does the step number change as the robot moves along this path?",
+            "question": "If the robot starts at v on step 1 (odd), at what step parity does it reach the vertex two hops closer to the root? Three hops?",
+            "formal": "Let the path be v = u_0, u_1, ..., u_d = 1 where d is the depth. The robot visits u_k at step k+1. Steps with even index (u_1, u_3, u_5, ...) are the even-step vertices where the robot chooses whether to pay a coin."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "On an even step without paying, the robot picks a random neighbor and may bounce back",
+          "description": "At an even-step vertex u with degree deg(u), if the robot does not pay, it moves to a uniformly random neighbor. With probability 1/deg(u) it goes toward the root (the correct direction), and with probability (deg(u)-1)/deg(u) it goes to some other neighbor. If it goes the wrong way, the next step is odd, so it deterministically comes back to u, wasting 2 steps. This repeats until the robot finally picks the correct neighbor.",
+          "hints": {
+            "nudge": "If the robot moves randomly at vertex u, what fraction of neighbors lead toward vertex 1?",
+            "question": "If the robot goes to a wrong neighbor, what happens on the next (odd) step? How many extra steps does each wrong move cost?",
+            "formal": "At vertex u with deg(u) neighbors, the probability of moving toward root is 1/deg(u). Each failed attempt costs 2 extra steps (one random step away + one deterministic step back). The number of attempts follows a geometric distribution."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The expected cost at an unpaid even-step vertex is 2 * deg(u)",
+          "description": "The number of attempts at vertex u until the robot moves toward the root follows a geometric distribution with success probability 1/deg(u). The expected number of attempts is deg(u). Each attempt that fails costs 2 steps and the final successful attempt costs 1 step (just the move toward root, since the odd step to reach u was already counted). Working this out, the total expected steps contributed by this vertex is 2*deg(u) - 1 for the random walk portion. Combined with the deterministic step arriving at u, the contribution to the total expected path length at this even-step vertex is 2*deg(u) steps, versus just 2 steps if you pay a coin.",
+          "hints": {
+            "nudge": "What is the expected number of trials in a geometric distribution with success probability 1/k?",
+            "question": "Each failure costs 2 extra steps. With expected number of attempts being deg(u), what is the total expected step count contributed by this vertex?",
+            "formal": "Expected attempts = deg(u). Each failed attempt costs 2 steps, the successful attempt costs 1. Total expected contribution = 2*(deg(u) - 1) + 1 = 2*deg(u) - 1 for the random portion. Including the deterministic arrival step, the even-step vertex contributes 2*deg(u) to the path. Paying reduces this to 2 (one deterministic arrival + one deterministic departure), saving 2*(deg(u) - 1) steps."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Greedily spend coins at even-step vertices with the highest degree",
+          "description": "Each coin spent at an even-step vertex u saves 2*(deg(u) - 1) expected steps. The savings from spending a coin at different vertices are independent. To minimize the total expected steps, sort the even-step vertices by degree in decreasing order and spend coins at the ones with the largest degrees first. This is a straightforward greedy choice since coin savings do not interact.",
+          "hints": {
+            "nudge": "If you have p coins and several vertices where you could spend them, which vertices give you the biggest savings?",
+            "question": "The saving from spending a coin at vertex u is 2*(deg(u) - 1). These savings are independent. How should you allocate p coins among the even-step vertices?",
+            "formal": "Collect degrees of all even-step vertices along the path from v to root. Sort in descending order. Spend coins on the first min(p, count) vertices. Total expected steps = depth + sum of 2*(deg(u_i) - 1) for unpaid even-step vertices, where depth is the distance from v to root."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Precompute ancestor information with DFS for efficient queries",
+          "description": "Root the tree at vertex 1 and run a single DFS to compute each vertex's depth, parent, and degree. For each query (v, p), walk from v to the root collecting the degrees of vertices at even-step positions. This walk takes O(depth) per query. Sort the collected degrees and apply the greedy coin strategy. With n, q up to 2000, this O(n * q) approach is efficient enough.",
+          "hints": {
+            "nudge": "Can you precompute the tree structure once and then answer each query by walking the path?",
+            "question": "After rooting the tree with a DFS, what information at each vertex do you need to answer a query starting there?",
+            "formal": "DFS from root computes depth[v], parent[v], and deg[v] for all v. For query (v, p): walk v -> parent[v] -> ... -> 1, collecting deg[u] for even-step vertices u. Sort the degrees descending, subtract 2*(deg[u_i] - 1) for the top min(p, count) values. Output result modulo 998244353."
+          },
+          "skill_tag": "trees"
+        }
+      ]
+    },
+    {
+      "name": "Cumulative cost DP on the tree",
+      "description": "Define a cost value for each vertex based on the accumulated expected steps from that vertex to the root with zero coins. Precompute this with a single DFS. For each query, collect the savings available at each even-step ancestor, sort, and apply coins greedily.",
+      "skill_tags": [
+        "trees",
+        "dp",
+        "greedy",
+        "math"
+      ],
+      "observations": [
+        {
+          "title": "Odd-step vertices always contribute exactly 1 step",
+          "description": "At odd-step vertices the robot deterministically moves toward the root. There is no choice and no randomness. Each odd-step vertex contributes exactly 1 step to the total. This means the depth of the starting vertex gives a baseline cost, and only even-step vertices introduce variability.",
+          "hints": {
+            "nudge": "What happens at every odd-numbered step? Is there any choice?",
+            "question": "If all odd steps are deterministic, what is the minimum possible total number of steps ignoring randomness entirely?",
+            "formal": "The baseline is depth(v) steps — one per edge on the path from v to root. Odd-step vertices contribute 1 step each and cannot be optimized. All optimization focuses on even-step vertices."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "Define d[v] as the expected cost from v to root with zero coins",
+          "description": "With zero coins, every even-step vertex incurs the full random cost. The total expected steps from vertex v to root with no coins can be computed by summing up the contributions along the path: each odd-step vertex contributes 1, each even-step vertex contributes 2*deg(u). This can be computed incrementally: d[v] = d[grandparent(v)] + cost of the two edges and the even-step vertex in between.",
+          "hints": {
+            "nudge": "Can you express the expected cost from v in terms of the expected cost from an ancestor?",
+            "question": "If you know d[u] for the vertex two hops closer to root, how does d[v] relate to d[u]?",
+            "formal": "For a vertex v at depth >= 2: d[v] = d[grandparent(v)] + 2*deg(parent(v)) if parent(v) is an even-step vertex, or d[v] = d[grandparent(v)] + 2 otherwise. For depth 1: d[v] = 1. Precompute with DFS in O(n)."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Coins reduce the cost by removing the largest excess costs",
+          "description": "Each coin converts an even-step vertex from costing 2*deg(u) steps to costing 2 steps, saving 2*(deg(u)-1). The total cost with p coins equals the zero-coin cost minus the sum of the p largest savings. Collect the savings for all even-step vertices on the path, sort descending, and subtract the top p values.",
+          "hints": {
+            "nudge": "You computed the zero-coin cost. How does each coin modify this cost?",
+            "question": "If each coin saves 2*(deg(u)-1) at vertex u, and you want to maximize total savings with p coins, which vertices should you pick?",
+            "formal": "f(v, p) = d[v] - sum of top min(p, k) values from {2*(deg(u)-1) : u is an even-step ancestor of v}, where k is the number of even-step ancestors. This is the greedy optimum since savings are independent and additive."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

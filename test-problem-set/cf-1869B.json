@@ -1,0 +1,77 @@
+{
+  "contest_id": 1869,
+  "index": "B",
+  "title": "2D Traveling",
+  "difficulty": 1100,
+  "tags": ["greedy", "math", "shortest-paths", "sorting"],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Piggy lives on an infinite plane with the Cartesian coordinate system on it. There are $$$n$$$ cities on the plane, numbered from $$$1$$$ to $$$n$$$, and the first $$$k$$$ cities are defined as major cities . The coordinates of the $$$i$$$-th city are $$$(x_i,y_i)$$$. Piggy, as a well-experienced traveller, wants to have a relaxing trip after Zhongkao examination. Currently, he is in city $$$a$$$, and he wants to travel to city $$$b$$$ by air. You can fly between any two cities, and you can visit several cities in any order while travelling, but the final destination must be city $$$b$$$. Because of active trade between major cities, it's possible to travel by plane between them for free. Formally, the price of an air ticket $$$f(i,j)$$$ between two cities $$$i$$$ and $$$j$$$ is defined as follows: $$$$$$ f(i,j)= \\begin{cases} 0, & \\text{if cities }i \\text{ and }j \\text{ are both major cities} \\\\ |x_i-x_j|+|y_i-y_j|, & \\text{otherwise} \\end{cases} $$$$$$ Piggy doesn't want to save time, but he wants to save money. So you need to tell him the minimum value of the total cost of all air tickets if he can take any number of flights.",
+  "input_spec": "The first line of input contains a single integer $$$t$$$ ($$$1\\le t\\le 10^4$$$) — the number of test cases. The description of test cases follows. The first line of each test case contains four integers $$$n$$$, $$$k$$$, $$$a$$$ and $$$b$$$ ($$$2\\le n\\le 2\\cdot 10^5$$$, $$$0\\le k\\le n$$$, $$$1\\le a,b\\le n$$$, $$$a\\ne b$$$) — the number of cities, the number of major cities and the numbers of the starting and the ending cities. Then $$$n$$$ lines follow, the $$$i$$$-th line contains two integers $$$x_i$$$ and $$$y_i$$$ ($$$-10^9\\le x_i,y_i\\le 10^9$$$) — the coordinates of the $$$i$$$-th city. The first $$$k$$$ lines describe major cities. It is guaranteed that all coordinates are pairwise distinct. It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$2\\cdot 10^5$$$.",
+  "output_spec": "For each test case, print a single integer — the minimum value of the total price of all air tickets.",
+  "examples": [
+    {
+      "input": "56 2 3 50 01 -2-2 1-1 32 -2-3 -32 0 1 2-1000000000 -10000000001000000000 10000000007 5 4 2154 147-154 -147123 45620 2343 20998 244353 1003 1 3 10 101 202 304 3 2 40 0-100 100-1 -1-1 0",
+      "output": "4\n4000000000\n0\n22\n1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy: direct flight vs detour through major cities",
+      "description": "There are only two useful path shapes: fly directly from a to b, or fly from a to some major city, traverse the free major-city network, then fly from some major city to b. Compare the direct cost with the best detour cost and take the minimum.",
+      "skill_tags": ["greedy", "math", "shortest-paths"],
+      "observations": [
+        {
+          "title": "Any optimal path uses at most two paid flights",
+          "description": "Between any two major cities the cost is zero, so the entire major-city subgraph acts as a single free hub. The only paid flights in any path are the first leg (from a to the major-city network) and the last leg (from the major-city network to b). Any intermediate non-major city detour would only add cost, never reduce it.",
+          "hints": {
+            "nudge": "If flights between major cities are free, how many paid flights does a multi-stop path actually require?",
+            "question": "Suppose you fly a -> M1 -> M2 -> ... -> Mk -> b where all Mi are major cities. Which legs of this journey cost money?",
+            "formal": "All major-to-major flights are free. So a path a -> M_i -> M_j -> b costs f(a, M_i) + 0 + f(M_j, b). Inserting non-major cities between a and M_i or between M_j and b cannot reduce cost because Manhattan distance satisfies the triangle inequality."
+          },
+          "skill_tag": "shortest-paths"
+        },
+        {
+          "title": "The direct flight is one candidate answer",
+          "description": "Flying directly from a to b with no stops costs |x_a - x_b| + |y_a - y_b|. This is always a valid option and serves as the baseline answer.",
+          "hints": {
+            "nudge": "What is the simplest possible way to get from a to b?",
+            "question": "What is the cost of a single direct flight from city a to city b?",
+            "formal": "cost_direct = |x_a - x_b| + |y_a - y_b|. This is valid regardless of whether a or b are major cities."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Find the nearest major city to a and the nearest major city to b",
+          "description": "The detour cost is (distance from a to its nearest major city) + 0 + (distance from b to its nearest major city). To minimize this, independently find the major city closest to a and the major city closest to b, measuring by Manhattan distance. These need not be the same major city.",
+          "hints": {
+            "nudge": "You want to enter the free major-city network as cheaply as possible from a, and exit it as cheaply as possible near b. What should you minimize?",
+            "question": "If you pick major city M_i to fly from a and major city M_j to fly to b (with M_i to M_j free), what two quantities determine the total cost?",
+            "formal": "mins = min over major cities i of (|x_a - x_i| + |y_a - y_i|). mint = min over major cities j of (|x_b - x_j| + |y_b - y_j|). detour_cost = mins + mint."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "The answer is the minimum of direct and detour",
+          "description": "The optimal cost is min(direct, detour). Sometimes the direct flight is already cheaper than any detour through major cities, and sometimes the free major-city hop saves money. Both must be checked.",
+          "hints": {
+            "nudge": "You have two candidate costs. How do you combine them?",
+            "question": "When would the detour through major cities be worse than flying directly? When would it be better?",
+            "formal": "ans = min(|x_a - x_b| + |y_a - y_b|, mins + mint). Output ans."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Handle edge cases: k=0, or a and b are themselves major cities",
+          "description": "When k=0 there are no major cities, so no free flights exist and the answer is the direct Manhattan distance. When a is a major city, mins=0 because a is already in the free network. Similarly when b is major, mint=0. When both a and b are major, the answer is 0.",
+          "hints": {
+            "nudge": "What happens when there are no major cities at all? What if the start or end city is itself major?",
+            "question": "If city a is one of the first k cities, what is the cost to enter the free major-city network?",
+            "formal": "If k=0, ans = direct. If a <= k, mins = 0. If b <= k, mint = 0. If both a <= k and b <= k, ans = 0. These are all subsumed by the general formula when the loop over major cities includes a and b themselves."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

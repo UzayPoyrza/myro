@@ -1,0 +1,55 @@
+{
+  "contest_id": 263,
+  "index": "A",
+  "title": "Beautiful Matrix",
+  "difficulty": 800,
+  "tags": ["implementation"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You've got a 5 x 5 matrix, consisting of 24 zeroes and a single one. Find the minimum number of moves needed to move the one to the center of the matrix (position (3, 3) using 1-based indexing). In one move, you can move the one to any adjacent cell that shares a side (up, down, left, right).",
+  "input_spec": "The input consists of five lines, each containing five integers separated by spaces. Each integer is either 0 or 1. There is exactly one 1 in the matrix.",
+  "output_spec": "Print the minimum number of moves needed to move the 1 to the center of the matrix.",
+  "examples": [
+    {"input": "0 0 0 0 0\n0 0 0 0 1\n0 0 0 0 0\n0 0 0 0 0\n0 0 0 0 0", "output": "3"},
+    {"input": "0 0 0 0 0\n0 0 0 0 0\n0 1 0 0 0\n0 0 0 0 0\n0 0 0 0 0", "output": "1"}
+  ],
+  "routes": [
+    {
+      "name": "Manhattan distance",
+      "description": "Find the position of the 1 and compute the Manhattan distance to the center.",
+      "skill_tags": ["implementation", "math"],
+      "observations": [
+        {
+          "title": "Locate the 1 in the grid",
+          "description": "Scan the 5x5 matrix to find the row and column of the single 1.",
+          "hints": {
+            "nudge": "How do you find where a specific value is in a grid?",
+            "question": "Can you iterate through the matrix row by row and check each cell?",
+            "formal": "For i in 0..5, for j in 0..5: if matrix[i][j] == 1, record (i, j) as the position of the 1."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "The center is at (2, 2) in 0-based indexing",
+          "description": "In a 5x5 grid with 0-based indexing, the center cell is at row 2, column 2.",
+          "hints": {
+            "nudge": "What is the center position of a 5x5 grid?",
+            "question": "If rows and columns are numbered 0 through 4, which row and column is the center?",
+            "formal": "Center = (2, 2) in 0-based indexing, or (3, 3) in 1-based indexing."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Manhattan distance gives minimum moves",
+          "description": "Since we can move in 4 directions (up/down/left/right) and there are no obstacles, the minimum moves is the Manhattan distance: |row - 2| + |col - 2|.",
+          "hints": {
+            "nudge": "What kind of distance measures the number of grid moves?",
+            "question": "If the 1 is at position (r, c) and the center is at (2, 2), how many moves does it take to get there moving one cell at a time?",
+            "formal": "Minimum moves = |r - 2| + |c - 2| where (r, c) is the 0-based position of the 1. This is the Manhattan distance."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

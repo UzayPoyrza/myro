@@ -1,0 +1,136 @@
+{
+  "contest_id": 2059,
+  "index": "C",
+  "title": "Customer Service",
+  "difficulty": 1600,
+  "tags": [
+    "greedy",
+    "math",
+    "sortings"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Nikyr has started working as a queue manager at the company \"Black Contour.\" He needs to choose the order of servicing customers. There are a total of $$$n$$$ queues, each initially containing $$$0$$$ people. In each of the next $$$n$$$ moments of time, there are two sequential events: New customers arrive in all queues. More formally, at the $$$j$$$-th moment of time, the number of people in the $$$i$$$-th queue increases by a positive integer $$$a_{i,j}$$$. Nikyr chooses exactly one of the $$$n$$$ queues to be served at that moment in time. The number of customers in this queue becomes $$$0$$$. Let the number of people in the $$$i$$$-th queue after all events be $$$x_i$$$. Nikyr wants MEX$$$^{\\dagger}$$$ of the collection $$$x_1, x_2, \\ldots, x_n$$$ to be as large as possible. Help him determine the maximum value he can achieve with an optimal order of servicing the queues. $$$^{\\dagger}$$$The minimum excluded (MEX) of a collection of integers $$$c_1, c_2, \\ldots, c_k$$$ is defined as the smallest non-negative integer $$$y$$$ which does not occur in the collection $$$c$$$. For example: $$$\\operatorname{MEX}([2,2,1])= 0$$$, since $$$0$$$ does not belong to the array. $$$\\operatorname{MEX}([3,1,0,1]) = 2$$$, since $$$0$$$ and $$$1$$$ belong to the array, but $$$2$$$ does not. $$$\\operatorname{MEX}([0,3,1,2]) = 4$$$, since $$$0$$$, $$$1$$$, $$$2$$$, and $$$3$$$ belong to the array, but $$$4$$$ does not.",
+  "input_spec": "Each test consists of multiple test cases. The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 2 \\cdot 10^4$$$) --- the number of test cases. The description of the test cases follows. The first line of each test case contains a single integer $$$n$$$ ($$$1 \\le n \\le 300$$$) --- the number of queues and moments of time. The $$$i$$$-th of the next $$$n$$$ lines contains $$$n$$$ integers $$$a_{i,1}, a_{i,2}, \\ldots, a_{i,n}$$$ ($$$1 \\le a_{i,j} \\le 10^9$$$) --- the number of new customers in the $$$i$$$-th queue at each moment of time. It is guaranteed that the sum of $$$n^2$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case, output a single integer --- the maximum value of $$$\\operatorname{MEX}([x_1, x_2, \\ldots, x_n])$$$ that can be achieved.",
+  "examples": [
+    {
+      "input": "421 22 1210 1010 1032 3 34 4 12 1 144 2 2 171 9 3 15 5 5 111 2 1 1",
+      "output": "2\n1\n3\n3"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Suffix-of-ones greedy",
+      "description": "Determine what each queue's final value would be if served at a given time, realize the minimum achievable final value depends on trailing 1s in the arrival row, then greedily assign target values 0, 1, 2, ... to queues sorted by their capability.",
+      "skill_tags": [
+        "greedy",
+        "math",
+        "sorting"
+      ],
+      "observations": [
+        {
+          "title": "Serving a queue at time j determines its final value",
+          "description": "If queue i is served at time j, its contents are reset to 0 at time j, then it accumulates arrivals from times j+1 through n. Its final value is x_i = a[i][j+1] + a[i][j+2] + ... + a[i][n]. Earlier arrivals (times 1 through j) are irrelevant since they were wiped out.",
+          "hints": {
+            "nudge": "After a queue is cleared at time j, what happens to it in the remaining time steps?",
+            "question": "If a queue is served at time j, all its customers become 0. But customers keep arriving at times j+1, j+2, ..., n. What is the queue's final size in terms of the arrival values?",
+            "formal": "Serving queue i at time j gives x_i = sum of a[i][k] for k = j+1 to n. This is the suffix sum of row i starting after position j. Serving at time n gives x_i = 0 (empty suffix)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "For MEX >= k, we need distinct values 0, 1, ..., k-1 assigned to k queues",
+          "description": "MEX of the final values equals k if and only if every value in {0, 1, ..., k-1} appears among x_1, ..., x_n. So maximizing MEX is equivalent to finding the largest k such that we can assign k queues to produce exactly the values 0, 1, ..., k-1 (the remaining n-k queues can have any values >= k).",
+          "hints": {
+            "nudge": "What does MEX = k require about which values must appear in the final array?",
+            "question": "If MEX is k, then 0, 1, ..., k-1 must all be present. Can two queues share the same target value if it helps, or must each value 0 through k-1 be covered by a distinct queue?",
+            "formal": "We need at least one queue with final value v for each v in {0, 1, ..., k-1}. Since each queue produces exactly one final value, we need a one-to-one assignment of k queues to the k target values."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Achieving final value v requires a suffix sum equal to v, which requires v trailing 1s",
+          "description": "Since every a[i][j] >= 1, a suffix of length L has sum at least L. To achieve x_i = v, we need a suffix of length exactly v where every entry equals 1 (otherwise the sum exceeds v). This means queue i must have at least v consecutive 1s at the end of its arrival row. Define suff[i] as the number of consecutive trailing 1s in row i.",
+          "hints": {
+            "nudge": "Each arrival a[i][j] is at least 1. What is the minimum possible suffix sum of length L?",
+            "question": "If you want x_i = v by serving queue i at time n-v (so the suffix has length v), what must be true about a[i][n-v+1], ..., a[i][n]?",
+            "formal": "A suffix of length L sums to at least L since each term >= 1. Equality holds iff every term is 1. So x_i = v is achievable iff there exist v consecutive trailing entries in row i that are all 1, i.e., suff[i] >= v. (x_i = 0 is always achievable by serving at time n.)"
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Each queue is served at most once, so assignments do not interfere",
+          "description": "There are n time steps and n queues. Each time step serves exactly one queue, so at most n service events occur. When assigning target values to queues, each queue uses one time step for its service. Since we have n time steps and at most n assignments, the service slots do not conflict: we can always arrange the chosen service times in chronological order without collision.",
+          "hints": {
+            "nudge": "You need to serve different queues at different times. Could two queues need the same time slot?",
+            "question": "If queue i needs to be served at time n - v_i to achieve value v_i, could two queues require the same time slot? Does it matter that each queue's row is independent?",
+            "formal": "Queue i achieving value v needs service at time n - v. Distinct target values v produce distinct service times n - v. Since we assign distinct values 0, 1, ..., k-1 to distinct queues, all service times are distinct and fit within the n available slots."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Greedy: sort suff values and assign targets 0, 1, 2, ... to queues with smallest sufficient capability",
+          "description": "Sort the queues by suff[i] in non-decreasing order. Iterate through them, maintaining a counter ans starting at 1 (since value 0 is always achievable). For each queue, if suff[i] >= ans, that queue can produce value ans, so increment ans. The final answer is min(ans, n). This greedy works because assigning the smallest feasible queue to each target value leaves larger-capability queues available for higher targets.",
+          "hints": {
+            "nudge": "If you sort the queues by their trailing-ones count, in what order should you try to assign the target values 0, 1, 2, ...?",
+            "question": "Consider processing queues from smallest suff to largest. If the current queue has suff[i] >= current_target, should you assign it or save it for later? Why does greedy exchange argument apply here?",
+            "formal": "Sort suff[1..n] in non-decreasing order. Set ans = 1. For each i from 1 to n: if suff[i] >= ans, increment ans. Output min(ans, n). This is O(n log n) per test case for sorting plus O(n) for the scan."
+          },
+          "skill_tag": "sorting"
+        }
+      ]
+    },
+    {
+      "name": "Binary search on the answer",
+      "description": "Binary search on the MEX value k. For a given k, check whether it is possible to assign k queues to produce the values 0, 1, ..., k-1 by counting how many queues have enough trailing 1s for each target.",
+      "skill_tags": [
+        "greedy",
+        "math",
+        "sorting"
+      ],
+      "observations": [
+        {
+          "title": "Serving a queue at time j determines its final value",
+          "description": "If queue i is served at time j, its contents are reset to 0 at time j, then it accumulates arrivals from times j+1 through n. Its final value is x_i = a[i][j+1] + a[i][j+2] + ... + a[i][n]. Earlier arrivals (times 1 through j) are irrelevant since they were wiped out.",
+          "hints": {
+            "nudge": "After a queue is cleared at time j, what happens to it in the remaining time steps?",
+            "question": "If a queue is served at time j, all its customers become 0. But customers keep arriving at times j+1, j+2, ..., n. What is the queue's final size in terms of the arrival values?",
+            "formal": "Serving queue i at time j gives x_i = sum of a[i][k] for k = j+1 to n. This is the suffix sum of row i starting after position j. Serving at time n gives x_i = 0 (empty suffix)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Achieving value v requires at least v trailing 1s in the arrival row",
+          "description": "Since every a[i][j] >= 1, a suffix of length L sums to at least L. To get x_i = v exactly, the suffix must have length v with all entries equal to 1. So define suff[i] as the count of consecutive trailing 1s in row i; queue i can produce any value v with 0 <= v <= suff[i].",
+          "hints": {
+            "nudge": "Each arrival is at least 1. What is the minimum possible value of a suffix sum of length L?",
+            "question": "To get x_i = v, you need a suffix of some length whose sum is exactly v. Given that each term is at least 1, what is the only way to get sum equal to the suffix length?",
+            "formal": "sum(a[i][j+1..n]) >= n - j. Equality iff all terms are 1. So x_i = v is achievable iff the last v entries of row i are all 1, i.e., suff[i] >= v."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Binary search on k: MEX >= k iff k queues can cover values 0..k-1",
+          "description": "The answer is monotone: if MEX >= k is achievable, then MEX >= k-1 is also achievable (just drop one assignment). Binary search on k in [0, n]. For a candidate k, check whether there exist k distinct queues that can be assigned the k distinct values 0, 1, ..., k-1.",
+          "hints": {
+            "nudge": "If you can achieve MEX = k, can you also achieve MEX = k-1? What search technique exploits this?",
+            "question": "Is the predicate 'MEX >= k is achievable' monotonically decreasing in k? How does that help narrow the search?",
+            "formal": "Define feasible(k) = true iff we can pick k distinct queues and assign them values 0, 1, ..., k-1 such that suff[i] >= assigned_value for each. This predicate is monotone non-increasing. Binary search on k in [0, n]."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Feasibility check: sort suff values and match greedily",
+          "description": "To check whether MEX >= k is achievable, sort suff values. Greedily match: the queue with the smallest sufficient suff takes the smallest unassigned target. If at least k queues can be matched this way, k is feasible. This check runs in O(n log n) for sorting plus O(n) for the scan.",
+          "hints": {
+            "nudge": "Given target values 0, 1, ..., k-1 and queue capabilities suff[1..n], how do you check if a valid assignment exists?",
+            "question": "If you sort queues by suff and targets by value, can you use a two-pointer or greedy matching to verify feasibility?",
+            "formal": "Sort suff[1..n] ascending. Use a pointer for the current target starting at 0. For each queue (in sorted order): if suff[i] >= current_target, assign it and advance the target pointer. If the pointer reaches k, return true. Otherwise return false."
+          },
+          "skill_tag": "sorting"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "contest_id": 1648,
+  "index": "A",
+  "title": "Weird Sum",
+  "difficulty": 1400,
+  "tags": [
+    "combinatorics",
+    "data structures",
+    "geometry",
+    "math",
+    "matrices",
+    "sortings"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Egor has a table of size $$$n \\times m$$$, with lines numbered from $$$1$$$ to $$$n$$$ and columns numbered from $$$1$$$ to $$$m$$$. Each cell has a color that can be presented as an integer from $$$1$$$ to $$$10^5$$$. Let us denote the cell that lies in the intersection of the $$$r$$$-th row and the $$$c$$$-th column as $$$(r, c)$$$. We define the manhattan distance between two cells $$$(r_1, c_1)$$$ and $$$(r_2, c_2)$$$ as the length of a shortest path between them where each consecutive cells in the path must have a common side. The path can go through cells of any color. For example, in the table $$$3 \\times 4$$$ the manhattan distance between $$$(1, 2)$$$ and $$$(3, 3)$$$ is $$$3$$$, one of the shortest paths is the following: $$$(1, 2) \\to (2, 2) \\to (2, 3) \\to (3, 3)$$$. Egor decided to calculate the sum of manhattan distances between each pair of cells of the same color. Help him to calculate this sum.",
+  "input_spec": "The first line contains two integers $$$n$$$ and $$$m$$$ ($$$1 \\leq n \\le m$$$, $$$n \\cdot m \\leq 100\\,000$$$) — number of rows and columns in the table. Each of next $$$n$$$ lines describes a row of the table. The $$$i$$$-th line contains $$$m$$$ integers $$$c_{i1}, c_{i2}, \\ldots, c_{im}$$$ ($$$1 \\le c_{ij} \\le 100\\,000$$$) — colors of cells in the $$$i$$$-th row.",
+  "output_spec": "Print one integer — the the sum of manhattan distances between each pair of cells of the same color.",
+  "examples": [
+    {
+      "input": "2 3\n1 2 3\n3 2 1",
+      "output": "7"
+    },
+    {
+      "input": "3 4\n1 1 2 2\n2 1 1 2\n2 2 1 1",
+      "output": "76"
+    },
+    {
+      "input": "4 4\n1 1 2 3\n2 1 1 2\n3 1 2 1\n1 1 2 1",
+      "output": "129"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Coordinate decomposition with sorted prefix sums",
+      "description": "Split Manhattan distance into independent row and column sums. For each color, collect row coordinates and column coordinates separately, sort each list, and compute the sum of all pairwise absolute differences using a linear sweep.",
+      "skill_tags": ["math", "sorting", "implementation"],
+      "observations": [
+        {
+          "title": "Manhattan distance separates into row and column contributions",
+          "description": "The Manhattan distance |r1 - r2| + |c1 - c2| is the sum of two independent terms. This means the total sum of distances over all same-color pairs equals the sum of row-coordinate pairwise distances plus the sum of column-coordinate pairwise distances. The two dimensions can be solved completely independently.",
+          "hints": {
+            "nudge": "Look at the formula for Manhattan distance. Can you break the 2D problem into two 1D problems?",
+            "question": "If you expand the sum of |r1-r2|+|c1-c2| over all pairs, what happens to the row and column parts? Do they interact?",
+            "formal": "Sum over all pairs (i,j) of |r_i - r_j| + |c_i - c_j| = (sum of |r_i - r_j| over all pairs) + (sum of |c_i - c_j| over all pairs). Solve each 1D sum independently."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Group cells by color",
+          "description": "To process only same-color pairs, scan the grid and collect the row and column coordinates of every cell into lists indexed by color. Each color's list is then an independent 1D subproblem.",
+          "hints": {
+            "nudge": "You only care about pairs with the same color. How should you organize the data?",
+            "question": "If you store a list of row coordinates and a list of column coordinates for each color, how does that reduce the problem?",
+            "formal": "Use a map from color to two vectors: rows[] and cols[]. For each cell (r, c) with color k, append r to rows[k] and c to cols[k]. Each color is then processed independently."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Sorting enables an efficient pairwise absolute-difference sum",
+          "description": "Given an unsorted list of coordinates, computing the sum of |a_i - a_j| over all pairs naively takes O(k^2). Sorting the list lets you remove the absolute value, because for i < j in sorted order, |a_i - a_j| = a_j - a_i. This structure is what makes a linear formula possible.",
+          "hints": {
+            "nudge": "The absolute value makes the sum hard to compute directly. What operation lets you remove the absolute value?",
+            "question": "If the coordinates are sorted in non-decreasing order, what is |a_i - a_j| for i < j? How does that simplify the double sum?",
+            "formal": "Sort the coordinate list. For sorted a_0 <= a_1 <= ... <= a_{k-1}, the sum of all pairwise |a_i - a_j| = sum over all i<j of (a_j - a_i). This removes the absolute value and opens the door to a closed-form per-element contribution."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Each element's contribution is determined by its rank",
+          "description": "In a sorted list of k values, element a_i (0-indexed) appears as the larger value in i pairs and as the smaller value in (k-1-i) pairs. So its net contribution to the total sum is a_i * i - a_i * (k-1-i) = a_i * (2i - k + 1). Summing this over all i gives the answer in O(k) time.",
+          "hints": {
+            "nudge": "For a single element in the sorted list, in how many pairs is it the larger value versus the smaller value?",
+            "question": "If a_i is at position i (0-indexed) in a sorted list of size k, it gets added a_i times for each pair where it is the bigger element and subtracted a_i times where it is the smaller. How many of each?",
+            "formal": "For 0-indexed sorted a_0 ... a_{k-1}: total = sum_{i=0}^{k-1} a_i * (2*i - k + 1). Equivalently, maintain a prefix sum S; at position i, add a_i * i - S, then update S += a_i. Both formulations run in O(k)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Use 64-bit integers to avoid overflow",
+          "description": "Coordinates can be up to 100000 and there can be up to 100000 cells of the same color. The pairwise sum can reach roughly 10^5 * 10^5 * 10^5 / 2, which exceeds 32-bit integer range. All accumulation must use 64-bit integers.",
+          "hints": {
+            "nudge": "What is the maximum possible answer? Does it fit in a 32-bit integer?",
+            "question": "If 100000 cells all have row coordinate ~100000, how large can the sum of pairwise differences get?",
+            "formal": "Worst case: ~10^5 cells with coordinate ~10^5. Sum of pairwise differences ~ k^2 * max_coord / 2 ~ 5 * 10^14, which requires 64-bit integers (long long in C++, i64 in Rust)."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

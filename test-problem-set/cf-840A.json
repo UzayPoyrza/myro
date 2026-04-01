@@ -1,0 +1,65 @@
+{
+  "contest_id": 840,
+  "index": "A",
+  "title": "Leha and Function",
+  "difficulty": 1300,
+  "tags": ["greedy", "math", "sorting"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Leha like all kinds of strange things. Recently he liked the function F(n, k). Consider all possible k-element subsets of the set [1, 2, ..., n]. For subset find minimal element in it. F(n, k) is the mathematical expectation of the minimal element among all k-element subsets. Mom brought him two arrays A and B, each consists of m integers. For all i, j such that 1 <= i, j <= m the condition A_i >= B_j holds. Help Leha rearrange the numbers in the array A so that the sum of F(A'_i, B_i) is maximally possible, where A' is the rearranged array.",
+  "input_spec": "First line of input data contains single integer m (1 <= m <= 2*10^5) -- length of arrays A and B. Next line contains m integers a_1, a_2, ..., a_m (1 <= a_i <= 10^9) -- array A. Next line contains m integers b_1, b_2, ..., b_m (1 <= b_i <= 10^9) -- array B.",
+  "output_spec": "Output m integers a'_1, a'_2, ..., a'_m -- array A' which is a permutation of array A.",
+  "examples": [
+    {"input": "5\n7 3 5 3 4\n2 1 3 2 3", "output": "4 7 3 5 3"},
+    {"input": "7\n4 6 5 8 8 2 6\n2 1 2 2 1 1 2", "output": "2 6 4 5 8 8 6"}
+  ],
+  "routes": [
+    {
+      "name": "Rearrangement inequality via F(n,k) analysis",
+      "description": "Derive a closed-form for F(n,k) to understand its monotonicity in n and k, then apply the rearrangement inequality to maximize the sum.",
+      "skill_tags": ["math", "greedy", "sorting"],
+      "observations": [
+        {
+          "title": "F(n,k) has a simple closed form",
+          "description": "By reasoning about the expected minimum of a random k-element subset of {1,...,n}, one can derive that F(n,k) = (n+1)/(k+1). This can be shown using a symmetry argument or the Hockey Stick identity on binomial coefficients.",
+          "hints": {
+            "nudge": "Try computing F(n,k) for small cases like F(4,2) by enumeration. Do you see a pattern?",
+            "question": "If you model the gaps between selected elements as a stars-and-bars partition, what is the expected value of the first gap (which equals the minimum element)?",
+            "formal": "Represent a k-element subset as gaps d_1, d_2, ..., d_{k+1} where d_1 = min element and d_1 + d_2 + ... + d_{k+1} = n+1. By symmetry of the gaps, E[d_1] = (n+1)/(k+1), so F(n,k) = (n+1)/(k+1)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "F is increasing in n and decreasing in k",
+          "description": "Since F(n,k) = (n+1)/(k+1), the function increases as n grows (larger set means larger expected minimum) and decreases as k grows (choosing more elements forces the minimum lower). This monotonicity is the key to the rearrangement step.",
+          "hints": {
+            "nudge": "Once you have the formula, check: does F grow when n increases? When k increases?",
+            "question": "Given F(n,k) = (n+1)/(k+1), which variable is in the numerator and which in the denominator? What does that imply about monotonicity?",
+            "formal": "F(n,k) = (n+1)/(k+1). Partial derivative with respect to n is 1/(k+1) > 0 (increasing). With respect to k it is -(n+1)/(k+1)^2 < 0 (decreasing)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Rearrangement inequality: pair large A with small B",
+          "description": "The sum of F(A'_i, B_i) = sum of (A'_i + 1)/(B_i + 1) is maximized by the rearrangement inequality when the sequences are oppositely sorted: A' ascending and B descending (or equivalently, pair the largest A values with the smallest B values).",
+          "hints": {
+            "nudge": "You are summing products of terms from two sequences. There is a classical inequality about when such sums are maximized.",
+            "question": "The rearrangement inequality says the sum of a_i * b_i is maximized when one sequence is sorted ascending and the other descending. How does this apply to (A'_i + 1) / (B_i + 1)?",
+            "formal": "Since 1/(B_i + 1) is a fixed sequence per position and (A'_i + 1) is what we permute, the sum is maximized when we assign the largest A' values to positions with the smallest B values. Sort A ascending, sort B's indices by B descending, and assign accordingly."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Implementation: sort and assign by rank",
+          "description": "Sort A in ascending order. Sort the indices of B by B values in descending order. Assign the sorted A values to positions in this order. The i-th smallest A goes to the position with the i-th largest B.",
+          "hints": {
+            "nudge": "You need to output A' in the original index order of B. How do you track which A value goes to which position?",
+            "question": "If you sort B's indices by decreasing B value, and sort A in increasing order, how do you build the output array A'?",
+            "formal": "Let idx = argsort(B, descending). Sort A ascending. For i in 0..m-1: result[idx[i]] = A_sorted[i]. Output result. Time complexity: O(m log m)."
+          },
+          "skill_tag": "sorting"
+        }
+      ]
+    }
+  ]
+}

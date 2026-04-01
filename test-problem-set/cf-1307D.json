@@ -1,0 +1,89 @@
+{
+  "contest_id": 1307,
+  "index": "D",
+  "title": "Cow and Fields",
+  "difficulty": 1900,
+  "tags": [
+    "binary search",
+    "data structures",
+    "dfs and similar",
+    "graphs",
+    "greedy",
+    "shortest paths",
+    "sortings"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Bessie is out grazing on the farm, which consists of $$$n$$$ fields connected by $$$m$$$ bidirectional roads. She is currently at field $$$1$$$, and will return to her home at field $$$n$$$ at the end of the day. The Cowfederation of Barns has ordered Farmer John to install one extra bidirectional road. The farm has $$$k$$$ special fields and he has decided to install the road between two different special fields. He may add the road between two special fields that already had a road directly connecting them. After the road is added, Bessie will return home on the shortest path from field $$$1$$$ to field $$$n$$$. Since Bessie needs more exercise, Farmer John must maximize the length of this shortest path. Help him!",
+  "input_spec": "The first line contains integers $$$n$$$, $$$m$$$, and $$$k$$$ ($$$2 \\le n \\le 2 \\cdot 10^5$$$, $$$n-1 \\le m \\le 2 \\cdot 10^5$$$, $$$2 \\le k \\le n$$$)  \u2014 the number of fields on the farm, the number of roads, and the number of special fields. The second line contains $$$k$$$ integers $$$a_1, a_2, \\ldots, a_k$$$ ($$$1 \\le a_i \\le n$$$)  \u2014 the special fields. All $$$a_i$$$ are distinct. The $$$i$$$-th of the following $$$m$$$ lines contains integers $$$x_i$$$ and $$$y_i$$$ ($$$1 \\le x_i, y_i \\le n$$$, $$$x_i \\ne y_i$$$), representing a bidirectional road between fields $$$x_i$$$ and $$$y_i$$$. It is guaranteed that one can reach any field from every other field. It is also guaranteed that for any pair of fields there is at most one road connecting them.",
+  "output_spec": "Output one integer, the maximum possible length of the shortest path from field $$$1$$$ to $$$n$$$ after Farmer John installs one road optimally.",
+  "examples": [
+    {
+      "input": "5 5 3\n1 3 5\n1 2\n2 3\n3 4\n3 5\n2 4",
+      "output": "3"
+    },
+    {
+      "input": "5 4 2\n2 4\n1 2\n2 3\n3 4\n4 5",
+      "output": "3"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Two BFS + greedy pairing",
+      "description": "Run BFS from both endpoints, then greedily pick the pair of special fields whose added edge maximizes the shortest path.",
+      "skill_tags": ["bfs", "greedy", "sorting", "shortest-paths"],
+      "observations": [
+        {
+          "title": "New path through the added edge has a fixed form",
+          "description": "If we add an edge between special fields a and b, any shortest path using that edge goes 1 -> a -> b -> n or 1 -> b -> a -> n. Its length is min(dist(1,a) + 1 + dist(b,n), dist(1,b) + 1 + dist(a,n)). The overall shortest path is the minimum of this and the original shortest path.",
+          "hints": {
+            "nudge": "Think about what a shortest path that uses the new edge looks like. It must enter through one endpoint and leave through the other.",
+            "question": "If a shortest path uses the new edge (a, b), what are the only two ways it can traverse it? What is the total length in each case?",
+            "formal": "A path using edge (a,b) has length dist(1,a) + 1 + dist(b,n) or dist(1,b) + 1 + dist(a,n). The new shortest path is min(original, min of these two)."
+          },
+          "skill_tag": "shortest-paths"
+        },
+        {
+          "title": "BFS from both endpoints gives all needed distances",
+          "description": "Since all edge weights are 1, BFS from node 1 gives dist(1, v) for all v, and BFS from node n gives dist(v, n) for all v. These two arrays are all we need to evaluate any candidate edge.",
+          "hints": {
+            "nudge": "The graph is unweighted. What is the most efficient way to compute shortest paths from a single source in an unweighted graph?",
+            "question": "How many BFS runs do you need to know the distance from node 1 and to node n for every special field?",
+            "formal": "Run BFS from node 1 to get d1[v], and BFS from node n to get dn[v]. For any pair (a,b), the new path length is min(d1[a] + 1 + dn[b], d1[b] + 1 + dn[a])."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "Maximize the minimum of two expressions",
+          "description": "For a pair (a, b) the path through the new edge costs min(d1[a] + dn[b], d1[b] + dn[a]) + 1. We want to maximize this over all pairs. The min selects the cheaper direction, so we want both directions to be as expensive as possible.",
+          "hints": {
+            "nudge": "You want to maximize min(X, Y) where X and Y depend on the pair. When is min(X, Y) as large as possible?",
+            "question": "For a fixed pair (a,b), what determines which of the two directions is chosen? Can you express the condition X >= Y in terms of the distances?",
+            "formal": "d1[a] + dn[b] >= d1[b] + dn[a] simplifies to d1[a] - dn[a] >= d1[b] - dn[b]. So if we define val[v] = d1[v] - dn[v], the smaller-val node determines the direction."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Sort by d1[v] - dn[v] to decouple the optimization",
+          "description": "Define val[v] = d1[v] - dn[v] for each special field v. Sort by val. For a pair where val[a] <= val[b], the path cost is d1[a] + dn[b] + 1. This decouples: a contributes d1[a] and b contributes dn[b].",
+          "hints": {
+            "nudge": "Can you assign a single number to each special field that determines the optimal pairing order?",
+            "question": "If you sort the special fields by d1[v] - dn[v], and always pair a left element with a right element, which distances contribute to the cost?",
+            "formal": "Sort special fields by val[v] = d1[v] - dn[v]. For a < b in sorted order, cost = d1[a] + dn[b] + 1. To maximize, sweep right on b while tracking max d1[a] over all a to the left."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Linear scan with running maximum yields optimal pair",
+          "description": "After sorting by val, iterate through special fields. Maintain a running maximum of d1[a] for all previously seen fields. For each new field b, compute d1[a_best] + dn[b] + 1. The answer is the minimum of the original shortest path and the best such value.",
+          "hints": {
+            "nudge": "After sorting, you need the best pair. Do you need to check all O(k^2) pairs, or can you do better?",
+            "question": "As you scan left to right, what single value from the left side matters? Can you maintain it incrementally?",
+            "formal": "Keep max_d1 = max of d1[a] over all a seen so far. For each b, update best = max(best, max_d1 + dn[b] + 1). Then update max_d1 = max(max_d1, d1[b]). Answer = min(d1[n], best)."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

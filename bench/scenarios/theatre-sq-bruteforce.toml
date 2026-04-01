@@ -1,0 +1,22 @@
+[scenario]
+name = "Theatre Square — O(n*m) brute force"
+problem = "cf-1A"
+route = 0
+trigger = "user idle for 45s"
+elapsed_secs = 180
+observations_found = 0
+
+[scenario.code]
+text = """
+n, m, a = map(int, input().split())
+count = 0
+for i in range(0, n, a):
+    for j in range(0, m, a):
+        count += 1
+print(count)
+"""
+
+[expect]
+valid_states = ["moving_away", "approaching"]
+must_be_socratic = true
+banned_patterns = ["(n + a - 1) // a", "ceil(n/a) * ceil(m/a)"]

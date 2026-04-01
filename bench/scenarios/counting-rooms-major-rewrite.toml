@@ -1,0 +1,26 @@
+[scenario]
+name = "Counting Rooms — major rewrite to union-find approach"
+problem = "cf-1292B"
+route = 0
+trigger = "major rewrite detected (>50% code changed)"
+elapsed_secs = 300
+observations_found = 1
+
+[scenario.obs_states]
+0 = "found"
+
+[scenario.code]
+text = """
+n, m = map(int, input().split())
+grid = [input() for _ in range(n)]
+parent = {}
+def find(x):
+    if parent[x] != x:
+        parent[x] = find(parent[x])
+    return parent[x]
+"""
+
+[expect]
+valid_states = ["approaching", "uncertain"]
+must_be_socratic = true
+banned_patterns = []

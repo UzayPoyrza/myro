@@ -1,0 +1,24 @@
+[scenario]
+name = "Counting Rooms — knows connected components but hasn't started flood fill"
+problem = "cf-1292B"
+route = 0
+trigger = "user idle for 60s"
+elapsed_secs = 120
+observations_found = 1
+
+[scenario.obs_states]
+0 = "found"
+
+[scenario.code]
+text = """
+n, m = map(int, input().split())
+grid = []
+for i in range(n):
+    grid.append(input())
+# not sure how to count rooms...
+"""
+
+[expect]
+banned_states = ["found"]
+must_be_socratic = true
+banned_patterns = []

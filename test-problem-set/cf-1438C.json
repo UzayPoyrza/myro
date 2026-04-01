@@ -1,0 +1,73 @@
+{
+  "contest_id": 1438,
+  "index": "C",
+  "title": "Engineer Artem",
+  "difficulty": 2000,
+  "tags": [
+    "2-sat",
+    "chinese remainder theorem",
+    "constructive algorithms",
+    "fft",
+    "flows"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Artem is building a new robot. He has a matrix $$$a$$$ consisting of $$$n$$$ rows and $$$m$$$ columns. The cell located on the $$$i$$$-th row from the top and the $$$j$$$-th column from the left has a value $$$a_{i,j}$$$ written in it. If two adjacent cells contain the same value, the robot will break. A matrix is called good if no two adjacent cells contain the same value, where two cells are called adjacent if they share a side. Artem wants to increment the values in some cells by one to make $$$a$$$ good. More formally, find a good matrix $$$b$$$ that satisfies the following condition — For all valid ($$$i,j$$$), either $$$b_{i,j} = a_{i,j}$$$ or $$$b_{i,j} = a_{i,j}+1$$$. For the constraints of this problem, it can be shown that such a matrix $$$b$$$ always exists. If there are several such tables, you can output any of them. Please note that you do not have to minimize the number of increments.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 10$$$). Description of the test cases follows. The first line of each test case contains two integers $$$n, m$$$ ($$$1 \\le n \\le 100$$$, $$$1 \\le m \\le 100$$$)  — the number of rows and columns, respectively. The following $$$n$$$ lines each contain $$$m$$$ integers. The $$$j$$$-th integer in the $$$i$$$-th line is $$$a_{i,j}$$$ ($$$1 \\leq a_{i,j} \\leq 10^9$$$).",
+  "output_spec": "For each case, output $$$n$$$ lines each containing $$$m$$$ integers. The $$$j$$$-th integer in the $$$i$$$-th line is $$$b_{i,j}$$$.",
+  "examples": [
+    {
+      "input": "3\n3 2\n1 2\n4 5\n7 8\n2 2\n1 1\n3 3\n2 2\n1 3\n2 2",
+      "output": "1 2\n5 6\n7 8\n2 1\n4 3\n2 4\n3 2"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Parity checkerboard",
+      "description": "Assign a target parity to each cell using a checkerboard pattern (based on i+j), then adjust each cell by 0 or 1 to match its target parity. Adjacent cells always differ in parity and thus can never be equal.",
+      "skill_tags": ["constructive", "math"],
+      "observations": [
+        {
+          "title": "Two numbers of different parity are never equal",
+          "description": "If one number is even and another is odd, they cannot be equal regardless of their magnitudes. This is a fundamental property of integers: even and odd numbers form disjoint sets. If we could guarantee every pair of adjacent cells has different parity, the 'good' condition would automatically hold.",
+          "hints": {
+            "nudge": "What simple property of integers guarantees two numbers are distinct?",
+            "question": "If you know one cell is even and its neighbor is odd, can they ever be equal?",
+            "formal": "For any integers a and b, if a is even and b is odd (or vice versa), then a != b. So if adjacent cells always have opposite parities, no two adjacent cells can share the same value."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "A checkerboard pattern assigns opposite parities to adjacent cells",
+          "description": "Color the grid like a checkerboard using (i+j) mod 2. Cells where i+j is even get one color, cells where i+j is odd get the other. Every pair of adjacent cells (sharing a side) has different colors, because moving one step in any direction changes i+j by exactly 1, flipping its parity.",
+          "hints": {
+            "nudge": "Think about a chessboard. How are the black and white squares arranged, and what property do neighbors have?",
+            "question": "If cell (i,j) has i+j even, what is the parity of i+j for each of its four neighbors (i-1,j), (i+1,j), (i,j-1), (i,j+1)?",
+            "formal": "Define color(i,j) = (i+j) mod 2. For any neighbor (i',j') of (i,j), we have |i'-i| + |j'-j| = 1, so (i'+j') mod 2 != (i+j) mod 2. Thus adjacent cells always have opposite colors."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Adding 0 or 1 lets you control any cell's parity",
+          "description": "Since each cell's value can stay the same or increase by 1, you have full control over its parity. If the original value already has the desired parity, keep it. If not, add 1 to flip its parity. This works for every cell independently.",
+          "hints": {
+            "nudge": "You can add 0 or 1 to any cell. What effect does adding 1 have on whether a number is even or odd?",
+            "question": "If a cell has value 7 (odd) but you want it to be even, what do you do? What if it already has value 4 (even) and you want it even?",
+            "formal": "For any integer a, exactly one of {a, a+1} is even and the other is odd. So by choosing to add 0 or 1, you can make the cell's value match any desired parity."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Combine: force even parity on checkerboard-white cells and odd on black cells",
+          "description": "The complete construction: for each cell (i,j), if (i+j) is even, make b[i][j] even (add 1 if a[i][j] is odd, else keep it). If (i+j) is odd, make b[i][j] odd (add 1 if a[i][j] is even, else keep it). Adjacent cells get opposite parities, so no two neighbors can be equal.",
+          "hints": {
+            "nudge": "You have a way to assign different parities to neighbors and a way to enforce any parity per cell. Can you put these together?",
+            "question": "If cells where (i+j) is even must have even values and cells where (i+j) is odd must have odd values, what is the rule for deciding whether to increment a[i][j]?",
+            "formal": "Set b[i][j] = a[i][j] + ((a[i][j] % 2) != ((i+j) % 2) ? 0 : 1). Equivalently, if a[i][j] mod 2 equals (i+j) mod 2, add 1; otherwise keep a[i][j]. This ensures b[i][j] mod 2 != (i+j) mod 2... more simply: b[i][j] = a[i][j] if a[i][j] % 2 != (i+j) % 2, else a[i][j] + 1. Adjacent cells have opposite (i+j) parities, so they have opposite value parities, so they are never equal."
+          },
+          "skill_tag": "constructive"
+        }
+      ]
+    }
+  ]
+}

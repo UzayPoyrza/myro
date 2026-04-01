@@ -1,0 +1,87 @@
+{
+  "contest_id": 1379,
+  "index": "C",
+  "title": "Choosing flowers",
+  "difficulty": 2000,
+  "tags": ["binary search", "brute force", "data structures", "dfs and similar", "dp", "greedy", "sortings", "two pointers"],
+  "time_limit": "1 second",
+  "memory_limit": "512 megabytes",
+  "description": "Vladimir would like to prepare a present for his wife: they have an anniversary! He decided to buy her exactly $$$n$$$ flowers. Vladimir went to a flower shop, and he was amazed to see that there are $$$m$$$ types of flowers being sold there, and there is unlimited supply of flowers of each type. Vladimir wants to choose flowers to maximize the happiness of his wife. He knows that after receiving the first flower of the $$$i$$$-th type happiness of his wife increases by $$$a_i$$$ and after receiving each consecutive flower of this type her happiness increases by $$$b_i$$$. That is, if among the chosen flowers there are $$$x_i  \\gt  0$$$ flowers of type $$$i$$$, his wife gets $$$a_i + (x_i - 1) \\cdot b_i$$$ additional happiness (and if there are no flowers of type $$$i$$$, she gets nothing for this particular type). Please help Vladimir to choose exactly $$$n$$$ flowers to maximize the total happiness of his wife.",
+  "input_spec": "The first line contains the only integer $$$t$$$ ($$$1 \\leq t \\leq 10\\,000$$$), the number of test cases. It is followed by $$$t$$$ descriptions of the test cases. Each test case description starts with two integers $$$n$$$ and $$$m$$$ ($$$1 \\le n \\le 10^9$$$, $$$1 \\le m \\le 100\\,000$$$), the number of flowers Vladimir needs to choose and the number of types of available flowers. The following $$$m$$$ lines describe the types of flowers: each line contains integers $$$a_i$$$ and $$$b_i$$$ ($$$0 \\le a_i, b_i \\le 10^9$$$) for $$$i$$$-th available type of flowers. The test cases are separated by a blank line. It is guaranteed that the sum of values $$$m$$$ among all test cases does not exceed $$$100\\,000$$$.",
+  "output_spec": "For each test case output a single integer: the maximum total happiness of Vladimir's wife after choosing exactly $$$n$$$ flowers optimally.",
+  "examples": [
+    {
+      "input": "2\n4 3\n5 0\n1 4\n2 2\n\n5 3\n5 2\n4 2\n3 1",
+      "output": "14\n16"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Enumerate bulk type with sorted greedy",
+      "description": "Fix which flower type gets bought in bulk, then greedily assign single flowers to all other types whose first-flower value exceeds the bulk type's repeat value. Use sorting and prefix sums for efficiency.",
+      "skill_tags": ["greedy", "sorting", "binary-search"],
+      "observations": [
+        {
+          "title": "Only one type should receive many flowers",
+          "description": "If you buy many flowers of two different types, you could improve by shifting all extras to whichever has the higher b value. So at most one type should be bought in quantity greater than 1.",
+          "hints": {
+            "nudge": "Think about what happens when you buy a second, third, fourth flower of the same type. Which value governs the marginal gain?",
+            "question": "Suppose you buy extra flowers of both type i and type j, and b_i > b_j. Could you improve the solution by moving one flower from j to i?",
+            "formal": "Each extra flower of type i beyond the first gives b_i happiness. If you buy extras of two types, shifting all extras to the type with the larger b value is always at least as good. So at most one type receives more than one flower."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Enumerate which type is the bulk purchase",
+          "description": "Since at most one type gets multiple flowers, try each of the m types as the candidate bulk type and take the best answer. This gives O(m) candidates to evaluate.",
+          "hints": {
+            "nudge": "You know only one type gets extras, but you don't know which one. How many candidates are there?",
+            "question": "There are m types. If you could evaluate each candidate in O(log m) time, what would the total complexity be?",
+            "formal": "Iterate over each type j as the potential bulk type. For each j, compute the best happiness assuming all extra flowers go to type j. Take the maximum over all j. You need each evaluation to be fast."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Single flowers beat extras when a_i >= b_j",
+          "description": "When type j is the bulk type, buying one flower of type i gives a_i happiness, while one more of type j gives b_j. So buy a single of type i if and only if a_i >= b_j.",
+          "hints": {
+            "nudge": "For a fixed bulk type j, compare the gain of buying one flower of another type versus one more of type j.",
+            "question": "If type j's repeat value is b_j and type i's first-flower value is a_i, when is it better to buy one of type i instead of one more of type j?",
+            "formal": "With bulk type j fixed, for every other type i: if a_i >= b_j, buying one flower of i yields a_i >= b_j, which is at least as good as another j-flower. So greedily take all singles with a_i >= b_j first, then fill remaining slots with type j."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Sort a-values and precompute prefix sums",
+          "description": "To quickly find the sum and count of all a_i above a threshold, sort the a values and build a suffix sum array. This allows O(1) lookups after a binary search.",
+          "hints": {
+            "nudge": "You need the sum of all a_i values above some threshold, and you need it fast for each of the m candidates.",
+            "question": "If the a values were sorted, how could you find the sum of all values >= b_j efficiently?",
+            "formal": "Sort the a values in non-decreasing order and compute a suffix sum array. For a given threshold b_j, binary search to find the first index where a >= b_j. The suffix sum from that index gives the total happiness from single-flower purchases."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "Adjust for the bulk type's own a_j",
+          "description": "When evaluating type j as the bulk candidate, its own a_j may appear among the sorted singles above b_j. If so, you must account for the fact that type j's first flower is already included in the bulk purchase rather than double-counting it as a separate single.",
+          "hints": {
+            "nudge": "When you count singles with a_i >= b_j, does that count include type j itself?",
+            "question": "If a_j >= b_j, the sorted array includes a_j among the values above the threshold. But type j is the bulk type — how should you handle its first flower?",
+            "formal": "Type j's first flower contributes a_j (already part of the bulk). If a_j >= b_j, it appears in the suffix sum. You must either exclude it from the singles count (subtract a_j and reduce count by 1) or treat the bulk type's first flower as already allocated. After counting k valid singles, the remaining n - k flowers go to type j at b_j each, plus the singles' total a-sum, plus the bulk overhead of a_j - b_j for j's first flower."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Handle more singles than n",
+          "description": "If the number of types with a_i >= b_j exceeds n, you cannot buy one of each. In this case, take only the top n types by a_i value, with no bulk flowers needed at all.",
+          "hints": {
+            "nudge": "What if there are more flower types worth buying as singles than the total number of flowers you need?",
+            "question": "If 200 types have a_i >= b_j but you only need 50 flowers, do you still need any bulk flowers of type j?",
+            "formal": "If the count of types with a_i >= b_j is at least n, then just take the n largest a_i values (using the suffix sum of the top n). No bulk flowers are needed — the answer for this candidate is simply the sum of the n largest a values."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

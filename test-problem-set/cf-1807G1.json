@@ -1,0 +1,124 @@
+{
+  "contest_id": 1807,
+  "index": "G1",
+  "title": "Subsequence Addition (Easy Version)",
+  "difficulty": 1100,
+  "tags": ["greedy", "sorting", "dp", "implementation"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "The only difference between the two versions is that in this version, the constraints are lower. Initially, array $$$a$$$ contains just the number $$$1$$$. You can perform several operations in order to change the array. In an operation, you can select some subsequence$$$^{\\dagger}$$$ of $$$a$$$ and add into $$$a$$$ an element equal to the sum of all elements of the subsequence. You are given a final array $$$c$$$. Check if $$$c$$$ can be obtained from the initial array $$$a$$$ by performing some number (possibly 0) of operations on the initial array. $$$^{\\dagger}$$$ A sequence $$$b$$$ is a subsequence of a sequence $$$a$$$ if $$$b$$$ can be obtained from $$$a$$$ by the deletion of several (possibly zero, but not all) elements. In other words, select $$$k$$$ ($$$1 \\leq k \\leq |a|$$$) distinct indices $$$i_1, i_2, \\dots, i_k$$$ and insert anywhere into $$$a$$$ a new element with the value equal to $$$a_{i_1} + a_{i_2} + \\dots + a_{i_k}$$$.",
+  "input_spec": "The first line of the input contains an integer $$$t$$$ ($$$1 \\leq t \\leq 1000$$$) — the number of test cases. The description of the test cases follows. The first line of each test case contains a single integer $$$n$$$ ($$$1 \\leq n \\leq 5000$$$)  — the number of elements the final array $$$c$$$ should have. The second line of each test case contains $$$n$$$ space-separated integers $$$c_i$$$ ($$$1 \\leq c_i \\leq 5000$$$)  — the elements of the final array $$$c$$$ that should be obtained from the initial array $$$a$$$. It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$5000$$$.",
+  "output_spec": "For each test case, output \" YES \" (without quotes) if such a sequence of operations exists, and \" NO \" (without quotes) otherwise. You can output the answer in any case (for example, the strings \" yEs \", \" yes \", \" Yes \" and \" YES \" will be recognized as a positive answer).",
+  "examples": [
+    {
+      "input": "6111255 1 3 2 157 1 5 2 131 1 151 1 4 2 1",
+      "output": "YES\nNO\nYES\nNO\nYES\nYES"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy prefix-sum check",
+      "description": "Sort the array and verify that each element in sorted order is at most the sum of all preceding elements. This works because the order of insertion does not matter — what matters is whether each value could have been formed from some subset of previously existing values.",
+      "skill_tags": ["greedy", "sorting"],
+      "observations": [
+        {
+          "title": "The first element must be 1",
+          "description": "The array starts as [1]. Every operation adds a sum of a subsequence of existing elements. Since all elements are positive, every generated value is at least 1. The only way to produce a 1 is from the original element. So the target array must contain at least one 1, and if sorted, the smallest element must be exactly 1.",
+          "hints": {
+            "nudge": "What is the smallest value that can ever appear in the array?",
+            "question": "The array starts as [1] and you can only add sums of positive elements. Can you ever produce a value less than 1? What must the minimum element of the target array be?",
+            "formal": "Every subsequence sum is >= 1 (since all elements are >= 1 and at least one is selected). The only way to have value 1 is from the original. So if the sorted target has a[0] != 1, the answer is NO."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Order of insertion does not matter",
+          "description": "The problem asks whether the target multiset of values is reachable, not in what order. Since the operation only adds elements and never removes them, we can reason about whether each value could have been produced at some point, regardless of the sequence of operations chosen.",
+          "hints": {
+            "nudge": "Does it matter which element was inserted first versus last?",
+            "question": "If both values 2 and 3 are in the target, does it matter whether 2 was inserted before 3 or vice versa? What if you considered them in sorted order?",
+            "formal": "Since elements are only added (never removed), once a value exists it remains available for all future operations. This means we can reason about constructability in any convenient order — sorted order being the most natural."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Process elements in sorted order",
+          "description": "If we sort the target array, we can check elements from smallest to largest. When we consider element a[i], all smaller elements a[0..i-1] were already available in the array before a[i] was inserted. So a[i] must be expressible as a sum of some subset of a[0..i-1].",
+          "hints": {
+            "nudge": "What ordering of the target elements lets you most easily check if each one could have been built from the others?",
+            "question": "If you sort the array, when you reach element a[i], which elements were definitely already in the array when a[i] was created?",
+            "formal": "Sort the array. Element a[i] was added at some operation step. All elements smaller than a[i] were either the original 1 or were added earlier (they could not have been added later since they are smaller sums). So a[i] must be a subsequence sum of {a[0], ..., a[i-1]}."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Each element must be at most the running prefix sum",
+          "description": "A subsequence sum of the first i elements can be at most a[0] + a[1] + ... + a[i-1] (the full sum). So a necessary condition is a[i] <= prefix_sum(i). Remarkably, this is also sufficient: since a[0] = 1 and all values are positive integers, any integer from 1 to the prefix sum can be represented as a subset sum (by induction, each new element extends the range of achievable sums).",
+          "hints": {
+            "nudge": "What is the largest value a[i] could possibly be, given the elements before it?",
+            "question": "The maximum subsequence sum of a[0..i-1] is their total sum. Is checking a[i] <= sum(a[0..i-1]) sufficient, or do you need to verify which specific subsets are achievable?",
+            "formal": "Claim: if a[0] = 1 and a[i] <= a[0]+...+a[i-1] for all i, then each a[i] is achievable. Proof by induction: with {1} we can make 1. If we can make all integers in [1, S] and a[i] <= S, then adding a[i] lets us make [1, S] union [a[i]+1, S+a[i]] = [1, S+a[i]]. So checking a[i] <= prefix sum is both necessary and sufficient."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    },
+    {
+      "name": "Subset-sum DP verification",
+      "description": "Sort the array, verify a[0] = 1, then use a boolean DP to track which sums are achievable with the elements seen so far. For each new element, check if it is an achievable sum before adding it to the DP.",
+      "skill_tags": ["dp", "sorting"],
+      "observations": [
+        {
+          "title": "The first element must be 1",
+          "description": "The array starts as [1]. Every operation adds a sum of a subsequence of existing elements. Since all elements are positive, every generated value is at least 1. The only way to produce a 1 is from the original element. So the target array must contain at least one 1, and if sorted, the smallest element must be exactly 1.",
+          "hints": {
+            "nudge": "What is the smallest value that can ever appear in the array?",
+            "question": "The array starts as [1] and you can only add sums of positive elements. Can you ever produce a value less than 1? What must the minimum element of the target array be?",
+            "formal": "Every subsequence sum is >= 1 (since all elements are >= 1 and at least one is selected). The only way to have value 1 is from the original. So if the sorted target has a[0] != 1, the answer is NO."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Process elements in sorted order",
+          "description": "If we sort the target array, we can check elements from smallest to largest. When we consider element a[i], all smaller elements a[0..i-1] were already available in the array before a[i] was inserted. So a[i] must be expressible as a sum of some subset of a[0..i-1].",
+          "hints": {
+            "nudge": "What ordering of the target elements lets you most easily check if each one could have been built from the others?",
+            "question": "If you sort the array, when you reach element a[i], which elements were definitely already in the array when a[i] was created?",
+            "formal": "Sort the array. Element a[i] was added at some operation step. All elements smaller than a[i] were either the original 1 or were added earlier (they could not have been added later since they are smaller sums). So a[i] must be a subsequence sum of {a[0], ..., a[i-1]}."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Reduce to a subset-sum feasibility check",
+          "description": "For each element a[i] (i >= 1), we need to check whether a[i] can be expressed as a sum of some subset of a[0..i-1]. This is exactly the subset-sum decision problem. The easy version constraints (values up to 5000) make this tractable with a standard boolean DP.",
+          "hints": {
+            "nudge": "You need to verify that a certain value is achievable as a sum of a subset. What classic DP problem does this remind you of?",
+            "question": "Given elements a[0..i-1] with values up to 5000, how can you determine whether some subset sums to exactly a[i]?",
+            "formal": "This is subset-sum: given a set of positive integers and a target, decide if any subset sums to the target. With values bounded by 5000 and n <= 5000, a DP over achievable sums is feasible."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Boolean DP on achievable sums",
+          "description": "Maintain a boolean array dp[0..5000] where dp[s] = true if sum s is achievable using some subset of elements seen so far. Initialize dp[0] = false, dp[1] = true (from a[0] = 1). For each new element a[i], first check dp[a[i]]; if false, output NO. Otherwise, update the DP by processing sums from high to low: dp[j] |= dp[j - a[i]].",
+          "hints": {
+            "nudge": "How do you maintain the set of all achievable subset sums as you add elements one by one?",
+            "question": "If dp[s] indicates whether sum s is achievable, how do you update dp when you add a new element v? Why must you iterate from high to low?",
+            "formal": "Start with dp[1] = true. For element a[i]: if dp[a[i]] is false, answer NO. Then for j from 5000 down to a[i], set dp[j] |= dp[j - a[i]]. Iterating downward ensures each element is used at most once in each subset (0/1 knapsack style)."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Check before update ordering",
+          "description": "It is critical to check whether dp[a[i]] is true before incorporating a[i] into the DP table. Element a[i] must be representable as a subset sum of the elements that existed before it was inserted — not including itself. Checking after the DP update would incorrectly allow a[i] to use itself.",
+          "hints": {
+            "nudge": "When you process a[i], should you check feasibility before or after updating the DP with a[i]?",
+            "question": "If a[i] = 4 and you update dp first, could dp[4] become true just because you added 4 itself? Why is that wrong?",
+            "formal": "The element a[i] was created as a sum of elements already in the array at that time. It cannot be part of its own subsequence. Therefore, check dp[a[i]] before performing dp[j] |= dp[j - a[i]] for the current element."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    }
+  ]
+}

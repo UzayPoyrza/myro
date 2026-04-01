@@ -1,0 +1,119 @@
+{
+  "contest_id": 2028,
+  "index": "D",
+  "title": "Alice's Adventures in Cards",
+  "difficulty": 2000,
+  "tags": [
+    "constructive algorithms",
+    "data structures",
+    "greedy",
+    "implementation"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Alice is playing cards with the Queen of Hearts, King of Hearts, and Jack of Hearts. There are $$$n$$$ different types of cards in their card game. Alice currently has a card of type $$$1$$$ and needs a card of type $$$n$$$ to escape Wonderland. The other players have one of each kind of card. In this card game, Alice can trade cards with the three other players. Each player has different preferences for the $$$n$$$ types of cards, which can be described by permutations $$$q$$$, $$$k$$$, and $$$j$$$ for the Queen, King, and Jack, respectively. A player values card $$$a$$$ more than card $$$b$$$ if for their permutation $$$p$$$, $$$p_a > p_b$$$. Then, this player is willing to trade card $$$b$$$ to Alice in exchange for card $$$a$$$. Alice's preferences are straightforward: she values card $$$a$$$ more than card $$$b$$$ if $$$a > b$$$, and she will also only trade according to these preferences. Determine if Alice can trade up from card $$$1$$$ to card $$$n$$$ subject to these preferences, and if it is possible, give a possible set of trades to do it.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 10^4$$$). The description of the test cases follows. The first line of each test case contains an integer $$$n$$$ ($$$2\\le n\\le 2\\cdot 10^5$$$) — the number of card types. The next three lines contain the preferences of the Queen, King, and Jack respectively. Each of these lines contains $$$n$$$ integers $$$p_1, p_2, \\ldots, p_n$$$ ($$$1\\le p_i\\le n$$$) — a permutation corresponding to the player's preferences. The sum of $$$n$$$ over all test cases does not exceed $$$2\\cdot 10^5$$$.",
+  "output_spec": "For each test case, on the first line output a single string \"YES\" or \"NO\" denoting whether Alice can trade up to card $$$n$$$. If the first line was \"YES\", then on the next line output $$$k$$$ — the number of trades Alice will make. On the next $$$k$$$ lines output space separated a character $$$c\\in \\{\\texttt{q}, \\texttt{k}, \\texttt{j}\\}$$$ and integer $$$x$$$, denoting that Alice trades with player $$$c$$$ to get card $$$x$$$. It must be the case that on the $$$k$$$'th line, $$$x = n$$$. If there are multiple solutions, print any of them.",
+  "examples": [
+    {
+      "input": "2\n3\n1 3 2\n2 1 3\n1 2 3\n4\n2 3 1 4\n1 2 3 4\n1 4 2 3",
+      "output": "YES\n2\nk 2\nq 3\nNO"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy backward sweep with per-player minimums",
+      "description": "Process cards from n-1 down to 1, maintaining for each player the reachable card with the smallest preference value. A card can reach n if some player prefers it over that player's current minimum. Build the trade chain by following recorded successors from card 1.",
+      "skill_tags": ["greedy", "constructive", "implementation"],
+      "observations": [
+        {
+          "title": "A trade is possible when a player values Alice's card more than the card she wants",
+          "description": "A player with permutation p will trade card b to Alice for card a if p_a > p_b. Alice will accept the trade only if b > a (she only trades up). So Alice can trade card a for card b through a player if b > a and p_a > p_b. The player gives up a card they value less to get one they value more, while Alice gives up a card with a smaller index to get one with a larger index.",
+          "hints": {
+            "nudge": "Read the trade condition carefully. Who benefits from the trade? Both Alice and the player must prefer what they receive.",
+            "question": "If Alice holds card a and wants card b (b > a), under what condition on permutation p will a player agree to give up card b?",
+            "formal": "Player trades card b for card a iff p_a > p_b. Alice trades iff b > a. A valid trade through player p from card a to card b requires: b > a AND p_a > p_b. The player values what they receive (a) more than what they give (b), while Alice values what she receives (b) more than what she gives (a)."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Think about reachability backward from card n, not forward from card 1",
+          "description": "Rather than simulating Alice's trades forward (which could branch exponentially), ask: which cards can eventually reach card n through a chain of trades? Card n is trivially reachable from itself. Then for any card i < n, card i can reach n if there exists some player and some card j that is already known to reach n, such that Alice can trade card i for card j through that player (j > i and p_i > p_j).",
+          "hints": {
+            "nudge": "Searching forward from card 1, you might try many branches. What if you started from the destination and worked backward?",
+            "question": "If you already know which cards can reach n, how would you determine if card i can also reach n?",
+            "formal": "Define reachable(i) = true iff there exists a chain of valid trades from card i to card n. Card n is reachable. Card i < n is reachable iff there exists some j > i that is reachable and some player p such that p_i > p_j. Process cards from n-1 down to 1."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "For each player, only the reachable card with the smallest preference value matters",
+          "description": "When checking if card i can trade up to some reachable card j through player p, the condition is p_i > p_j. To make this easiest to satisfy, we want the smallest possible p_j among all reachable cards j > i. So for each player, we only need to track the reachable card with the minimum preference value. If p_i exceeds that minimum, a trade is possible; otherwise no trade through that player can help card i.",
+          "hints": {
+            "nudge": "You need p_i > p_j for some reachable j. Among all reachable cards, which one gives you the best chance?",
+            "question": "If there are many reachable cards j with different p_j values, which specific j should you compare p_i against to decide if any trade is possible?",
+            "formal": "For player p, maintain mins_p = argmin over reachable j of p_j. Card i can trade to a reachable card through player p iff p_i > p[mins_p]. This reduces checking all reachable cards to a single comparison per player."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "When a new card becomes reachable, update the per-player minimums",
+          "description": "Processing from n-1 down to 1: when card i is found to be reachable (some player's minimum test passes), it becomes a new reachable card. For each of the three players, check if p_i is smaller than their current minimum preference value, and if so, update their minimum to card i. This ensures the minimums stay correct for processing the next card.",
+          "hints": {
+            "nudge": "After determining card i is reachable, what needs to change before you process card i-1?",
+            "question": "If card i just became reachable and player p has p_i < p[current_min], should you update current_min for player p? Why?",
+            "formal": "When card i becomes reachable, for each player p: if p_i < p[mins_p], set mins_p = i. Initialize mins_p = n for all players (card n is always reachable). This maintains the invariant that mins_p is the reachable card with minimum p-value."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Record the successor for each reachable card to reconstruct the trade path",
+          "description": "When card i is found reachable through player p (trading to mins_p), record sol[i] = (p, mins_p). After processing all cards, if sol[1] exists, follow the chain sol[1] -> sol[sol[1].target] -> ... until reaching card n. This gives the sequence of trades Alice must make. If sol[1] does not exist, output NO.",
+          "hints": {
+            "nudge": "You know card 1 can reach n, but how do you output the actual trades?",
+            "question": "If you stored which player and which target card made each card reachable, how would you reconstruct the full trade sequence?",
+            "formal": "Store sol[i] = (player_char, next_card) when card i is determined reachable. To output: start at card 1, follow sol[1].next_card to get the second card, then sol[second].next_card, and so on until reaching n. Each step in the chain is one trade. Output the player character and target card for each step."
+          },
+          "skill_tag": "constructive"
+        }
+      ]
+    },
+    {
+      "name": "Forward simulation with greedy next-card selection",
+      "description": "From card 1, greedily find the largest card Alice can trade to through any player, repeat until reaching card n or getting stuck. This requires careful choice of which trade to make at each step to avoid dead ends.",
+      "skill_tags": ["greedy", "constructive", "implementation"],
+      "observations": [
+        {
+          "title": "A trade is possible when a player values Alice's card more than the card she wants",
+          "description": "A player with permutation p will trade card b to Alice for card a if p_a > p_b. Alice will accept the trade only if b > a (she only trades up). So Alice can trade card a for card b through a player if b > a and p_a > p_b.",
+          "hints": {
+            "nudge": "Read the trade condition carefully. Who benefits from the trade? Both Alice and the player must prefer what they receive.",
+            "question": "If Alice holds card a and wants card b (b > a), under what condition on permutation p will a player agree to give up card b?",
+            "formal": "Player trades card b for card a iff p_a > p_b. Alice trades iff b > a. A valid trade through player p from card a to card b requires: b > a AND p_a > p_b."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Forward greedy is tricky: the largest reachable card is not always optimal",
+          "description": "If Alice holds card i, she can see all cards j > i where some player has p_i > p_j, and trade to any of them. Taking the largest j is tempting, but that card might have poor preference values for all three players, making further progress impossible. The backward approach avoids this issue entirely because it determines reachability before committing to any trades.",
+          "hints": {
+            "nudge": "If Alice can jump to card 5 or card 8, is card 8 always better? What if card 8 is a dead end?",
+            "question": "Can you construct an example where greedily taking the largest available card leads to a dead end, but a smaller card would eventually reach n?",
+            "formal": "Forward greedy requires lookahead or backtracking to be correct. Without it, a greedy choice may strand Alice at a card from which no further trades are possible. The backward sweep avoids this by only marking cards reachable when they provably connect to n."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "The backward sweep resolves forward ambiguity and runs in O(n) time",
+          "description": "Processing from n-1 to 1 with three running minimums requires only O(n) time and O(n) space. Each card is examined once, with three comparisons per card. The path reconstruction is also linear in the number of trades. This avoids any graph construction or BFS/DFS, making the solution both simple and efficient.",
+          "hints": {
+            "nudge": "How many comparisons do you need per card? How many cards total?",
+            "question": "With three players and n cards, processing each card takes O(1) work (three comparisons and at most three minimum updates). What is the total time complexity?",
+            "formal": "Backward sweep: O(n) time, O(n) space. For each card i from n-1 to 1: 3 comparisons to check reachability, at most 3 minimum updates. Path reconstruction: follow at most n-1 successor pointers. Total: O(n) per test case."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

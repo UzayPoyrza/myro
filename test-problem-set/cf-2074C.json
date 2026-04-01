@@ -1,0 +1,126 @@
+{
+  "contest_id": 2074,
+  "index": "C",
+  "title": "XOR and Triangle",
+  "difficulty": 1100,
+  "tags": [
+    "bitmasks",
+    "brute force",
+    "geometry",
+    "greedy"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "This time, the pink soldiers have given you an integer $$$x$$$ ($$$x \\ge 2$$$). Please determine if there exists a positive integer $$$y$$$ that satisfies the following conditions. $$$y$$$ is strictly less than $$$x$$$. There exists a non-degenerate triangle $$$^{\\text{∗}}$$$ with side lengths $$$x$$$, $$$y$$$, $$$x \\oplus y$$$. Here, $$$\\oplus$$$ denotes the bitwise XOR operation . Additionally, if there exists such an integer $$$y$$$, output any. $$$^{\\text{∗}}$$$A triangle with side lengths $$$a$$$, $$$b$$$, $$$c$$$ is non-degenerate when $$$a+b  \\gt  c$$$, $$$a+c  \\gt  b$$$, $$$b+c  \\gt  a$$$.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 2000$$$). The description of the test cases follows. The only line of each test case contains a single integer $$$x$$$ ($$$2 \\le x \\le 10^9$$$).",
+  "output_spec": "For each test case, print one integer on a separate line. The integer you must output is as follows: If there exists an integer $$$y$$$ satisfying the conditions, output the value of $$$y$$$ ($$$1 \\le y  \\lt  x$$$); Otherwise, output $$$-1$$$. If there exist multiple integers that satisfy the conditions, you may output any.",
+  "examples": [
+    {
+      "input": "75263694420",
+      "output": "3\n-1\n5\n-1\n66\n-1\n320"
+    }
+  ],
+  "routes": [
+    {
+      "name": "XOR-AND identity simplifies triangle inequality",
+      "description": "Use the identity x + y = (x XOR y) + 2*(x AND y) to reduce the three triangle inequalities to two conditions on bits: y must share at least one set bit with x, and y must have at least one set bit that x does not. This characterizes exactly when a valid y exists and directly yields a construction.",
+      "skill_tags": [
+        "dp",
+        "math",
+        "greedy"
+      ],
+      "observations": [
+        {
+          "title": "Rewrite the triangle sides using the XOR-AND identity",
+          "description": "For any non-negative integers x and y, the identity x + y = (x XOR y) + 2*(x AND y) holds. This lets you express the third side x XOR y as x + y - 2*(x AND y). Substituting this into the three triangle inequalities transforms them from geometric constraints into algebraic conditions on the bitwise AND of x and y.",
+          "hints": {
+            "nudge": "How are addition and XOR related for binary numbers? What role does the carry play?",
+            "question": "If you write x + y = (x XOR y) + 2*(x AND y), can you express x XOR y purely in terms of x, y, and x AND y? How does this simplify x + y > x XOR y?",
+            "formal": "Since x + y = (x XOR y) + 2*(x AND y), the third side is x XOR y = x + y - 2*(x AND y). Substituting into x + y > x XOR y gives x + y > x + y - 2*(x AND y), i.e., x AND y > 0."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Two of the three inequalities are automatic when y < x",
+          "description": "After substitution, the inequality x + y > x XOR y becomes x AND y > 0 (they share a set bit). The inequality x + (x XOR y) > y simplifies to x > x AND y, which is always true when y < x because x AND y <= y < x. So only two conditions actually matter: x AND y > 0, and the third inequality.",
+          "hints": {
+            "nudge": "Substitute c = x + y - 2*(x AND y) into all three triangle inequalities. Which ones are trivially satisfied given y < x?",
+            "question": "The second inequality x + c > y expands to 2x - 2*(x AND y) > 0. Since x AND y <= y < x, is this always positive?",
+            "formal": "Inequality 2: x + (x XOR y) > y becomes 2x - 2*(x AND y) > 0, i.e., x > x AND y. Since x AND y <= y < x, this always holds. Inequality 1: x + y > x XOR y becomes x AND y > 0."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The binding constraint: y must not be a submask of x",
+          "description": "The third inequality y + (x XOR y) > x simplifies to y > x AND y, meaning y must have at least one bit set that is NOT set in x. Equivalently, y must not be a submask of x. If y were a submask of x, then x AND y = y, and the triangle degenerates (the sum equals x, not strictly greater).",
+          "hints": {
+            "nudge": "What does the third inequality y + (x XOR y) > x reduce to after substitution? What does it say about the bits of y?",
+            "question": "If every set bit of y is also set in x (y is a submask of x), what is x AND y? What happens to the inequality y > x AND y?",
+            "formal": "y + (x XOR y) > x becomes 2y - 2*(x AND y) > 0, i.e., y > x AND y. This fails exactly when y = x AND y, i.e., y is a submask of x. So y must have at least one bit set outside the bit-pattern of x."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Characterize when no valid y exists",
+          "description": "A valid y must satisfy three things: y < x, x AND y > 0 (shared bit), and y is not a submask of x (extra bit). No such y exists in exactly two cases. If x is a power of 2 (single bit k), every y < x has bits only below k, sharing no bit with x. If x = 2^k - 1 (all bits 0 through k-1 set), every y < x is a submask of x, so no y has an extra bit outside x.",
+          "hints": {
+            "nudge": "For which x does every y in [1, x-1] fail one of the two conditions? Think about what the binary representation of x looks like.",
+            "question": "If x = 2^k, what bits can y < x have? Can any of them overlap with x's single bit? If x = 2^k - 1, is every smaller number a submask?",
+            "formal": "If x = 2^k: only bit k is set. All y < 2^k have bits in {0,...,k-1}, so x AND y = 0 always. If x = 2^k - 1: bits {0,...,k-1} are all set, and every y < x is a subset of these bits, so y is always a submask. In all other cases, x has at least one 0-bit and at least one 1-bit below the MSB, allowing a valid y."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Construct y by choosing one shared bit and one extra bit",
+          "description": "When a valid y exists, you can build it with just two bits: pick any bit position that is set in x (to satisfy x AND y > 0), and pick any bit position that is NOT set in x but is below x's most significant bit (to satisfy y not a submask of x, and y < x). Setting y to the OR of these two single-bit values gives a valid answer.",
+          "hints": {
+            "nudge": "You need y to share a bit with x and also have a bit that x lacks. What is the simplest y with exactly those properties?",
+            "question": "If bit i is set in x and bit j is not set in x (with j less than the MSB of x), what is y = (1 << i) | (1 << j)? Does it satisfy all conditions?",
+            "formal": "Let i be any position where x has a 1-bit, and j be any position where x has a 0-bit with j < MSB(x). Set y = (1 << i) | (1 << j). Then x AND y >= (1 << i) > 0, and y has bit j not in x, so y is not a submask. Since both bits are below MSB(x), y < x. This runs in O(log x) per test case."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    },
+    {
+      "name": "Small brute force over two-bit candidates",
+      "description": "Observe that if a valid y exists, one with at most two bits set also works. Enumerate all y = (1 << i) | (1 << j) for bit positions i, j in [0, 29] and check the triangle inequality directly. At most 900 candidates per test case.",
+      "skill_tags": [
+        "implementation",
+        "dp"
+      ],
+      "observations": [
+        {
+          "title": "A valid y needs exactly two bit-level properties",
+          "description": "From the triangle inequality analysis, y must share at least one set bit with x (so x AND y > 0) and must have at least one set bit not in x (so y is not a submask). The simplest y satisfying both properties has exactly two bits: one shared with x and one not in x.",
+          "hints": {
+            "nudge": "What is the minimum number of set bits y needs to simultaneously share a bit with x and have a bit outside x?",
+            "question": "Can a y with a single set bit satisfy both x AND y > 0 and y not a submask of x at the same time? What about two set bits?",
+            "formal": "y needs bit i in x (for AND > 0) and bit j not in x (for non-submask). If i != j, y needs at least 2 bits. If i = j, the conditions contradict. So the minimum is two bits (or one bit if i = j is somehow possible, which it is not)."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "x < 2^30, so only 30 bit positions matter",
+          "description": "Since x <= 10^9 < 2^30, both x and any valid y have at most 30 bits. This means the search space for two-bit candidates y = (1 << i) | (1 << j) with i, j in [0, 29] is at most 30 * 30 = 900 values, which is tiny.",
+          "hints": {
+            "nudge": "How many bit positions are relevant given the constraint x <= 10^9?",
+            "question": "If you enumerate all pairs of bit positions (i, j) where 0 <= i, j <= 29, how many candidate y values is that?",
+            "formal": "10^9 < 2^30, so all bits of x and y fit in positions 0 through 29. The number of two-bit candidates (1 << i) | (1 << j) for i, j in {0,...,29} is at most 30^2 = 900. When i = j, y = 1 << i has a single bit."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Check each candidate directly against y < x and the triangle inequality",
+          "description": "For each candidate y = (1 << i) | (1 << j), verify: y < x, and the three triangle inequalities for sides x, y, x XOR y. If any candidate passes all checks, output it. If none pass, output -1. No algebraic simplification of the inequalities is needed for this approach.",
+          "hints": {
+            "nudge": "You have at most 900 candidates. What do you need to check for each one?",
+            "question": "Given a candidate y, what are the three conditions for x, y, x XOR y to form a non-degenerate triangle? Can you just check them directly?",
+            "formal": "For each y in {(1 << i) | (1 << j) : 0 <= i, j <= 29}: if y < x and x + y > (x ^ y) and x + (x ^ y) > y and y + (x ^ y) > x, output y and stop. If no candidate works, output -1. Total work: O(900) per test case."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

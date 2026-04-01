@@ -1,0 +1,56 @@
+{
+  "contest_id": 112,
+  "index": "A",
+  "title": "Petya and Strings",
+  "difficulty": 800,
+  "tags": ["strings", "implementation"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Little Petya loves presents. His mum bought him two strings of the same length, consisting only of lowercase Latin letters. Now Petya wants to compare them lexicographically, ignoring case. Help Petya perform a case-insensitive lexicographic comparison of the two strings.",
+  "input_spec": "Each of the first two lines contains a string. The strings are non-empty, have the same length, consist of lowercase and uppercase Latin letters, and their length does not exceed 100.",
+  "output_spec": "If the first string is less, print -1. If the strings are equal (case-insensitively), print 0. If the first string is greater, print 1.",
+  "examples": [
+    {"input": "aaaa\naaaA", "output": "0"},
+    {"input": "abs\nAbz", "output": "-1"},
+    {"input": "abcdefg\nAbCdEfF", "output": "1"}
+  ],
+  "routes": [
+    {
+      "name": "Lowercase and compare",
+      "description": "Convert both strings to lowercase and perform a standard lexicographic comparison.",
+      "skill_tags": ["strings", "implementation"],
+      "observations": [
+        {
+          "title": "Normalize case before comparing",
+          "description": "Since the comparison is case-insensitive, convert both strings to the same case (e.g., lowercase) before comparing.",
+          "hints": {
+            "nudge": "How do you make two strings comparable when case doesn't matter?",
+            "question": "What string operation makes 'A' and 'a' identical?",
+            "formal": "s1 = s1.lower(), s2 = s2.lower(). Now both strings are in the same case and can be compared directly."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Lexicographic comparison",
+          "description": "After normalizing case, compare the two strings character by character from left to right. The first position where they differ determines the result.",
+          "hints": {
+            "nudge": "How does dictionary ordering work for strings?",
+            "question": "If you scan left to right and find the first position where the strings differ, how does that character comparison determine the overall result?",
+            "formal": "Compare character by character. At the first differing position i: if s1[i] < s2[i], result is -1; if s1[i] > s2[i], result is 1. If no difference, result is 0."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Use built-in comparison",
+          "description": "Most languages support direct string comparison operators that implement lexicographic order.",
+          "hints": {
+            "nudge": "Do you need to write the character-by-character loop yourself?",
+            "question": "In Python, what happens when you use < or > on two strings?",
+            "formal": "In Python: if s1 < s2: print(-1) elif s1 > s2: print(1) else: print(0). The < and > operators do lexicographic comparison natively."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

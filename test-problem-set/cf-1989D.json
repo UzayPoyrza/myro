@@ -1,0 +1,148 @@
+{
+  "contest_id": 1989,
+  "index": "D",
+  "title": "Smithing Skill",
+  "difficulty": 1900,
+  "tags": [
+    "brute force",
+    "data structures",
+    "dp",
+    "greedy",
+    "math",
+    "sortings",
+    "two pointers"
+  ],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are playing a famous computer game (that just works) where you have various skills you can level up. Today, you focused on the \"Smithing\" skill. Your tactic is obvious: forging weapons from ingots and then melting them back to return the materials partially. For simplicity, every time you create an item, you get $$$1$$$ experience point, and every time you melt an item, you also get $$$1$$$ experience point. There are $$$n$$$ classes of weapons you can forge and $$$m$$$ types of metal ingots. You can create one weapon of the $$$i$$$-th class, spending $$$a_i$$$ ingots of metal of the same type . Melting a weapon of the $$$i$$$-th class (which you crafted earlier) returns you $$$b_i$$$ ingots of the type of metal it was made of . You have $$$c_j$$$ metal ingots of the $$$j$$$-th type, and you know that you can craft a weapon of any class from any metal type. Each combination of a weapon class and a metal type can be used any number of times. What is the maximum total amount of experience you can earn by crafting and melting weapons?",
+  "input_spec": "The first line contains two integers $$$n$$$ and $$$m$$$ ($$$1 \\le n, m \\le 10^6$$$) — the number of weapon classes and metal types. The second line contains $$$n$$$ integers $$$a_1, a_2, \\dots, a_n$$$ ($$$1 \\le a_i \\le 10^6$$$), where $$$a_i$$$ is the number of ingots you need to forge one weapon of the $$$i$$$-th class. The third line contains $$$n$$$ integers $$$b_1, b_2, \\dots, b_n$$$ ($$$0 \\le b_i  \\lt  a_i$$$), where $$$b_i$$$ is the number of ingots you return by melting one weapon of the $$$i$$$-th class you forged earlier. The fourth line contains $$$m$$$ integers $$$c_1, c_2, \\dots, c_m$$$ ($$$1 \\le c_j \\le 10^9$$$) — the number of ingots you have of the corresponding metal type.",
+  "output_spec": "Print one integer — the maximum total experience points you can gain by repeatedly forging and melting weapons.",
+  "examples": [
+    {
+      "input": "5 39 6 7 5 58 4 5 1 210 4 7",
+      "output": "12"
+    },
+    {
+      "input": "3 410 20 200 0 09 10 19 20",
+      "output": "8"
+    },
+    {
+      "input": "1 5311000000000 1000000000 1000000000 1000000000 1000000000",
+      "output": "4999999990"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Loss-array DP with arithmetic shortcut for large counts",
+      "description": "Observe that each forge+melt cycle has a fixed net ingot cost. Precompute the minimum achievable loss for every ingot level up to max(a_i), build a DP table of total cycles for small ingot counts, and handle large counts with a division formula before falling back to the DP table.",
+      "skill_tags": [
+        "dp",
+        "greedy",
+        "math"
+      ],
+      "observations": [
+        {
+          "title": "Each forge+melt cycle costs (a_i - b_i) net ingots and yields 2 XP; metal types are independent",
+          "description": "Forging weapon class i spends a_i ingots and melting it returns b_i, for a net loss of d_i = a_i - b_i > 0 ingots per cycle. Each cycle gives exactly 2 XP (one for forging, one for melting). Since weapons can be crafted from any metal type, and ingots of different types never interact, each metal type's ingot supply can be optimized independently. The answer is 2 times the total number of forge+melt cycles across all metal types.",
+          "hints": {
+            "nudge": "What is the net effect of one forge+melt cycle on your ingot count? Do different metal types affect each other?",
+            "question": "If forging costs a_i ingots and melting returns b_i, what is the net ingot loss per cycle? Why can you solve each metal type separately?",
+            "formal": "Each cycle of class i consumes d_i = a_i - b_i ingots (since b_i < a_i, d_i >= 1). Different metal types never share ingots, so for each type j with c_j ingots, independently maximize the number of forge+melt cycles. Final answer = 2 * sum over all j of cycles(c_j)."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "For a given ingot count x, the optimal weapon class minimizes net loss among those with a_i <= x",
+          "description": "To forge weapon class i, you need at least a_i ingots. Among all classes you can currently afford, you want the one that loses the fewest ingots per cycle, since this lets you do the most cycles. So at ingot level x, the best choice has the minimum d_i = a_i - b_i among all classes with a_i <= x.",
+          "hints": {
+            "nudge": "You want to maximize the number of cycles. Each cycle loses some ingots. Which weapon class should you pick at each step?",
+            "question": "If you have x ingots, which weapon classes can you use? Among those, which one lets you keep the most ingots after a cycle?",
+            "formal": "Define best(x) = min(a_i - b_i) over all i with a_i <= x. If no such i exists, best(x) = infinity (no cycle possible). At ingot level x, using the class that achieves best(x) is always optimal because it minimizes per-cycle loss."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Precompute best(x) for x = 1 to max(a_i) with a sweep",
+          "description": "Since a_i values can be up to 10^6, create an array best_loss of size max(a_i) + 1, initialized to infinity. For each weapon class i, update best_loss[a_i] = min(best_loss[a_i], a_i - b_i). Then sweep left to right: best_loss[x] = min(best_loss[x], best_loss[x-1]). After the sweep, best_loss[x] gives the minimum net loss achievable with x ingots.",
+          "hints": {
+            "nudge": "Can you avoid recomputing the minimum loss from scratch for every possible ingot count? Think about how best(x) relates to best(x-1).",
+            "question": "If you know best(x-1), what additional weapon classes become available at exactly x ingots? How does best(x) relate to best(x-1)?",
+            "formal": "Initialize best_loss[a_i] = min(best_loss[a_i], d_i) for each weapon class i. Then for x from 2 to max_a: best_loss[x] = min(best_loss[x], best_loss[x-1]). This prefix-minimum sweep runs in O(max_a + n) time and gives optimal loss for every ingot level."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "DP table for small ingot counts: cycles[x] = 1 + cycles[x - best_loss[x]]",
+          "description": "For ingot counts x from 1 to max(a_i), precompute the total number of forge+melt cycles achievable. If best_loss[x] is infinity (no weapon class affordable), cycles[x] = 0. Otherwise, one cycle reduces ingots from x to x - best_loss[x], so cycles[x] = 1 + cycles[x - best_loss[x]]. This DP fills in O(max(a_i)) time since each lookup is O(1).",
+          "hints": {
+            "nudge": "After one optimal cycle at ingot level x, what ingot level do you reach? If you already know the answer for that level, can you build up the answer for x?",
+            "question": "If you do one cycle losing best_loss[x] ingots, you have x - best_loss[x] ingots left. How do you express cycles[x] in terms of a smaller subproblem?",
+            "formal": "Define cycles[0] = 0. For x = 1 to max_a: if best_loss[x] < infinity, then cycles[x] = 1 + cycles[x - best_loss[x]]; else cycles[x] = 0. This is valid because x - best_loss[x] < x (since best_loss[x] >= 1), so we always reference an already-computed entry."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Large ingot counts: use division to jump down to the DP table range",
+          "description": "When c_j > max(a_i), all weapon classes are available, so the best loss is the global minimum d_min = best_loss[max_a]. The class achieving d_min has forge cost a*. You can repeatedly cycle with loss d_min until your ingots drop below a*. The number of such cycles is computable by integer division: k = floor((c_j - a*) / d_min) + 1. After k cycles, the remaining ingots r = c_j - k * d_min fall below a* (and thus below max_a), so the total cycles for c_j is k + cycles[r], looked up from the DP table.",
+          "hints": {
+            "nudge": "If c_j is 10^9 but max(a_i) is 10^6, you cannot simulate one cycle at a time. How do you skip ahead?",
+            "question": "When all weapon classes are available, the per-cycle loss is constant. If you repeat the same operation many times with constant cost, how do you compute the number of repetitions without looping?",
+            "formal": "Let d_min = best_loss[max_a] and a* = the minimum a_i achieving d_min. For c_j > max_a: k = floor((c_j - a*) / d_min) + 1 cycles bring ingots to r = c_j - k * d_min < a* <= max_a. Then total_cycles(c_j) = k + cycles[r]. For c_j <= max_a: total_cycles(c_j) = cycles[c_j] directly. This makes each metal type O(1) after the O(max_a) precomputation."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    },
+    {
+      "name": "Sorted thresholds with two-pointer simulation",
+      "description": "Deduplicate weapon classes by keeping only Pareto-optimal (threshold, loss) pairs, sort both thresholds and ingot counts, then simulate the forging process across ingot types using a pointer into the threshold list.",
+      "skill_tags": [
+        "greedy",
+        "sorting",
+        "two-pointers"
+      ],
+      "observations": [
+        {
+          "title": "Each forge+melt cycle costs (a_i - b_i) net ingots and yields 2 XP; metal types are independent",
+          "description": "Forging weapon class i spends a_i ingots and melting it returns b_i, for a net loss of d_i = a_i - b_i > 0 ingots per cycle. Each cycle gives exactly 2 XP. Since ingots of different types never interact, each metal type's ingot supply can be optimized independently.",
+          "hints": {
+            "nudge": "What is the net effect of one forge+melt cycle on your ingot count? Do different metal types affect each other?",
+            "question": "If forging costs a_i ingots and melting returns b_i, what is the net ingot loss per cycle? Why can you solve each metal type separately?",
+            "formal": "Each cycle of class i consumes d_i = a_i - b_i ingots. Different metal types never share ingots, so for each type j with c_j ingots, independently maximize the number of forge+melt cycles."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Only Pareto-optimal (threshold, loss) pairs matter",
+          "description": "A weapon class with forge cost a_i and net loss d_i is dominated if there exists another class with a_j <= a_i and d_j <= d_i (cheaper to access and cheaper to use). After removing dominated classes, the remaining classes form a Pareto frontier: as the forge cost threshold increases, the achievable net loss strictly decreases. Only these frontier classes are ever optimal to use.",
+          "hints": {
+            "nudge": "If weapon class A requires fewer ingots to forge AND loses fewer ingots per cycle than class B, would you ever choose B?",
+            "question": "Sort weapon classes by a_i. As you scan in increasing a_i order, when is a new class worth keeping? What does the set of useful classes look like?",
+            "formal": "Sort classes by a_i. Maintain a running minimum of d_i. A class is Pareto-optimal iff its d_i is strictly less than the running minimum. The frontier has the property: a_{k1} < a_{k2} < ... implies d_{k1} > d_{k2} > .... Only frontier classes are ever the best choice at any ingot level."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Simulate each ingot count by stepping through frontier classes",
+          "description": "For a metal type with c ingots, start with the best frontier class usable (lowest loss with threshold <= c). Do as many cycles as possible with this class via integer division. When ingots drop below its threshold, move to the next frontier class with a lower threshold. Repeat until no class is affordable. Each step uses division to skip many cycles at once.",
+          "hints": {
+            "nudge": "Within a single frontier class, the loss per cycle is constant. How do you quickly compute how many cycles you can do before dropping below its threshold?",
+            "question": "If your current ingot count is x, the best class has threshold a and loss d, how many cycles can you do before x drops below a? What ingot count do you have afterward?",
+            "formal": "At ingot level x with frontier class (a, d): cycles = floor((x - a) / d) + 1, remainder = x - cycles * d. Then x drops below a, and you check the next frontier class with lower threshold. With F frontier classes, each metal type takes at most O(F) steps."
+          },
+          "skill_tag": "two-pointers"
+        },
+        {
+          "title": "Precompute cycle counts for small ingot values to avoid repeated simulation",
+          "description": "Since ingot counts can be up to 10^9 but thresholds only go up to 10^6, once ingots drop below max(a_i) the number of remaining cycles depends only on the ingot count, not on history. Precompute a DP table for all ingot counts up to max(a_i). For c_j > max(a_i), use division to quickly reduce to the DP range, then look up the precomputed answer for the remainder.",
+          "hints": {
+            "nudge": "Many metal types might end up at the same ingot count after the initial large jumps. Can you avoid recomputing the same subproblem?",
+            "question": "If two metal types both reach 500 ingots at some point, will they produce the same number of remaining cycles? How can you exploit this?",
+            "formal": "Build cycles[x] for x = 0 to max_a by DP: cycles[x] = 1 + cycles[x - best_loss[x]] when a forge is possible, else 0. For c_j > max_a, compute the initial phase by division (all classes available, constant loss), then add cycles[remainder]. Total preprocessing: O(max_a + n), each query: O(1)."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "contest_id": 1926,
+  "index": "E",
+  "title": "Vlad and an Odd Ordering",
+  "difficulty": 1500,
+  "tags": [
+    "math",
+    "number theory",
+    "implementation"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Vladislav has n cards numbered 1, 2, ..., n. He wants to lay them down in a row as follows: First, he lays down all the odd-numbered cards from smallest to largest. Next, he lays down all cards that are twice an odd number from smallest to largest. Next, he lays down all cards that are 3 times an odd number from smallest to largest. Next, he lays down all cards that are 4 times an odd number from smallest to largest. And so on, until all cards are laid down. What is the k-th card he lays down in this process? Once Vladislav puts a card down, he cannot use that card again.",
+  "input_spec": "The first line contains an integer t (1 <= t <= 5 * 10^4) -- the number of test cases. The only line of each test case contains two integers n and k (1 <= k <= n <= 10^9) -- the number of cards Vlad has, and the position of the card you need to output.",
+  "output_spec": "For each test case, output a single integer -- the k-th card Vladislav lays down.",
+  "examples": [
+    {
+      "input": "11\n7 1\n7 2\n7 3\n7 4\n7 5\n7 6\n7 7\n1 1\n34 14\n84 19\n1000000000 1000000000",
+      "output": "1\n3\n5\n7\n2\n6\n4\n1\n27\n37\n536870912"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Unique odd factorization via powers of two",
+      "description": "Recognize that only rounds whose multiplier is a power of 2 produce any cards (all other rounds are empty because those cards were already laid down). Count how many cards each power-of-2 round contributes, locate which round k falls into, and compute the card value directly.",
+      "skill_tags": [
+        "math",
+        "number-theory",
+        "implementation"
+      ],
+      "observations": [
+        {
+          "title": "Only power-of-2 multiplier rounds produce cards",
+          "description": "Every positive integer has a unique representation as 2^a * b where b is odd. Round m lays down cards of the form m * (odd number) that have not yet been placed. If m has an odd factor greater than 1 (e.g., m = 3, 5, 6, ...), then m * q = (odd part of m) * q * (power-of-2 part of m), and the product (odd part of m) * q is itself odd, so this card was already placed in an earlier round with a smaller power-of-2 multiplier. Therefore round m is empty unless m is a power of 2. The only rounds that lay down cards are m = 1, 2, 4, 8, 16, ...",
+          "hints": {
+            "nudge": "Try writing out the first several rounds for n = 15 or so. Which rounds actually place new cards and which are empty?",
+            "question": "Every integer can be written as 2^a * (odd number). If round 3 tries to lay down 3 * 1 = 3, but 3 is odd and was already placed in round 1, what does this imply about all non-power-of-2 rounds?",
+            "formal": "Write any card c = 2^a * b with b odd. Card c is first placed in round m = 2^a, when the sequence 2^a * 1, 2^a * 3, 2^a * 5, ... is enumerated. For any m that is not a power of 2, every number of the form m * (odd) has already been claimed by the round corresponding to the exact power-of-2 part of m * (odd). Thus non-power-of-2 rounds are empty."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Count of cards in each round can be computed iteratively",
+          "description": "Round 2^0 = 1 lays down all odd numbers up to n: that is ceil(n/2) = (n+1)/2 cards. After removing these, the remaining cards are the even numbers up to n, which are equivalent to the integers 1 through floor(n/2) when divided by 2. The next round (multiplier 2) treats these in the same way, laying down the odd ones. This gives a simple loop: at each step, the count is (n+1)/2, then n becomes n/2.",
+          "hints": {
+            "nudge": "After laying down all odd cards from 1..n, what cards remain? Can you describe the remaining problem in terms of a smaller n?",
+            "question": "If there are n cards and you remove all odd-numbered ones, how many remain? If you relabel them by dividing by 2, what does the next round look like?",
+            "formal": "Let n_0 = n. Round i (multiplier 2^i) has count_i = (n_i + 1) / 2 cards. Then n_{i+1} = n_i / 2 (integer division). The loop terminates when n_i = 0. The counts satisfy sum of all count_i = n."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Locate which round contains position k",
+          "description": "Since the rounds have counts count_0, count_1, count_2, ..., the k-th card overall falls in the round where the cumulative sum first reaches or exceeds k. Maintain a running total; once tot < k <= tot + count_i, position k is within round i. The offset within this round is j = k - tot.",
+          "hints": {
+            "nudge": "You have a list of group sizes. How do you find which group the k-th element belongs to?",
+            "question": "If round 0 has 4 cards, round 1 has 2 cards, and round 2 has 1 card, and k = 6, which round is it in and what is its position within that round?",
+            "formal": "Iterate i = 0, 1, 2, ..., accumulating tot += count_i. The first i where tot >= k tells you round i contains the answer, and the local index is j = k - (tot - count_i)."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "The j-th card in round i is 2^i * (2j - 1)",
+          "description": "Round i lays down cards of the form 2^i * (odd number) in increasing order. The odd numbers in order are 1, 3, 5, 7, ..., so the j-th card in round i is 2^i * (2j - 1). This gives a direct O(1) formula once the round and local position are known.",
+          "hints": {
+            "nudge": "Within a single round, the cards are consecutive odd multiples of a power of 2. What is the j-th odd number?",
+            "question": "The j-th odd number is 2j - 1. If round i uses multiplier 2^i, what is the j-th card laid down in that round?",
+            "formal": "The j-th card in round i is 2^i * (2j - 1). Since j = k - tot (where tot is the cumulative count before round i), the answer is 2^i * (2(k - tot) - 1)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The loop runs at most O(log n) iterations",
+          "description": "Since n is halved at each step (n_{i+1} = n_i / 2), the total number of rounds with any cards is at most floor(log2(n)) + 1, which is at most 30 for n <= 10^9. This means the entire solution runs in O(log n) per test case, easily handling the constraint of up to 5 * 10^4 test cases.",
+          "hints": {
+            "nudge": "How many times can you halve n before it reaches 0?",
+            "question": "If n <= 10^9, what is the maximum number of non-empty rounds? Is this efficient enough for 50000 test cases?",
+            "formal": "The number of iterations is floor(log2(n)) + 1 <= 30. Total work across all test cases is O(t * log n) = O(50000 * 30) = O(1.5 * 10^6), which is well within limits."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

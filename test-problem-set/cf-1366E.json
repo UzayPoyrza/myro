@@ -1,0 +1,132 @@
+{
+  "contest_id": 1366,
+  "index": "E",
+  "title": "Two Arrays",
+  "difficulty": 2100,
+  "tags": ["binary-search", "combinatorics", "constructive", "dp", "two-pointers"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given two arrays $$$a_1, a_2, \\dots , a_n$$$ and $$$b_1, b_2, \\dots , b_m$$$. Array $$$b$$$ is sorted in ascending order ($$$b_i  \\lt  b_{i + 1}$$$ for each $$$i$$$ from $$$1$$$ to $$$m - 1$$$). You have to divide the array $$$a$$$ into $$$m$$$ consecutive subarrays so that, for each $$$i$$$ from $$$1$$$ to $$$m$$$, the minimum on the $$$i$$$-th subarray is equal to $$$b_i$$$. Note that each element belongs to exactly one subarray, and they are formed in such a way: the first several elements of $$$a$$$ compose the first subarray, the next several elements of $$$a$$$ compose the second subarray, and so on. For example, if $$$a = [12, 10, 20, 20, 25, 30]$$$ and $$$b = [10, 20, 30]$$$ then there are two good partitions of array $$$a$$$: $$$[12, 10, 20], [20, 25], [30]$$$; $$$[12, 10], [20, 20, 25], [30]$$$. You have to calculate the number of ways to divide the array $$$a$$$. Since the number can be pretty large print it modulo 998244353 .",
+  "input_spec": "The first line contains two integers $$$n$$$ and $$$m$$$ ($$$1 \\le n, m \\le 2 \\cdot 10^5$$$) — the length of arrays $$$a$$$ and $$$b$$$ respectively. The second line contains $$$n$$$ integers $$$a_1, a_2, \\dots , a_n$$$ ($$$1 \\le a_i \\le 10^9$$$) — the array $$$a$$$. The third line contains $$$m$$$ integers $$$b_1, b_2, \\dots , b_m$$$ ($$$1 \\le b_i \\le 10^9; b_i  \\lt  b_{i+1}$$$) — the array $$$b$$$.",
+  "output_spec": "In only line print one integer — the number of ways to divide the array $$$a$$$ modulo 998244353 .",
+  "examples": [
+    {
+      "input": "6 3\n12 10 20 20 25 30\n10 20 30",
+      "output": "2"
+    },
+    {
+      "input": "4 2\n1 3 3 7\n3 7",
+      "output": "0"
+    },
+    {
+      "input": "8 2\n1 2 2 2 2 2 2 2\n1 2",
+      "output": "7"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy scan with boundary counting",
+      "description": "Process from right to left (or equivalently reverse both arrays). Greedily assign each b-value to its latest possible occurrence, then count the number of flexible cut points between consecutive assigned minimums.",
+      "skill_tags": ["greedy", "two-pointers", "math"],
+      "observations": [
+        {
+          "title": "Subarray minimums are strictly increasing",
+          "description": "Since b is strictly sorted, the minimum of subarray i is less than the minimum of subarray i+1. This means any element equal to b[i] cannot appear in subarrays i+1 through m, because it would violate those subarrays' minimum constraints. This strict ordering heavily constrains which elements can belong to which subarray.",
+          "hints": {
+            "nudge": "What does the fact that b is strictly increasing tell you about where elements equal to b[i] can appear?",
+            "question": "If b[i] < b[i+1], can an element with value b[i] ever appear in subarray i+1 or later?",
+            "formal": "An element equal to b[i] forces the minimum of any subarray containing it to be at most b[i], which is less than b[j] for j > i. So all occurrences of b[i] must be in subarrays 1 through i."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Each b[i] must appear in a, and elements smaller than b[i] cannot appear in subarray i",
+          "description": "For the i-th subarray to have minimum exactly b[i], the value b[i] must exist somewhere in the portion of a assigned to that subarray, and no element in that subarray can be strictly less than b[i]. If any element smaller than b[1] exists in a, the answer is 0 (since b[1] is the smallest required minimum). More generally, every element in a must be >= the b-value of the subarray it belongs to.",
+          "hints": {
+            "nudge": "What conditions must hold for a subarray to achieve exactly a certain minimum?",
+            "question": "If the minimum of a subarray must be b[i], what two things must be true about the elements in that subarray?",
+            "formal": "Subarray i must contain at least one element equal to b[i], and every element in it must be >= b[i]. If any element in a is not >= some b[i] it would need to be assigned to, output 0."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Process from the last subarray backward to find forced boundaries",
+          "description": "Reversing both arrays and scanning left to right is equivalent to processing subarrays from last to first. Starting from the end of a, the running minimum must reach b[m] (the largest b-value). The position where this first happens is the forced starting point of the last subarray. Then continue to find where the running minimum reaches b[m-1], and so on. This greedy assignment finds the tightest valid partition.",
+          "hints": {
+            "nudge": "Which end of array a is easier to start from when assigning subarrays?",
+            "question": "If you scan from the right end of a, when does the running minimum first equal b[m]? What does that position tell you?",
+            "formal": "Reverse both arrays. Scan a left to right, tracking the running minimum. When it equals b[0] (formerly b[m]), that position is the mandatory rightmost boundary of the last subarray. Continue scanning for each successive b-value."
+          },
+          "skill_tag": "two-pointers"
+        },
+        {
+          "title": "Flexible boundary zone gives a multiplier",
+          "description": "Between two consecutive forced b-value positions, there may be a stretch of elements all strictly greater than the current b[i]. In this zone, the cut between subarray i and subarray i+1 can be placed at any position, because moving the boundary within this zone doesn't change either subarray's minimum. The number of valid positions in each such zone is a multiplicative factor in the answer.",
+          "hints": {
+            "nudge": "After finding where each b[i] forces a boundary, is the boundary always uniquely determined?",
+            "question": "Consider elements between the last element equal to b[i] and the first element equal to b[i+1]. If they are all strictly greater than b[i], can the cut point be placed anywhere among them?",
+            "formal": "Let pos_i be where b[i] forces the running minimum. Between pos_i and pos_{i+1}, there may be k elements all > b[i]. The cut can be placed at any of k positions. Multiply all such counts together for the total answer."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Multiply independent choices modulo 998244353",
+          "description": "The total number of valid partitions is the product of the number of valid cut positions between each pair of consecutive subarrays. Since each boundary's flexibility is independent of the others, the answer is their product taken modulo 998244353. If any subarray's constraint is impossible to satisfy, the entire answer is 0.",
+          "hints": {
+            "nudge": "Once you know the number of choices at each boundary, how do you combine them?",
+            "question": "If boundary 1 has c1 choices and boundary 2 has c2 choices, and they are independent, what is the total count?",
+            "formal": "Answer = product of (number of valid positions for each of the m-1 boundaries) mod 998244353. If any boundary has 0 valid positions, the answer is 0."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    },
+    {
+      "name": "Binary search for boundary ranges",
+      "description": "For each b[i], binary search to find the range of positions in a where the cut between subarray i and i+1 can be placed, then multiply the range sizes.",
+      "skill_tags": ["binary-search", "greedy", "math"],
+      "observations": [
+        {
+          "title": "Locate occurrences of each b[i] in a",
+          "description": "For the partition to be valid, each b[i] must appear in the correct portion of a. Precompute the positions of each b[i] value in a. If some b[i] has no occurrences at all, the answer is immediately 0.",
+          "hints": {
+            "nudge": "Before figuring out partition boundaries, what do you need to know about where the b values appear in a?",
+            "question": "For each b[i], which positions in a could potentially serve as the element that makes b[i] the subarray minimum?",
+            "formal": "Collect positions of each b[i] in a into a list. Also check that no element in a is smaller than b[1] (otherwise impossible). Use sorted position lists for binary search."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "Earliest and latest valid cut positions bound the flexibility",
+          "description": "For the boundary between subarray i and subarray i+1, there is an earliest position (where the cut must be at least) and a latest position (where the cut can be at most). The earliest is determined by the last occurrence of b[i] in the region, and the latest by the first occurrence of b[i+1] minus one. Any element strictly between these bounds that is less than b[i+1] further constrains the latest position.",
+          "hints": {
+            "nudge": "For each boundary, what constrains where you can place the cut from the left side versus the right side?",
+            "question": "The cut between subarrays i and i+1 must be after the last b[i] element and before the first b[i+1] element. But what about elements between them that are too small?",
+            "formal": "Let L = last position of b[i] in this region, R = first position of b[i+1]. The cut must be in [L, R-1]. Additionally, any element in (L, R) with value < b[i+1] but > b[i] would need to be in subarray i, constraining L further."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "No element may be smaller than the minimum of its assigned subarray",
+          "description": "Since b is strictly increasing, subarrays to the right have larger required minimums. If any element in a is too small to be in any valid subarray given its position, the answer is 0. Specifically, between the region assigned to b[i] and b[i+1], every element must be >= b[i] and no stray small elements can appear.",
+          "hints": {
+            "nudge": "What happens if an element in a is sandwiched between two subarrays but is too small for either?",
+            "question": "If an element at position p has value v where b[i] <= v < b[i+1], which subarray must it belong to?",
+            "formal": "Every element in a with value in [b[i], b[i+1]) must be assigned to subarray i or earlier. An element smaller than b[1] makes the answer 0. This constrains the feasible boundary ranges."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Multiply boundary choices for the final answer",
+          "description": "Each of the m-1 boundaries has an independently determined number of valid cut positions. The total number of valid partitions is the product of all these counts, taken modulo 998244353.",
+          "hints": {
+            "nudge": "How do you combine the flexibility at each boundary into a single count?",
+            "question": "If boundary i has k_i valid placements and the choices are independent, what is the total number of partitions?",
+            "formal": "Answer = k_1 * k_2 * ... * k_{m-1} mod 998244353, where k_i = (latest cut position - earliest cut position + 1) for boundary i."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

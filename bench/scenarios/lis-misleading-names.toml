@@ -1,0 +1,26 @@
+[scenario]
+name = "LIS — O(n^2) DP with misleading variable names"
+problem = "cf-340D"
+route = 1
+trigger = "user idle for 60s"
+elapsed_secs = 240
+observations_found = 0
+
+[scenario.code]
+text = """
+n = int(input())
+dp = list(map(int, input().split()))  # misleading: this is the input array!
+arr = [1] * n  # this is actually the dp table
+for i in range(n):
+    for j in range(i):
+        if dp[j] < dp[i]:
+            arr[i] = max(arr[i], arr[j] + 1)
+# forgot to print the answer
+"""
+
+[expect]
+state = "approaching"
+obs_id = "cf:340D:route:2:obs:1"
+min_confidence = 0.3
+must_be_socratic = true
+banned_patterns = []

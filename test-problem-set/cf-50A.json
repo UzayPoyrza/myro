@@ -1,0 +1,55 @@
+{
+  "contest_id": 50,
+  "index": "A",
+  "title": "Domino piling",
+  "difficulty": 800,
+  "tags": ["math", "greedy"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given a rectangular board of M x N squares. Find the maximum number of dominoes (2 x 1 tiles) that can be placed on the board such that each domino covers exactly two squares and no two dominoes overlap. Dominoes can be placed horizontally or vertically.",
+  "input_spec": "The input contains two integers M and N separated by a space (1 <= M, N <= 16).",
+  "output_spec": "Print a single integer -- the maximum number of dominoes that can be placed on the board.",
+  "examples": [
+    {"input": "2 4", "output": "4"},
+    {"input": "3 3", "output": "4"}
+  ],
+  "routes": [
+    {
+      "name": "Area / 2",
+      "description": "Each domino covers exactly 2 squares, and the entire board can be tiled greedily, so the answer is floor(M * N / 2).",
+      "skill_tags": ["math", "greedy"],
+      "observations": [
+        {
+          "title": "Each domino covers exactly 2 squares",
+          "description": "A domino is a 2x1 tile, so it always covers exactly 2 cells of the board.",
+          "hints": {
+            "nudge": "How many squares does each domino cover?",
+            "question": "If the board has M*N squares total and each domino covers 2 squares, what is the theoretical maximum?",
+            "formal": "Maximum possible dominoes = floor(M * N / 2), since each domino uses 2 of the M*N available cells."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The theoretical maximum is always achievable",
+          "description": "On any rectangular board, you can always tile to achieve floor(M*N/2) dominoes. No cells are wasted beyond the one leftover when M*N is odd.",
+          "hints": {
+            "nudge": "Can you think of a way to tile any rectangle row by row?",
+            "question": "If M is even, can you tile each column with vertical dominoes? If M is odd, what about the last row?",
+            "formal": "If M is even, pair cells in each column. If M is odd, tile the first M-1 rows as even case, then tile the last row horizontally in pairs. At most 1 cell is left uncovered."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "The formula is simply floor(M * N / 2)",
+          "description": "The answer requires no complex logic -- just compute M * N // 2 using integer division.",
+          "hints": {
+            "nudge": "Can the answer be written as a one-line formula?",
+            "question": "What does integer division (floor division) of M*N by 2 give you?",
+            "formal": "print(M * N // 2). For example: 2*4 // 2 = 4, and 3*3 // 2 = 4."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

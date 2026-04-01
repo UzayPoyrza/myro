@@ -1,0 +1,96 @@
+{
+  "contest_id": 2031,
+  "index": "E",
+  "title": "Penchick and Chloe's Trees",
+  "difficulty": 2100,
+  "tags": [
+    "data structures",
+    "dfs and similar",
+    "dp",
+    "greedy",
+    "implementation",
+    "math",
+    "sortings",
+    "trees"
+  ],
+  "time_limit": "3.5 seconds",
+  "memory_limit": "512 megabytes",
+  "description": "With just a few hours left until Penchick and Chloe leave for Singapore, they could hardly wait to see the towering trees at the Singapore Botanic Gardens! Attempting to contain their excitement, Penchick crafted a rooted tree to keep Chloe and himself busy. Penchick has a rooted tree consisting of n vertices, numbered from 1 to n, with vertex 1 as the root, and Chloe can select a non-negative integer d to create a perfect binary tree of depth d. Since Penchick and Chloe are good friends, Chloe wants her tree to be isomorphic to Penchick's tree. To meet this condition, Chloe can perform the following operation on her own tree any number of times: Select an edge (u,v), where u is the parent of v. Remove vertex v and all the edges connected to v, then connect all of v's previous children directly to u. In particular, doing an operation on an edge (u, v) where v is a leaf will delete vertex v without adding any new edges. Since constructing a perfect binary tree can be time-consuming, Chloe wants to choose the minimum d such that a perfect binary tree of depth d can be made isomorphic to Penchick's tree using the above operation. Note that she can't change the roots of the trees.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases t (1 <= t <= 10^5). The first line of each test case contains a single integer n (2 <= n <= 10^6) -- the number of vertices in Penchick's tree. The second line of each test case contains n-1 integers p_2, p_3, ..., p_n (1 <= p_i <= i-1) -- the parent of vertex i. It is guaranteed that the sum of n over all test cases does not exceed 10^6.",
+  "output_spec": "For each test case, output a single integer on each line: the minimum depth of Chloe's perfect binary tree.",
+  "examples": [
+    {
+      "input": "5\n6\n1 2 2 1 1\n15\n1 1 2 2 3 3 4 4 5 5 6 6 7 7\n5\n1 2 2 2\n7\n1 1 2 1 1 2\n10\n1 1 1 2 2 2 4 3 3",
+      "output": "2\n3\n3\n3\n3"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Bottom-up DFS with Kraft's inequality",
+      "description": "Compute the answer bottom-up via DFS. For each node, determine the minimum perfect binary tree depth needed for its subtree by combining two constraints: every child must fit at depth >= 1, and the children's subtrees must pack into the binary tree's branching capacity (Kraft's inequality on the antichain placement).",
+      "skill_tags": ["trees", "greedy", "math", "dfs"],
+      "observations": [
+        {
+          "title": "The contraction operation produces topological tree minors",
+          "description": "Contracting a vertex v removes v and reconnects its children to v's parent. Starting from a perfect binary tree, any sequence of contractions produces a tree that is a topological minor of the original. The problem asks: what is the minimum-depth perfect binary tree such that the given target tree is a topological minor of it, with the root preserved? Equivalently, each node of the target tree maps to a node of the binary tree, the root maps to the root, parent-child relationships in the target correspond to ancestor-descendant relationships in the binary tree, and siblings in the target map to nodes in disjoint subtrees.",
+          "hints": {
+            "nudge": "Think about what remains after a sequence of contractions. Each surviving node was originally in the perfect binary tree. What structural relationship must these surviving nodes have with each other?",
+            "question": "If node u is the parent of node v in the target tree, what must be true about their images in the perfect binary tree? Can two children of the same target node map to nodes on the same root-to-leaf path?",
+            "formal": "Define an embedding f from target nodes to binary tree nodes. f(root) = binary root. If u is the parent of v in the target, then f(u) is a proper ancestor of f(v). If v1 and v2 are distinct children of u, then f(v1) and f(v2) are in disjoint subtrees (neither is an ancestor of the other). All nodes between f(u) and f(v) on the path are contracted."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "Define the subproblem bottom-up: minimum depth per subtree",
+          "description": "Let f(u) be the minimum depth of a perfect binary tree needed to realize the subtree rooted at u. For a leaf, f(u) = 0 (a single node, depth zero). For an internal node, f(u) depends on the f-values of its children. Computing f bottom-up via post-order DFS gives the final answer as f(root).",
+          "hints": {
+            "nudge": "Can you solve the problem independently for each subtree? What is the simplest case?",
+            "question": "If you know the minimum binary tree depth needed for each child's subtree, how does that help you compute the answer for the parent? What base case is trivial?",
+            "formal": "Define f(u) = minimum d such that a perfect binary tree of depth d can be contracted to produce the subtree of the target rooted at u. Base case: f(leaf) = 0. Compute f in post-order. The answer is f(1)."
+          },
+          "skill_tag": "dfs"
+        },
+        {
+          "title": "Children map to an antichain in the binary tree",
+          "description": "The children c_1, ..., c_k of a target node u must each map to a distinct descendant of the binary tree root (which represents u). These image nodes form an antichain: no image node is an ancestor of another, because each child owns its own disjoint subtree. In a perfect binary tree, an antichain is a set of nodes such that no two are on the same root-to-leaf path. This antichain structure is the key geometric constraint governing how many children can be packed and at what depths.",
+          "hints": {
+            "nudge": "Two children of the same node need disjoint subtrees in the binary tree. What does that say about their relative positions?",
+            "question": "If child c_i maps to node n_i in the binary tree, and c_j maps to n_j, can n_i be an ancestor of n_j? What is the formal name for a set of nodes with this mutual exclusion property?",
+            "formal": "The images {f(c_1), ..., f(c_k)} form an antichain in the perfect binary tree of depth D rooted at f(u). Each f(c_i) is at some depth d_i >= 1 (since f(c_i) != f(u)). The antichain condition ensures each child gets its own subtree to embed its descendants into."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "Each child's placement depth is bounded by its subtree requirement",
+          "description": "If child c_i is placed at depth d_i in the binary tree of depth D, then the subtree below c_i has depth D - d_i. This subtree must be large enough for c_i's own subtree, so D - d_i >= f(c_i), giving d_i <= D - f(c_i). Also d_i >= 1 since c_i is a proper descendant of the root. Combining: 1 <= d_i <= D - f(c_i), which requires D >= f(c_i) + 1 for every child.",
+          "hints": {
+            "nudge": "A child placed deeper in the binary tree has less remaining depth below it. How does that interact with the child's subtree requirement?",
+            "question": "If child c_i needs f(c_i) levels for its own subtree and is placed at depth d_i, how much total depth does the binary tree need? What is the minimum D from this constraint alone?",
+            "formal": "For each child c_i: d_i + f(c_i) <= D and d_i >= 1. Therefore D >= f(c_i) + 1. The first constraint on D is: D >= max over all children of (f(c_i) + 1)."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Kraft's inequality governs the packing of the antichain",
+          "description": "In a perfect binary tree, an antichain is feasible if and only if the sum of 2^{-d_i} over all members at depth d_i is at most 1 (Kraft's inequality). To minimize D, place each child as deep as possible: d_i = D - f(c_i). Substituting, the condition becomes sum of 2^{-(D - f(c_i))} <= 1, which simplifies to sum of 2^{f(c_i)} <= 2^D, i.e., D >= ceil(log2(sum of 2^{f(c_i)})). This is the second constraint on D.",
+          "hints": {
+            "nudge": "Think of the binary tree's capacity as a resource. A node at depth d blocks a fraction 2^{-d} of all leaf slots. What must be true for all children to fit?",
+            "question": "If each child is placed as deep as its budget allows (d_i = D - f(c_i)), what inequality must hold for the antichain to be valid? How does this relate to binary prefix codes?",
+            "formal": "Kraft's inequality: sum of 2^{-d_i} <= 1. Substituting d_i = D - f(c_i): sum of 2^{f(c_i) - D} <= 1, equivalently 2^D >= sum of 2^{f(c_i)}. So D >= ceil(log2(sum_i 2^{f(c_i)}))."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Combine both constraints for the final recurrence",
+          "description": "The minimum depth for node u is the maximum of the two constraints: (1) D >= max(f(c_i) + 1) ensuring each child fits at depth >= 1, and (2) D >= ceil(log2(sum 2^{f(c_i)})) ensuring the antichain packs into the binary tree. So f(u) = max(max_i(f(c_i) + 1), ceil(log2(sum_i 2^{f(c_i)}))). Compute this bottom-up in O(n) total time using a single DFS, since each node is visited once and the sum/max over children is computed incrementally.",
+          "hints": {
+            "nudge": "You have two lower bounds on D. Which one is tighter depends on the children's structure. What is the final answer?",
+            "question": "For a node with children depths [2, 0, 0, 0], which constraint dominates? What about [0, 0, 0, 0, 0]? How do you compute ceil(log2(x)) efficiently?",
+            "formal": "f(u) = max(max_child c of (f(c) + 1), ceil(log2(sum_child c of 2^{f(c)}))). For leaves: f(u) = 0. Compute via post-order DFS. Total time O(n) since each edge is traversed once. To compute ceil(log2(x)), find the smallest power of 2 >= x, which can be done with bit operations. The sum of 2^{f(c)} can overflow for large depths, but since f <= log2(n), the values stay bounded by n."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "contest_id": 979,
+  "index": "D",
+  "title": "Kuro and GCD and XOR and SUM",
+  "difficulty": 2200,
+  "tags": ["data-structures", "number-theory", "greedy", "math"],
+  "time_limit": "2 seconds",
+  "memory_limit": "512 megabytes",
+  "description": "Initially there is an empty array a. The game consists of q tasks of two types. Type 1 asks to add a number u to a. Type 2 asks to find a number v in a such that k | GCD(x, v), x + v <= s, and x XOR v is maximized, where XOR denotes the bitwise XOR operation, or report -1 if no such number exists.",
+  "input_spec": "The first line contains one integer q (2 <= q <= 10^5). q lines follow, each beginning with an integer t -- the type of the task. If t = 1, an integer u follows (1 <= u <= 10^5) -- add u to array a. If t = 2, three integers x, k, and s follow (1 <= x, k, s <= 10^5) -- find v in a such that k | GCD(x, v), x + v <= s, and x XOR v is maximized, or report -1.",
+  "output_spec": "For each task of type 2, output on one line the desired number v, or -1 if no such numbers are found.",
+  "examples": [
+    {"input": "5\n1 1\n1 2\n2 1 1 3\n2 1 1 2\n2 1 1 1", "output": "2\n1\n-1"},
+    {"input": "10\n1 9\n2 9 9 22\n2 3 3 18\n1 25\n2 9 9 20\n2 25 25 14\n1 20\n2 26 26 3\n1 14\n2 20 20 9", "output": "9\n9\n9\n-1\n-1\n-1"}
+  ],
+  "routes": [
+    {
+      "name": "Divisor-indexed tries with greedy XOR maximization",
+      "description": "Build one binary trie per divisor value. For each query, reduce the GCD constraint to a divisibility check, then greedily traverse the appropriate trie to maximize XOR while respecting the sum constraint.",
+      "skill_tags": ["data-structures", "number-theory", "greedy"],
+      "observations": [
+        {
+          "title": "GCD constraint reduces to divisibility by k",
+          "description": "The condition k | GCD(x, v) holds if and only if both x and v are divisible by k. So if k does not divide x, the answer is immediately -1. Otherwise, we only need to consider values v in the array that are multiples of k.",
+          "hints": {
+            "nudge": "What does it mean for k to divide GCD(x, v)? What must be true about x and v individually?",
+            "question": "If GCD(x, v) is divisible by k, does that mean x is divisible by k? Does v have to be divisible by k?",
+            "formal": "k | GCD(x, v) iff k | x and k | v. This is because GCD(x,v) divides both x and v, and k divides GCD(x,v). Conversely, if k | x and k | v then k | GCD(x,v). So immediately return -1 if k does not divide x."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "One trie per divisor to handle the divisibility filter",
+          "description": "Maintain a separate binary trie for each possible divisor d (1 <= d <= MAX). Trie[d] contains all values in the array that are multiples of d. When a number u is added, insert it into trie[d] for every divisor d of u. For a query with divisor k, search only trie[k].",
+          "hints": {
+            "nudge": "You need fast access to all multiples of k in the array. How could you preorganize numbers by their divisors?",
+            "question": "If you insert a number u into a trie for each of its divisors d, how many tries does u go into? What is the total cost over all insertions?",
+            "formal": "When adding u, enumerate all divisors of u in O(sqrt(u)) and insert u into trie[d] for each divisor d. Total insertions across all adds: sum of d(u) for all u, bounded by O(MAX * log(MAX)) across all distinct values up to MAX = 10^5."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Greedy bit-by-bit XOR maximization on a trie",
+          "description": "To maximize x XOR v, traverse the binary trie from the most significant bit to the least. At each bit, prefer the branch that differs from the corresponding bit of x (since differing bits produce 1 in the XOR). This is the classic trie-based XOR maximization.",
+          "hints": {
+            "nudge": "In XOR, you want as many high-order bits to be 1 as possible. At each bit, which branch of the trie gives a 1 in the XOR?",
+            "question": "If the current bit of x is b, going to the trie branch (1-b) gives a 1 in that bit of the XOR. When should you go to branch b instead?",
+            "formal": "At bit i, let b = (x >> i) & 1. Try to descend into child (b ^ 1) for a 1-bit in the XOR. If that child does not exist or cannot satisfy the sum constraint, descend into child b instead. This greedy approach from MSB to LSB maximizes the XOR."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Enforce the sum constraint via minimum tracking in trie nodes",
+          "description": "Each trie node stores the minimum value in its subtree. When traversing to maximize XOR, only descend into a branch if its minimum value plus x does not exceed s. This ensures the sum constraint x + v <= s is satisfied without filtering candidates afterwards.",
+          "hints": {
+            "nudge": "You need x + v <= s, which means v <= s - x. How can you quickly tell if a trie branch contains any value small enough?",
+            "question": "If each trie node stores the minimum value among all numbers in its subtree, how would you use that during the greedy traversal?",
+            "formal": "Each node maintains min_val = min of all values in its subtree. When deciding to descend into a child, check child.min_val + x <= s. If the preferred branch (for XOR) fails this check, try the other branch. If neither works, return -1."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Deduplication: only insert each distinct value once",
+          "description": "Since the problem adds values to the array and values can repeat, use a boolean array to track which values have already been inserted. Skip re-insertion of duplicates to avoid unnecessary trie operations and keep the tries compact.",
+          "hints": {
+            "nudge": "What happens if the same number is added multiple times? Does it change the answer to any query?",
+            "question": "If v is already in the array and is added again, does the set of reachable XOR values change? Is there any benefit to inserting it twice?",
+            "formal": "Maintain chk[u] = true if u has been added. On type 1 query, if chk[u] is true, skip. Duplicates do not affect the existence or optimality of any v, since we only need to find one such v."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Complexity: precomputing divisors and trie bit-width",
+          "description": "Precompute for each number 1..MAX the list of its divisors using a sieve-like approach in O(MAX log MAX). Each trie has depth log2(MAX) ~ 17 bits. Queries run in O(17) per trie traversal. Total complexity is O(MAX log MAX + q * sqrt(MAX) + q * 17).",
+          "hints": {
+            "nudge": "How do you enumerate all divisors of every number up to MAX efficiently?",
+            "question": "For each d from 1 to MAX, you can mark d as a divisor of d, 2d, 3d, ... How does this relate to the harmonic series?",
+            "formal": "Sieve divisors: for d in 1..MAX, for j in d, 2d, ..., MAX: add d to divisors[j]. Total work: sum_{d=1}^{MAX} MAX/d = O(MAX * H(MAX)) = O(MAX log MAX). Trie depth: ceil(log2(10^5)) = 17. Each query does O(17) trie descent."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

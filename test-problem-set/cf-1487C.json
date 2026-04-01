@@ -1,0 +1,74 @@
+{
+  "contest_id": 1487,
+  "index": "C",
+  "title": "Minimum Ties",
+  "difficulty": 1500,
+  "tags": ["constructive", "greedy", "math", "graphs"],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "A big football championship will occur soon! $$$n$$$ teams will compete in it, and each pair of teams will play exactly one game against each other. There are two possible outcomes of a game: the game may result in a tie, then both teams get $$$1$$$ point; one team might win in a game, then the winning team gets $$$3$$$ points and the losing team gets $$$0$$$ points. The score of a team is the number of points it gained during all games that it played. You are interested in a hypothetical situation when all teams get the same score at the end of the championship. A simple example of that situation is when all games result in ties, but you want to minimize the number of ties as well. Your task is to describe a situation (choose the result of each game) so that all teams get the same score, and the number of ties is the minimum possible.",
+  "input_spec": "The first line contains one integer $$$t$$$ ($$$1 \\le t \\le 100$$$) — the number of test cases. Then the test cases follow. Each test case is described by one line containing one integer $$$n$$$ ($$$2 \\le n \\le 100$$$) — the number of teams.",
+  "output_spec": "For each test case, print $$$\\frac{n(n - 1)}{2}$$$ integers describing the results of the games in the following order: the first integer should correspond to the match between team $$$1$$$ and team $$$2$$$, the second — between team $$$1$$$ and team $$$3$$$, then $$$1$$$ and $$$4$$$, ..., $$$1$$$ and $$$n$$$, $$$2$$$ and $$$3$$$, $$$2$$$ and $$$4$$$, ..., $$$2$$$ and $$$n$$$, and so on, until the game between the team $$$n - 1$$$ and the team $$$n$$$. The integer corresponding to the game between the team $$$x$$$ and the team $$$y$$$ should be $$$1$$$ if $$$x$$$ wins, $$$-1$$$ if $$$y$$$ wins, or $$$0$$$ if the game results in a tie. All teams should get the same score, and the number of ties should be the minimum possible. If there are multiple optimal answers, print any of them. It can be shown that there always exists a way to make all teams have the same score.",
+  "examples": [
+    {"input": "2\n2\n3", "output": "0 \n1 -1 1"}
+  ],
+  "routes": [
+    {
+      "name": "Circular tournament",
+      "description": "Arrange teams in a circle and have each team beat the next floor(n/2) teams clockwise and lose to the rest. For even n, diametrically opposite teams must tie.",
+      "skill_tags": ["constructive", "greedy", "math"],
+      "observations": [
+        {
+          "title": "Equal scores means equal total points",
+          "description": "Each team plays n-1 games. For scores to be equal, every team must earn the same total. Since a win awards 3 points (total 3 across both teams) and a tie awards 2 (total 2 across both teams), the total points in the tournament depend on how many games are wins vs ties. Equal scores means total points / n must be an integer, which constrains the number of ties.",
+          "hints": {
+            "nudge": "How many total points are distributed in the tournament? Does that depend on the number of ties vs decisive games?",
+            "question": "A win distributes 3 points total, a tie distributes 2 points total. If there are w wins and d ties among n(n-1)/2 games, the total is 3w + 2d. For equal scores, (3w + 2d) must be divisible by n. What does this force?",
+            "formal": "Total games = n(n-1)/2. Total points = 3w + 2d where w + d = n(n-1)/2. For equal scores: (3w + 2d)/n must be an integer. This means (w + 2*n(n-1)/2) / n = (w + n(n-1)) / n must be integer, so n | w. The minimum ties occur when w is maximized while still divisible by n."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Odd n allows zero ties",
+          "description": "When n is odd, each team plays n-1 (even) games. We can give each team exactly (n-1)/2 wins and (n-1)/2 losses, using 0 ties. This works because the total wins n*(n-1)/2 equals the total losses, and each team's share is (n-1)/2 wins giving 3*(n-1)/2 points each.",
+          "hints": {
+            "nudge": "When n is odd, n-1 is even. Can you split each team's games evenly into wins and losses?",
+            "question": "If every team wins exactly (n-1)/2 games and loses (n-1)/2 games, does the total number of wins across all teams match the total number of games?",
+            "formal": "For odd n: give each team (n-1)/2 wins and (n-1)/2 losses. Total wins = n*(n-1)/2 = total games. Each team scores 3*(n-1)/2. Zero ties needed."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Even n requires exactly n/2 ties",
+          "description": "When n is even, each team plays n-1 (odd) games. You cannot split an odd number of games into equal wins and losses without a remainder. Each team needs exactly 1 tie (to make the remaining n-2 games split evenly), giving n/2 ties total (since each tie involves two teams).",
+          "hints": {
+            "nudge": "When n is even, n-1 is odd. Can each team have the same number of wins and losses if the total is odd?",
+            "question": "If each team needs at least 1 tie to make the rest split evenly, and each tie is shared by 2 teams, what is the minimum total number of ties?",
+            "formal": "For even n: each team plays n-1 (odd) games. Need at least 1 tie per team to split the rest as (n-2)/2 wins and (n-2)/2 losses. Since each tie involves 2 teams, minimum ties = n/2."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Arrange teams in a circle for symmetric construction",
+          "description": "Place teams 0 through n-1 around a circle. By symmetry, if team i beats teams at circular distances 1 through floor(n/2) ahead and loses to teams at distances floor(n/2)+1 through n-1 ahead, every team has an identical win/loss pattern. This rotational symmetry guarantees equal scores.",
+          "hints": {
+            "nudge": "Can you arrange teams so that every team's situation looks identical by symmetry?",
+            "question": "If you place n teams around a circle and each team beats the next k teams clockwise and loses to the rest, what value of k balances scores?",
+            "formal": "Place teams 0..n-1 on a circle. Team i beats team j if the clockwise distance (j-i) mod n is in {1, 2, ..., floor(n/2)}. By rotational symmetry, each team has floor(n/2) wins. For even n, distance n/2 is a tie (it equals n/2 both clockwise and counterclockwise)."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Translate circular distance to the output condition",
+          "description": "For the pair (i, j) where i < j, the difference j - i determines the result. If j - i <= floor(n/2), team i wins (output 1). If j - i > floor(n/2), team i loses (output -1). For even n, j - i == n/2 is a tie (output 0). This directly implements the circular arrangement without modular arithmetic.",
+          "hints": {
+            "nudge": "Given teams i and j with i < j, how does j - i relate to the circular distance?",
+            "question": "For i < j, the clockwise distance from i to j is j - i, and from j to i is n - (j-i). When is j - i in the 'winning' half for team i?",
+            "formal": "For pair (i, j) with i < j: if j - i < n/2, output 1 (i wins). If j - i > n/2, output -1 (j wins). If j - i == n/2 (only possible when n is even), output 0 (tie)."
+          },
+          "skill_tag": "constructive"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+[scenario]
+name = "Xenia — segment tree with XOR everywhere"
+problem = "cf-339D"
+route = 0
+trigger = "test failure on test 1"
+elapsed_secs = 240
+observations_found = 1
+
+[scenario.obs_states]
+1 = "found"
+
+[scenario.code]
+text = """
+import sys
+input = sys.stdin.readline
+
+n, q = map(int, input().split())
+a = list(map(int, input().split()))
+size = 1 << n
+tree = [0] * (2 * size)
+
+# Build
+for i in range(size):
+    tree[size + i] = a[i] if i < len(a) else 0
+for i in range(size - 1, 0, -1):
+    tree[i] = tree[2*i] ^ tree[2*i+1]  # BUG: always XOR, should alternate
+
+def update(p, val):
+    p += size
+    tree[p] = val
+    p >>= 1
+    while p >= 1:
+        tree[p] = tree[2*p] ^ tree[2*p+1]  # BUG: always XOR
+        p >>= 1
+
+for _ in range(q):
+    p, b = map(int, input().split())
+    update(p - 1, b)
+    print(tree[1])
+"""
+
+[[scenario.recent_messages]]
+role = "user"
+content = "My segment tree works for some cases but fails on the sample"
+
+[expect]
+state = "approaching"
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["if level % 2", "if depth % 2", "alternating"]

@@ -1,0 +1,26 @@
+[scenario]
+name = "Remove Two Letters — O(n^2) brute-force set approach"
+problem = "cf-1800D"
+route = 0
+trigger = "user idle for 60s"
+elapsed_secs = 200
+observations_found = 0
+
+[scenario.code]
+text = """
+t = int(input())
+for _ in range(t):
+    n = int(input())
+    s = input()
+    results = set()
+    for i in range(n - 1):
+        results.add(s[:i] + s[i+2:])
+    print(len(results))
+"""
+
+[expect]
+valid_states = ["approaching", "moving_away"]
+obs_id = "cf:1800D:route:1:obs:1"
+min_confidence = 0.3
+must_be_socratic = true
+banned_patterns = ["s[i] == s[i+2]", "collision"]

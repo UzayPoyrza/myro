@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String            @id @default(cuid())
+  email     String            @unique
+  name      String?
+  sessions  TrainingSession[]
+  createdAt DateTime          @default(now())
+}
+
+model Problem {
+  id          String            @id @default(cuid())
+  title       String            @unique
+  difficulty  Int
+  topic       String
+  description String
+  inputSpec   String
+  outputSpec  String
+  examples    String // JSON: [{input, output}]
+  routes      Route[]
+  sessions    TrainingSession[]
+}
+
+model Route {
+  id           String            @id @default(cuid())
+  problemId    String
+  problem      Problem           @relation(fields: [problemId], references: [id])
+  name         String
+  description  String
+  order        Int
+  observations Observation[]
+  sessions     TrainingSession[]
+
+  @@unique([problemId, order])
+}
+
+model Observation {
+  id          String                @id @default(cuid())
+  routeId     String
+  route       Route                 @relation(fields: [routeId], references: [id])
+  order       Int
+  title       String
+  description String
+  hints       String // JSON: [nudge, pointed_question, partial_formalization]
+  unlocks     UnlockedObservation[]
+
+  @@unique([routeId, order])
+}
+
+model TrainingSession {
+  id         String                @id @default(cuid())
+  userId     String
+  user       User                  @relation(fields: [userId], references: [id])
+  problemId  String
+  problem    Problem               @relation(fields: [problemId], references: [id])
+  routeId    String?
+  route      Route?                @relation(fields: [routeId], references: [id])
+  status     String                @default("active") // active | observing | implementing | completed
+  scratchpad String                @default("")
+  code       String                @default("")
+  messages   ChatMessage[]
+  unlocked   UnlockedObservation[]
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+}
+
+model ChatMessage {
+  id        String          @id @default(cuid())
+  sessionId String
+  session   TrainingSession @relation(fields: [sessionId], references: [id])
+  role      String // user | coach
+  content   String
+  metadata  String? // JSON: CoachResponse for coach messages
+  createdAt DateTime @default(now())
+}
+
+model UnlockedObservation {
+  id            String          @id @default(cuid())
+  sessionId     String
+  session       TrainingSession @relation(fields: [sessionId], references: [id])
+  observationId String
+  observation   Observation     @relation(fields: [observationId], references: [id])
+  hintLevel     Int             @default(0)
+  unlockedAt    DateTime        @default(now())
+
+  @@unique([sessionId, observationId])
+}

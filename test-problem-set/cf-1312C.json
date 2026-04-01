@@ -1,0 +1,77 @@
+{
+  "contest_id": 1312,
+  "index": "C",
+  "title": "Adding Powers",
+  "difficulty": 1400,
+  "tags": ["math", "greedy", "implementation"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Suppose you are performing the following algorithm. There is an array $$$v_1, v_2, \\dots, v_n$$$ filled with zeroes at start. The following operation is applied to the array several times — at $$$i$$$-th step ($$$0$$$-indexed) you can: either choose position $$$pos$$$ ($$$1 \\le pos \\le n$$$) and increase $$$v_{pos}$$$ by $$$k^i$$$; or not choose any position and skip this step. You can choose how the algorithm would behave on each step and when to stop it. The question is: can you make array $$$v$$$ equal to the given array $$$a$$$ ($$$v_j = a_j$$$ for each $$$j$$$) after some step?",
+  "input_spec": "The first line contains one integer $$$T$$$ ($$$1 \\le T \\le 1000$$$) — the number of test cases. Next $$$2T$$$ lines contain test cases — two lines per test case. The first line of each test case contains two integers $$$n$$$ and $$$k$$$ ($$$1 \\le n \\le 30$$$, $$$2 \\le k \\le 100$$$) — the size of arrays $$$v$$$ and $$$a$$$ and value $$$k$$$ used in the algorithm. The second line contains $$$n$$$ integers $$$a_1, a_2, \\dots, a_n$$$ ($$$0 \\le a_i \\le 10^{16}$$$) — the array you'd like to achieve.",
+  "output_spec": "For each test case print YES (case insensitive) if you can achieve the array $$$a$$$ after some step or NO (case insensitive) otherwise.",
+  "examples": [
+    {
+      "input": "5\n4 100\n0 0 0 0\n1 2\n1\n3 4\n1 4 1\n3 2\n0 1 3\n3 9\n0 59049 810",
+      "output": "YES\nYES\nNO\nNO\nYES"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Base-k decomposition",
+      "description": "Represent each element in base k and check that every digit is 0 or 1 and that no power of k is claimed by more than one element.",
+      "skill_tags": ["math", "greedy", "implementation"],
+      "observations": [
+        {
+          "title": "Each power of k is a unique resource",
+          "description": "At step i, the value k^i can be added to exactly one position or skipped entirely. This means k^0, k^1, k^2, ... are distinct, one-use resources that must be distributed across array positions without reuse.",
+          "hints": {
+            "nudge": "What constraint does the step-by-step structure impose on how powers of k are shared among positions?",
+            "question": "If step i gives you k^i, can two different positions both receive k^i? What does that imply?",
+            "formal": "Each power k^i is available exactly once globally. It can go to at most one position. So across all elements, no two elements can require the same power of k."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Decompose each element in base k",
+          "description": "Writing a[j] in base k reveals which powers of k are needed to build it. The digit at position i tells you how many copies of k^i are needed for that element. This connects the problem to number representation.",
+          "hints": {
+            "nudge": "How can you figure out which powers of k sum to a given number?",
+            "question": "If you repeatedly divide a[j] by k and look at the remainders, what does each remainder tell you about which powers of k are used?",
+            "formal": "Compute the base-k representation of each a[j] by repeatedly taking a[j] mod k and dividing by k. The i-th digit tells you how many times k^i appears in the sum for that element."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Every digit must be 0 or 1",
+          "description": "Since each power k^i is available only once, no single element can use k^i more than once. Therefore every digit in the base-k representation of each a[j] must be either 0 or 1. Any digit >= 2 means the answer is NO.",
+          "hints": {
+            "nudge": "What happens if some element needs the same power of k twice?",
+            "question": "When you compute a[j] mod k at some step, what values are acceptable and why?",
+            "formal": "If any digit in the base-k expansion of a[j] is 2 or more, that element alone would require k^i to be added multiple times, which is impossible. Output NO."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "No two elements may share the same power",
+          "description": "Even if every element individually has only 0/1 digits, two elements might both have a 1 in the same digit position, meaning they both need k^i. Since each k^i can go to only one position, any collision across elements means the answer is NO.",
+          "hints": {
+            "nudge": "You have checked each element in isolation. Is that sufficient, or is there a global constraint?",
+            "question": "If a[1] needs k^3 and a[2] also needs k^3, can both be satisfied? How would you detect this?",
+            "formal": "Maintain a set of used powers. For each element, for each digit position i where the digit is 1, check if power i is already used. If so, output NO. Otherwise mark it as used."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Process from lowest power upward",
+          "description": "Extract digits by repeatedly taking mod k and dividing by k for each element. Process all elements in lockstep from the lowest power upward, checking the two constraints (digit <= 1, no collision) at each level.",
+          "hints": {
+            "nudge": "In what order should you process the powers, and how do you extract them efficiently?",
+            "question": "If you divide each a[j] by k at each step, how do you simultaneously check the collision constraint across elements?",
+            "formal": "At each power level i: for every element, compute a[j] mod k. If any result >= 2, output NO. Count how many elements have remainder 1; if more than one, output NO. Then set a[j] = a[j] / k for all j. Repeat until all elements are 0."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

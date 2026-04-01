@@ -1,0 +1,129 @@
+{
+  "contest_id": 1948,
+  "index": "C",
+  "title": "Arrow Path",
+  "difficulty": 1300,
+  "tags": [
+    "brute force",
+    "constructive algorithms",
+    "dfs and similar",
+    "dp",
+    "graphs",
+    "shortest paths"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "There is a grid, consisting of $$$2$$$ rows and $$$n$$$ columns. The rows are numbered from $$$1$$$ to $$$2$$$ from top to bottom. The columns are numbered from $$$1$$$ to $$$n$$$ from left to right. Each cell of the grid contains an arrow pointing either to the left or to the right. No arrow points outside the grid. There is a robot that starts in a cell $$$(1, 1)$$$. Every second, the following two actions happen one after another: Firstly, the robot moves left, right, down or up ( it can't try to go outside the grid, and can't skip a move ); then it moves along the arrow that is placed in the current cell (the cell it ends up after its move). Your task is to determine whether the robot can reach the cell $$$(2, n)$$$.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — the number of test cases. The first line of each test case contains a single integer ($$$2 \\le n \\le 2 \\cdot 10^5$$$). The second line contains a string consisting of exactly $$$n$$$ characters < and/or > — the first row of the grid. The third line contains a string consisting of exactly $$$n$$$ characters < and/or > — the second row of the grid. Additional constraints on the input: $$$n$$$ is even; there are no arrows pointing outside the grid; the sum of $$$n$$$ over all test cases doesn't exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case, print YES if the robot can reach the cell $$$(2, n)$$$; otherwise, print NO . You can print each letter in any case. For example, yes , Yes , YeS will all be recognized as positive answer.",
+  "examples": [
+    {
+      "input": "44>><<>>><2><><4>>><>><<6>><<><><>>><",
+      "output": "YES\nYES\nNO\nYES"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Parity reduction + BFS on even-sum cells",
+      "description": "Observe that after each full step (voluntary move + arrow), the robot always lands on a cell whose (row + column) sum is even. Build a graph on these even-sum cells and run BFS/DFS to check reachability from (1,1) to (2,n).",
+      "skill_tags": [
+        "graphs",
+        "bfs",
+        "constructive"
+      ],
+      "observations": [
+        {
+          "title": "Each step is two moves: voluntary then forced",
+          "description": "A single 'second' consists of two sub-moves: first the robot chooses a direction (up/down/left/right), then it is forced to follow the arrow in the cell it just entered. The robot cannot skip the voluntary move, and the arrow move is automatic. This means the robot always moves exactly two cells per second.",
+          "hints": {
+            "nudge": "Read the movement rules carefully. How many cells does the robot move per second?",
+            "question": "After the robot makes its voluntary move, it lands on an intermediate cell. What happens at that intermediate cell before the next second begins?",
+            "formal": "Each second: (1) robot at (r,c) voluntarily moves to adjacent (r',c'), (2) arrow at (r',c') forces it to (r', c'+-1). The robot effectively teleports two cells in one second, with the intermediate cell's arrow determining the second displacement."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "The robot always lands on cells where (row + col) is even",
+          "description": "Starting at (1,1) where row+col = 2 (even), each full step changes row+col by 0 or +-2, which preserves parity. The voluntary move changes the sum by +-1, and the arrow move changes it by another +-1, so the net change is always even. This means the robot can only ever rest on cells with even (row+col) sum.",
+          "hints": {
+            "nudge": "Track what happens to (row + column) after each full step. Does anything stay invariant?",
+            "question": "The voluntary move changes the column or row by 1. Then the arrow changes the column by 1. What are the possible net changes to (row + col)?",
+            "formal": "From (r,c) with r+c even: voluntary move to (r',c') changes sum by +-1, arrow to (r',c'+-1) changes sum by another +-1. Net change is in {-2, 0, +2}, all even. Since 1+1=2 is even and 2+n is even (n is even), both start and target have even sum."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "The intermediate cell's arrow determines which even-sum cell you reach",
+          "description": "When the robot moves from an even-sum cell to an adjacent cell (odd-sum), the arrow at that intermediate cell determines which even-sum cell the robot ends up on. If the arrow points right (>), the robot shifts right; if left (<), it shifts left. The arrow at the intermediate cell is what gates the transition.",
+          "hints": {
+            "nudge": "The robot passes through an intermediate cell on each step. What property of that cell matters?",
+            "question": "If the robot voluntarily moves to cell (r', c') and the arrow there is '<', where does the robot end up? What if the arrow is '>'?",
+            "formal": "From even-sum cell (r,c), the robot moves to odd-sum neighbor (r',c'), then follows the arrow to (r', c'+-1). The arrow at (r',c') determines c'+-1. Two even-sum cells are connected if and only if some odd-sum cell between them has an arrow pointing in the correct direction."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Build a graph on even-sum cells and check reachability",
+          "description": "Construct a graph where nodes are all cells with even (row+col) and edges connect two such cells if the robot can transition between them in one step. Then run BFS or DFS from (1,1) to check if (2,n) is reachable. The grid is only 2 rows wide, so each even-sum cell has at most a few neighbors to check.",
+          "hints": {
+            "nudge": "You know the robot only rests on even-sum cells. How would you model which even-sum cells connect to which?",
+            "question": "For each even-sum cell, enumerate which intermediate (odd-sum) neighbors it can move to, and for each of those, check where the arrow sends the robot. Can you build an adjacency list this way?",
+            "formal": "For each even-sum cell (r,c): for each of its 4 neighbors (r',c') that are in-bounds and have odd sum, compute the destination (r', c' + (1 if arrow is '>' else -1)). If the destination is in-bounds, add an edge (r,c) -> destination. Run BFS from (0,0) and check if (1, n-1) is reached (0-indexed)."
+          },
+          "skill_tag": "bfs"
+        }
+      ]
+    },
+    {
+      "name": "Direct BFS on all cells with two-phase moves",
+      "description": "Instead of reducing to even-sum cells, run BFS where each state is a grid cell and each BFS transition simulates both sub-moves of a single second. From each cell, try all 4 voluntary moves and apply the arrow, adding the resulting cell to the queue if unvisited.",
+      "skill_tags": [
+        "graphs",
+        "bfs",
+        "shortest-paths"
+      ],
+      "observations": [
+        {
+          "title": "Each step is two moves: voluntary then forced",
+          "description": "A single second consists of two sub-moves: the robot voluntarily moves to an adjacent cell, then follows the arrow in that cell. Both moves are mandatory. This means the robot moves through an intermediate cell before settling at its final position for that second.",
+          "hints": {
+            "nudge": "Read the movement rules carefully. How many cells does the robot move per second?",
+            "question": "After the robot makes its voluntary move, it lands on an intermediate cell. What happens at that intermediate cell before the next second begins?",
+            "formal": "Each second: (1) robot at (r,c) voluntarily moves to adjacent (r',c'), (2) arrow at (r',c') forces it to (r', c'+-1). The final position after one second is always the cell reached after both sub-moves."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Model each second as a single BFS edge",
+          "description": "Rather than treating voluntary and arrow moves as separate steps, combine them into one BFS transition. From cell (r,c), enumerate all 4 voluntary directions, compute where the arrow sends you, and treat the final cell as a neighbor in the BFS graph.",
+          "hints": {
+            "nudge": "You could simulate the robot second by second. What is the 'graph' you are really searching?",
+            "question": "If you try each of the 4 voluntary directions from (r,c), apply the arrow at the intermediate cell, and collect the resulting cells, what does that give you in graph terms?",
+            "formal": "For cell (r,c), the BFS neighbors are: for each direction d in {up, down, left, right}, let (r',c') = (r,c)+d. If (r',c') is in-bounds, let (r'', c'') = (r', c' + (1 if grid[r'][c'] is '>' else -1)). If (r'',c'') is in-bounds, it is a neighbor."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "BFS from start, check if target is reached",
+          "description": "Run a standard BFS starting from (1,1), using the combined transitions. Mark cells as visited when they are first reached. If (2,n) is ever reached, output YES. If the BFS finishes without reaching it, output NO.",
+          "hints": {
+            "nudge": "You have the graph. What standard algorithm checks reachability?",
+            "question": "Starting from (1,1), can you do a BFS over the combined-transition graph and check if (2,n) becomes visited?",
+            "formal": "Initialize a 2-by-n visited array, all false. Queue starts with (0,0). While queue is non-empty, pop (r,c), generate all combined-transition neighbors (r'',c''), skip if visited, mark visited and enqueue. Answer is visited[1][n-1]."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "Complexity is linear in n",
+          "description": "The grid has 2n cells. Each cell is visited at most once in BFS and has at most 4 outgoing transitions. So the total work per test case is O(n). With the sum of n across test cases bounded by 2*10^5, this comfortably fits in the time limit.",
+          "hints": {
+            "nudge": "How many cells and edges does your BFS graph have?",
+            "question": "Each of the 2n cells has at most 4 transitions. What is the total BFS work? Does it fit the constraints?",
+            "formal": "BFS visits O(n) cells, each with O(1) neighbors. Total work is O(n) per test case, O(sum of n) = O(2*10^5) overall. Well within the 2-second time limit."
+          },
+          "skill_tag": "shortest-paths"
+        }
+      ]
+    }
+  ]
+}

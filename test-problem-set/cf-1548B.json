@@ -1,0 +1,124 @@
+{
+  "contest_id": 1548,
+  "index": "B",
+  "title": "Integers Have Friends",
+  "difficulty": 1800,
+  "tags": ["math", "number-theory", "data-structures", "two-pointers", "binary-search"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "British mathematician John Littlewood once said about Indian mathematician Srinivasa Ramanujan that \"every positive integer was one of his personal friends.\" It turns out that positive integers can also be friends with each other! You are given an array $$$a$$$ of distinct positive integers. Define a subarray $$$a_i, a_{i+1}, \\ldots, a_j$$$ to be a friend group if and only if there exists an integer $$$m \\ge 2$$$ such that $$$a_i \\bmod m = a_{i+1} \\bmod m = \\ldots = a_j \\bmod m$$$, where $$$x \\bmod y$$$ denotes the remainder when $$$x$$$ is divided by $$$y$$$. Your friend Gregor wants to know the size of the largest friend group in $$$a$$$.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 2\\cdot 10^4$$$). Each test case begins with a line containing the integer $$$n$$$ ($$$1 \\le n \\le 2 \\cdot 10^5$$$), the size of the array $$$a$$$. The next line contains $$$n$$$ positive integers $$$a_1, a_2, \\ldots, a_n$$$ ($$$1 \\le a_i \\le {10}^{18}$$$), representing the contents of the array $$$a$$$. It is guaranteed that all the numbers in $$$a$$$ are distinct. It is guaranteed that the sum of $$$n$$$ over all test cases is less than $$$2\\cdot 10^5$$$.",
+  "output_spec": "Your output should consist of $$$t$$$ lines. Each line should consist of a single integer, the size of the largest friend group in $$$a$$$.",
+  "examples": [
+    {
+      "input": "4\n5\n1 5 2 4 6\n4\n8 2 5 10\n2\n1000 2000\n8\n465 55 3 54 234 12 45 78",
+      "output": "3\n3\n2\n6"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Difference array + sparse table GCD + binary search",
+      "description": "Reduce the equal-remainder condition to consecutive differences being divisible by m, then find the longest subarray of the difference array with GCD >= 2 using a sparse table for range GCD and binary search for the longest valid subarray starting at each position.",
+      "skill_tags": ["math", "number-theory", "data-structures", "binary-search"],
+      "observations": [
+        {
+          "title": "Equal remainders imply divisibility of consecutive differences",
+          "description": "If a[i] mod m = a[i+1] mod m, then m divides (a[i+1] - a[i]). So the subarray a[i..j] is a friend group if and only if there exists m >= 2 that divides all consecutive differences |a[k+1] - a[k]| for k in [i, j-1]. This transforms the problem from reasoning about remainders to reasoning about divisibility of differences.",
+          "hints": {
+            "nudge": "What algebraic relationship holds between two numbers that have the same remainder mod m?",
+            "question": "If a[i] mod m = a[i+1] mod m, what can you say about (a[i+1] - a[i]) in terms of m?",
+            "formal": "a[i] mod m = a[i+1] mod m implies m | (a[i+1] - a[i]). So define D[k] = |a[k+1] - a[k]|. The subarray a[i..j] is a friend group iff there exists m >= 2 dividing all of D[i], D[i+1], ..., D[j-1]."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The existence of a common m >= 2 is equivalent to GCD >= 2",
+          "description": "An m >= 2 dividing all values D[i], ..., D[j-1] exists if and only if gcd(D[i], D[i+1], ..., D[j-1]) >= 2. The GCD itself is a valid choice for m. This reduces the problem to: find the longest subarray of D where the GCD is at least 2.",
+          "hints": {
+            "nudge": "You need some m >= 2 dividing a set of numbers. What single quantity tells you whether such an m exists?",
+            "question": "If gcd(D[i], ..., D[j-1]) = g, what values of m divide all those differences? What condition on g ensures at least one m >= 2 works?",
+            "formal": "m divides all of D[i..j-1] iff m divides gcd(D[i..j-1]). Such an m >= 2 exists iff gcd(D[i..j-1]) >= 2. We can take m = gcd(D[i..j-1]) itself. The problem becomes: find the longest subarray of D with GCD >= 2, then the answer is that length + 1."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Sparse table enables O(1) range GCD queries",
+          "description": "Build a sparse table over the difference array D. Since GCD is an idempotent operation (gcd(x, x) = x), a sparse table answers range GCD queries in O(1) per query after O(n log n) preprocessing. Each GCD computation costs O(log(max value)) due to the Euclidean algorithm, making preprocessing O(n log n log V) where V = max(a_i).",
+          "hints": {
+            "nudge": "You need to query the GCD of arbitrary subarrays efficiently. What data structure answers range queries in O(1) for idempotent operations?",
+            "question": "GCD has the property that gcd(x, x) = x. Which range query structure exploits this overlap-friendly property for O(1) queries?",
+            "formal": "Build a sparse table: table[k][i] = gcd(D[i], D[i+1], ..., D[i + 2^k - 1]). Query gcd(D[l..r]) = gcd(table[k][l], table[k][r - 2^k + 1]) where k = floor(log2(r - l + 1)). Preprocessing: O(n log n) entries, each an O(log V) GCD computation."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Binary search for the longest valid subarray from each starting position",
+          "description": "For each starting index i in the difference array, binary search for the farthest index j such that gcd(D[i..j]) >= 2. As i increases, the farthest valid j can only increase or stay the same (monotonicity), but the simplest correct approach is binary search from each i. The answer is max over all i of (j - i + 1) + 1. Alternatively, a two-pointer approach exploits monotonicity directly.",
+          "hints": {
+            "nudge": "For a fixed left endpoint, how does the GCD of D[i..j] change as j increases?",
+            "question": "The GCD is non-increasing as the range grows. So if gcd(D[i..j]) < 2, can gcd(D[i..j+1]) ever be >= 2? How does this help find the farthest valid j?",
+            "formal": "For fixed i, gcd(D[i..j]) is non-increasing in j. Binary search for the largest j such that gcd(D[i..j]) >= 2 using the sparse table for O(1) queries. Do this for each i and take the maximum (j - i + 2) as the answer. Total complexity: O(n log n log V) for the sparse table + O(n log n) for binary searches."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "A single-element subarray is always valid",
+          "description": "Any single element forms a friend group of size 1 (vacuously, any m works since there are no pairs to constrain). So the answer is at least 1. When the difference array is empty (n = 1), the answer is 1. This is a necessary base case.",
+          "hints": {
+            "nudge": "What is the answer when n = 1, or when no two consecutive elements share a common factor in their difference?",
+            "question": "Can a subarray of length 1 always be a friend group? What about length 2 -- when does a pair a[i], a[i+1] form a friend group?",
+            "formal": "A subarray of length 1 is always a friend group (the condition is vacuously true). A pair a[i], a[i+1] is a friend group iff |a[i+1] - a[i]| >= 2 (since we need m >= 2 dividing the difference). Initialize the answer to 1 and handle n = 1 as a special case."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    },
+    {
+      "name": "Difference array + two-pointer with rolling GCD",
+      "description": "Use the same difference-array reduction, but instead of a sparse table, maintain a multiset or stack-based structure tracking the GCD as a sliding window expands and contracts, finding the longest subarray with GCD >= 2 using two pointers.",
+      "skill_tags": ["math", "number-theory", "two-pointers"],
+      "observations": [
+        {
+          "title": "Equal remainders imply divisibility of consecutive differences",
+          "description": "If a[i] mod m = a[i+1] mod m, then m divides (a[i+1] - a[i]). So the subarray a[i..j] is a friend group if and only if there exists m >= 2 that divides all consecutive differences |a[k+1] - a[k]| for k in [i, j-1]. This transforms the problem from reasoning about remainders to reasoning about divisibility of differences.",
+          "hints": {
+            "nudge": "What algebraic relationship holds between two numbers that have the same remainder mod m?",
+            "question": "If a[i] mod m = a[i+1] mod m, what can you say about (a[i+1] - a[i]) in terms of m?",
+            "formal": "a[i] mod m = a[i+1] mod m implies m | (a[i+1] - a[i]). So define D[k] = |a[k+1] - a[k]|. The subarray a[i..j] is a friend group iff there exists m >= 2 dividing all of D[i], D[i+1], ..., D[j-1]."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The existence of a common m >= 2 is equivalent to GCD >= 2",
+          "description": "An m >= 2 dividing all values D[i], ..., D[j-1] exists if and only if gcd(D[i], D[i+1], ..., D[j-1]) >= 2. This reduces the problem to finding the longest subarray of D with GCD at least 2.",
+          "hints": {
+            "nudge": "You need some m >= 2 dividing a set of numbers. What single quantity tells you whether such an m exists?",
+            "question": "If gcd(D[i], ..., D[j-1]) = g, what condition on g ensures a valid m >= 2 exists?",
+            "formal": "m divides all of D[i..j-1] iff m divides gcd(D[i..j-1]). Such an m >= 2 exists iff gcd(D[i..j-1]) >= 2. The problem becomes: find the longest subarray of D with GCD >= 2, then the answer is that length + 1."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "GCD is non-increasing as the window grows, enabling two pointers",
+          "description": "For a fixed left endpoint i, gcd(D[i..j]) is non-increasing as j increases. Once the GCD drops to 1, no extension can bring it back above 1. This means the valid window endpoint is monotonic: as i advances, the farthest valid j never decreases. This is the key property that enables a two-pointer approach.",
+          "hints": {
+            "nudge": "As you add more elements to a GCD, can it ever increase?",
+            "question": "If gcd(D[i..j]) = 1, can gcd(D[i..j+1]) ever be greater than 1? What does this imply about sliding the window?",
+            "formal": "gcd(D[i..j], D[j+1]) divides gcd(D[i..j]), so the GCD is non-increasing as the range extends. Once gcd = 1, it stays 1. This monotonicity means the right boundary of the longest valid subarray starting at i is non-decreasing in i, which is the two-pointer invariant."
+          },
+          "skill_tag": "two-pointers"
+        },
+        {
+          "title": "Maintain window GCD efficiently using a stack of suffix GCDs",
+          "description": "The challenge with two pointers for GCD is that removing an element from the left does not have a simple inverse operation. One approach: maintain a deque of (value, cumulative_gcd) pairs. When the window shrinks from the left, you cannot un-GCD, so use two stacks (front and back). Push new elements onto the back stack. When the front stack is empty, reverse the back stack onto the front, computing prefix GCDs. The window GCD is gcd(front_top_gcd, back_top_gcd). Amortized O(1) per operation.",
+          "hints": {
+            "nudge": "GCD is easy to maintain when adding elements but hard when removing. What data structure trick handles this for queue-like operations?",
+            "question": "Can you use a two-stack trick (like implementing a queue with two stacks) where each stack stores cumulative GCDs from its bottom? What is the amortized cost?",
+            "formal": "Use two stacks: back_stack for pushes, front_stack for pops. Each stack entry stores (value, running_gcd_from_bottom). Window GCD = gcd(front_stack.top().gcd, back_stack.top().gcd). When front is empty, move all from back to front recomputing prefix GCDs. Amortized O(log V) per element for the GCD computations."
+          },
+          "skill_tag": "data-structures"
+        }
+      ]
+    }
+  ]
+}

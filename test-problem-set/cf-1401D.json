@@ -1,0 +1,96 @@
+{
+  "contest_id": 1401,
+  "index": "D",
+  "title": "Maximum Distributed Tree",
+  "difficulty": 1800,
+  "tags": [
+    "dfs and similar",
+    "dp",
+    "greedy",
+    "implementation",
+    "math",
+    "number theory",
+    "sortings",
+    "trees"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given a tree that consists of $$$n$$$ nodes. You should label each of its $$$n-1$$$ edges with an integer in such way that satisfies the following conditions: each integer must be greater than $$$0$$$; the product of all $$$n-1$$$ numbers should be equal to $$$k$$$; the number of $$$1$$$-s among all $$$n-1$$$ integers must be minimum possible. Let's define $$$f(u,v)$$$ as the sum of the numbers on the simple path from node $$$u$$$ to node $$$v$$$. Also, let $$$\\sum\\limits_{i=1}^{n-1} \\sum\\limits_{j=i+1}^n f(i,j)$$$ be a distribution index of the tree. Find the maximum possible distribution index you can get. Since answer can be too large, print it modulo $$$10^9 + 7$$$. In this problem, since the number $$$k$$$ can be large, the result of the prime factorization of $$$k$$$ is given instead.",
+  "input_spec": "The first line contains one integer $$$t$$$ ($$$1 \\le t \\le 100$$$) — the number of test cases. The first line of each test case contains a single integer $$$n$$$ ($$$2 \\le n \\le 10^5$$$) — the number of nodes in the tree. Each of the next $$$n-1$$$ lines describes an edge: the $$$i$$$-th line contains two integers $$$u_i$$$ and $$$v_i$$$ ($$$1 \\le u_i, v_i \\le n$$$; $$$u_i \\ne v_i$$$) — indices of vertices connected by the $$$i$$$-th edge. Next line contains a single integer $$$m$$$ ($$$1 \\le m \\le 6 \\cdot 10^4$$$) — the number of prime factors of $$$k$$$. Next line contains $$$m$$$ prime numbers $$$p_1, p_2, \\ldots, p_m$$$ ($$$2 \\le p_i  \\lt  6 \\cdot 10^4$$$) such that $$$k = p_1 \\cdot p_2 \\cdot \\ldots \\cdot p_m$$$. It is guaranteed that the sum of $$$n$$$ over all test cases doesn't exceed $$$10^5$$$, the sum of $$$m$$$ over all test cases doesn't exceed $$$6 \\cdot 10^4$$$, and the given edges for each test cases form a tree.",
+  "output_spec": "Print the maximum distribution index you can get. Since answer can be too large, print it modulo $$$10^9+7$$$.",
+  "examples": [
+    {
+      "input": "3\n4\n1 2\n2 3\n3 4\n2\n2 2\n4\n3 4\n1 3\n3 2\n2\n3 2\n7\n6 1\n2 3\n4 6\n7 3\n5 1\n3 6\n4\n7 5 13 3",
+      "output": "17\n18\n286"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy assignment by edge weight",
+      "description": "Compute how many paths cross each edge, sort edges and primes by value, and greedily assign the largest prime factors to the most-traversed edges.",
+      "skill_tags": ["greedy", "trees", "math"],
+      "observations": [
+        {
+          "title": "Each edge's contribution is its label times the number of paths through it",
+          "description": "The distribution index is the sum of f(u,v) over all pairs. Each edge contributes its label once for every pair of nodes whose path includes it. So the total is the sum over all edges of (label_e * count_e), where count_e is the number of node pairs whose path crosses edge e.",
+          "hints": {
+            "nudge": "Instead of computing f(u,v) for each pair, think about each edge's total contribution across all pairs.",
+            "question": "If edge e has label w, and it lies on the path between P pairs of nodes, what is edge e's total contribution to the distribution index?",
+            "formal": "By linearity, the distribution index equals the sum over all edges e of (label_e * paths_through_e). This decouples the problem into computing path counts per edge, then assigning labels optimally."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Removing an edge splits the tree into two components of size s and n-s",
+          "description": "In a tree, removing any edge partitions the nodes into exactly two connected components. If one component has s nodes and the other has n-s nodes, then exactly s * (n-s) pairs of nodes have their path crossing this edge.",
+          "hints": {
+            "nudge": "Think about what happens structurally when you remove a single edge from a tree.",
+            "question": "If removing edge e creates components of sizes s and n-s, how many (i,j) pairs have their unique path crossing e?",
+            "formal": "Each of the s nodes in one component pairs with each of the (n-s) nodes in the other, giving s*(n-s) paths through edge e. Compute s via a single DFS computing subtree sizes."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "Assign larger factors to edges with larger path counts",
+          "description": "Since the distribution index is a sum of (label_e * count_e) terms, to maximize it we should assign larger labels to edges with larger counts. This is the rearrangement inequality: the sum of products is maximized when both sequences are sorted the same way.",
+          "hints": {
+            "nudge": "You have a set of values to assign to a set of positions with weights. How do you maximize the weighted sum?",
+            "question": "If you have weights w_1 >= w_2 >= ... and values v_1 >= v_2 >= ..., which assignment of values to weights maximizes the sum of w_i * v_i?",
+            "formal": "By the rearrangement inequality, sort edge path-counts descending and sort the prime factors descending, then pair them in order: largest prime to highest-count edge, second-largest to second-highest, etc."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "More primes than edges: multiply excess primes onto the top edge",
+          "description": "If m >= n-1 (more prime factors than edges), every edge gets at least one prime. The excess primes (m - (n-2) of them) should all be multiplied together and assigned to the single edge with the highest path count, since multiplying adds the most value where the weight is largest.",
+          "hints": {
+            "nudge": "What if you have more prime factors than edges? Some edge must receive a product of multiple primes. Which edge?",
+            "question": "If you must combine extra primes into one label, and the goal is to maximize a weighted sum, which edge's label should absorb the extra primes?",
+            "formal": "When m > n-1, assign the product of the (m - n + 2) largest primes to the highest-count edge. The remaining n-2 primes go one each to the remaining edges sorted by count. This follows because multiplying into the highest-weight position adds the most."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Fewer primes than edges: remaining edges get label 1",
+          "description": "If m < n-1 (fewer prime factors than edges), we can only assign non-trivial labels to m edges. The remaining (n-1-m) edges must be labeled 1. Assign the m primes to the m highest-count edges.",
+          "hints": {
+            "nudge": "What if you don't have enough prime factors for every edge?",
+            "question": "When m < n-1, some edges get label 1. Which edges should receive the actual prime factors?",
+            "formal": "Sort edge counts descending. The top m edges get one prime each (matched in sorted order). The remaining n-1-m edges get label 1. This minimizes waste since we put 1s on the lowest-count edges."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Use modular arithmetic carefully during the final computation",
+          "description": "The answer can be astronomically large. When computing the sum of (label_e * count_e) mod 10^9+7, be careful: the prime products and path counts must all be reduced modulo 10^9+7 during multiplication to avoid overflow.",
+          "hints": {
+            "nudge": "The answer is modulo 10^9+7. Where do you need to apply the modulus?",
+            "question": "When multiplying several primes together for one edge's label, how do you prevent overflow while preserving correctness modulo 10^9+7?",
+            "formal": "Take the product of primes modulo 10^9+7 at each multiplication step. Then multiply by the path count (also mod 10^9+7) and accumulate the sum modulo 10^9+7. Since path counts fit in 64-bit integers (at most ~(n/2)^2 ~ 2.5*10^9), use long long for intermediate values."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,132 @@
+{
+  "contest_id": 1572,
+  "index": "A",
+  "title": "Book",
+  "difficulty": 1800,
+  "tags": [
+    "binary search",
+    "brute force",
+    "data structures",
+    "dp",
+    "graphs",
+    "implementation",
+    "sortings"
+  ],
+  "time_limit": "1.5 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given a book with $$$n$$$ chapters. Each chapter has a specified list of other chapters that need to be understood in order to understand this chapter. To understand a chapter, you must read it after you understand every chapter on its required list. Currently you don't understand any of the chapters. You are going to read the book from the beginning till the end repeatedly until you understand the whole book. Note that if you read a chapter at a moment when you don't understand some of the required chapters, you don't understand this chapter. Determine how many times you will read the book to understand every chapter, or determine that you will never understand every chapter no matter how many times you read the book.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 2\\cdot10^4$$$). The first line of each test case contains a single integer $$$n$$$ ($$$1 \\le n \\le 2\\cdot10^5$$$) — number of chapters. Then $$$n$$$ lines follow. The $$$i$$$-th line begins with an integer $$$k_i$$$ ($$$0 \\le k_i \\le n-1$$$) — number of chapters required to understand the $$$i$$$-th chapter. Then $$$k_i$$$ integers $$$a_{i,1}, a_{i,2}, \\dots, a_{i, k_i}$$$ ($$$1 \\le a_{i, j} \\le n, a_{i, j} \\ne i, a_{i, j} \\ne a_{i, l}$$$ for $$$j \\ne l$$$) follow — the chapters required to understand the $$$i$$$-th chapter. It is guaranteed that the sum of $$$n$$$ and sum of $$$k_i$$$ over all testcases do not exceed $$$2\\cdot10^5$$$.",
+  "output_spec": "For each test case, if the entire book can be understood, print how many times you will read it, otherwise print $$$-1$$$.",
+  "examples": [
+    {
+      "input": "5\n4\n1 2\n0\n2 1 4\n1 2\n5\n1 5\n1 1\n1 2\n1 3\n1 4\n5\n0\n0\n2 1 2\n1 2\n2 2 1\n4\n2 2 3\n0\n0\n2 3 2\n5\n1 2\n1 3\n1 4\n1 5\n0",
+      "output": "2\n-1\n1\n2\n5"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Topological DP on backward edges",
+      "description": "Model chapters as a dependency DAG, detect cycles via topological sort, then compute the number of passes for each chapter based on whether its prerequisites appear before or after it in the reading order.",
+      "skill_tags": ["graphs", "dp"],
+      "observations": [
+        {
+          "title": "The dependency structure is a directed graph",
+          "description": "Each chapter's prerequisite list defines directed edges: an edge from prerequisite j to chapter i means j must be understood before i. This forms a directed graph where we need to process all chapters respecting these dependencies.",
+          "hints": {
+            "nudge": "Think about what kind of structure the prerequisite relationships form. What does it mean for chapter i to require chapter j?",
+            "question": "If you draw an edge from each prerequisite to the chapter that requires it, what kind of graph do you get? When is it impossible to understand all chapters?",
+            "formal": "Build a directed graph with edge j -> i for each prerequisite j of chapter i. Understanding all chapters is impossible if and only if this graph contains a cycle, since chapters in a cycle each require another chapter in the cycle to be understood first."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "A cycle in the dependency graph means -1",
+          "description": "If there is a cycle among the prerequisites, no number of passes will ever let you understand all chapters: each chapter in the cycle waits for another chapter in the same cycle. Topological sort (e.g., Kahn's algorithm with in-degree counting) detects this: if not all nodes are processed, a cycle exists.",
+          "hints": {
+            "nudge": "What happens if chapter A requires chapter B and chapter B requires chapter A? Can either ever be understood?",
+            "question": "How can you efficiently detect whether the prerequisite graph has a cycle? What well-known graph algorithm gives you both a valid processing order and cycle detection?",
+            "formal": "Run Kahn's algorithm (BFS topological sort): initialize a queue with all nodes of in-degree 0, repeatedly remove a node and decrement neighbors' in-degrees. If the number of processed nodes is less than n, a cycle exists and the answer is -1."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "A forward prerequisite adds no extra pass",
+          "description": "If chapter i requires chapter j where j < i (j appears earlier in the book), then by the time we reach chapter i in any pass, chapter j has already been read in this pass. If j was understood before this pass or gets understood during it, j does not force an additional re-read for i.",
+          "hints": {
+            "nudge": "Consider the reading order: chapters are read 1, 2, ..., n in each pass. If prerequisite j comes before chapter i in this order, when do you read j relative to i?",
+            "question": "If all of chapter i's prerequisites have smaller indices than i, how many passes does it take to understand chapter i? What if all prerequisites are themselves understood in pass 1?",
+            "formal": "If j < i and j is understood by pass p, then when we read chapter i in pass p, j is already understood (we read j earlier in the same pass). So a forward prerequisite (j < i) contributes no additional pass beyond what j itself needs."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "A backward prerequisite forces one additional pass",
+          "description": "If chapter i requires chapter j where j > i, then in the pass where j is first understood, chapter i has already been read (and skipped) earlier in that pass. Chapter i must wait for the next pass. This means passes[i] >= passes[j] + 1 for any backward prerequisite j > i.",
+          "hints": {
+            "nudge": "If chapter 3 requires chapter 7, and chapter 7 is understood during pass 2, can chapter 3 also be understood during pass 2?",
+            "question": "When j > i, chapter j is read after chapter i in each pass. If j becomes understood in pass p, in which pass can i first use that knowledge?",
+            "formal": "For j > i: if j is understood after being read in pass p, chapter i was already read (and failed) in pass p. Chapter i can only use j's understanding in pass p+1. Thus passes[i] >= passes[j] + 1."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "DP recurrence: passes[i] = max over prerequisites",
+          "description": "Combine the two cases into a recurrence processed in topological order: passes[i] = max over all prerequisites j of (passes[j] + (1 if j > i else 0)), with passes[i] = 1 for chapters with no prerequisites. The final answer is the maximum passes[i] over all chapters.",
+          "hints": {
+            "nudge": "You know forward prerequisites cost no extra pass and backward ones cost exactly one extra. How do you combine these across all prerequisites of a chapter?",
+            "question": "If chapter i has prerequisites j1, j2, ..., jk with known pass counts, what determines the pass count for i? Why take the maximum rather than the sum?",
+            "formal": "Process nodes in topological order. For each chapter i: passes[i] = max(1, max over prereqs j of (passes[j] + (1 if j > i else 0))). Answer = max(passes[i]) for all i. Each prerequisite independently constrains when i can be understood; the bottleneck (maximum) determines the pass."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    },
+    {
+      "name": "Direct pass simulation with BFS layers",
+      "description": "Simulate the reading process pass by pass using a BFS-like approach: in each pass, scan chapters 1..n and mark those whose prerequisites are all understood. Repeat until no new chapters are understood or all are done.",
+      "skill_tags": ["graphs", "implementation"],
+      "observations": [
+        {
+          "title": "Cycle detection determines impossibility",
+          "description": "If the prerequisite graph has a cycle, no chapter in the cycle can ever be understood. Check for cycles using topological sort or by observing that the simulation makes no progress.",
+          "hints": {
+            "nudge": "When would the simulation loop forever? What structure in the prerequisites causes this?",
+            "question": "If a pass completes and no new chapters are understood but some remain, what can you conclude about the prerequisite graph?",
+            "formal": "If a full pass (reading chapters 1..n) marks zero new chapters as understood and some chapters remain, output -1. This happens exactly when the remaining chapters form a cycle in the prerequisite graph."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Each pass is a left-to-right scan",
+          "description": "In each pass, scan chapters from 1 to n in order. When you reach chapter i, check if all its prerequisites are in the understood set. If yes, add i to the understood set. This within-pass ordering matters: understanding chapter 3 in this pass lets chapter 5 use it in the same pass.",
+          "hints": {
+            "nudge": "When simulating a single pass, does the order in which you process chapters matter?",
+            "question": "If chapter 5 requires chapter 3 and both are unread, and chapter 3 has no prerequisites, what happens when you scan left to right in a single pass?",
+            "formal": "Maintain a set 'understood'. In each pass, iterate i = 1..n: if all prereqs of i are in 'understood', add i. A chapter understood earlier in the same pass is immediately available to later chapters in that pass."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Track remaining prerequisites efficiently",
+          "description": "Instead of checking all prerequisites each time, maintain a counter of unmet prerequisites for each chapter. When a chapter is understood, decrement the counter for all chapters that depend on it. A chapter becomes ready when its counter reaches zero.",
+          "hints": {
+            "nudge": "Checking all k prerequisites of a chapter each pass is wasteful. Can you maintain a running count?",
+            "question": "If you store, for each chapter, how many prerequisites it still needs, what happens to that count when one of its prerequisites is understood?",
+            "formal": "Let remaining[i] = number of not-yet-understood prerequisites of i. Build a reverse adjacency list: for each prereq j of i, add i to dependents[j]. When j is understood, for each i in dependents[j], decrement remaining[i]. Chapter i is ready when remaining[i] == 0."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Simulate passes until completion or stall",
+          "description": "Repeat passes, each time scanning 1..n and collecting newly understood chapters (those with remaining count zero). If a pass adds no new chapters, the answer is -1. Otherwise the number of passes is the answer. With the counter optimization this runs in O(n + total edges) total across all passes.",
+          "hints": {
+            "nudge": "How many total passes can there be? Each pass must understand at least one new chapter for progress to continue.",
+            "question": "What is the maximum number of passes? In the worst case, how many chapters become understood per pass?",
+            "formal": "At most n passes (worst case: one chapter per pass, as in a backward chain n -> n-1 -> ... -> 1). Total work across all passes is O(n + sum of k_i) since each edge is processed exactly once when its source chapter is understood."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

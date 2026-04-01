@@ -1,0 +1,105 @@
+{
+  "contest_id": 1416,
+  "index": "C",
+  "title": "XOR Inverse",
+  "difficulty": 2000,
+  "tags": [
+    "bitmasks",
+    "data structures",
+    "divide and conquer",
+    "dp",
+    "greedy",
+    "math",
+    "sortings",
+    "strings",
+    "trees"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "512 megabytes",
+  "description": "You are given an array $$$a$$$ consisting of $$$n$$$ non-negative integers. You have to choose a non-negative integer $$$x$$$ and form a new array $$$b$$$ of size $$$n$$$ according to the following rule: for all $$$i$$$ from $$$1$$$ to $$$n$$$, $$$b_i = a_i \\oplus x$$$ ($$$\\oplus$$$ denotes the operation bitwise XOR ). An inversion in the $$$b$$$ array is a pair of integers $$$i$$$ and $$$j$$$ such that $$$1 \\le i  \\lt  j \\le n$$$ and $$$b_i  \\gt  b_j$$$. You should choose $$$x$$$ in such a way that the number of inversions in $$$b$$$ is minimized. If there are several options for $$$x$$$ — output the smallest one.",
+  "input_spec": "First line contains a single integer $$$n$$$ ($$$1 \\le n \\le 3 \\cdot 10^5$$$) — the number of elements in $$$a$$$. Second line contains $$$n$$$ space-separated integers $$$a_1$$$, $$$a_2$$$, ..., $$$a_n$$$ ($$$0 \\le a_i \\le 10^9$$$), where $$$a_i$$$ is the $$$i$$$-th element of $$$a$$$.",
+  "output_spec": "Output two integers: the minimum possible number of inversions in $$$b$$$, and the minimum possible value of $$$x$$$, which achieves those number of inversions.",
+  "examples": [
+    {
+      "input": "4\n0 1 3 2",
+      "output": "1 0"
+    },
+    {
+      "input": "9\n10 7 9 10 7 5 5 3 5",
+      "output": "4 14"
+    },
+    {
+      "input": "3\n8 10 3",
+      "output": "0 8"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Bit-independent inversion counting via trie",
+      "description": "Build a binary trie of the array values preserving insertion order, then at each bit level independently count inversions for x's bit being 0 vs 1, greedily choosing the bit that minimizes inversions.",
+      "skill_tags": ["data-structures", "greedy", "math"],
+      "observations": [
+        {
+          "title": "The relative order of a pair depends only on their most significant differing bit",
+          "description": "For any pair (i, j) with i < j, whether b[i] > b[j] is determined by the highest bit position where a[i] and a[j] differ. XOR with x flips a specific set of bits. At the highest differing bit, if x has a 1 there, the comparison flips; if x has a 0, it stays the same. Bits of x at lower positions cannot affect this comparison because the higher bit dominates.",
+          "hints": {
+            "nudge": "When comparing two integers, which bit position matters most?",
+            "question": "If a[i] and a[j] first differ at bit k, and x has bit k set to 1, what happens to the comparison b[i] vs b[j]?",
+            "formal": "For a pair differing first at bit k, XOR with x flips their relative order if and only if bit k of x is 1. All other bits of x are irrelevant to this particular pair because bit k is the most significant difference."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Each bit of x can be chosen independently",
+          "description": "Since each pair's inversion status is controlled entirely by one specific bit of x (the highest bit where the pair's elements differ), the total inversion count decomposes as a sum of contributions from each bit level. Choosing bit k of x affects only pairs that first differ at bit k. Therefore, we can optimize each bit of x independently without affecting the others.",
+          "hints": {
+            "nudge": "Does setting bit 5 of x affect pairs whose elements first differ at bit 3?",
+            "question": "If each pair's inversion is controlled by exactly one bit of x, can you express the total inversions as a sum of independent terms, one per bit?",
+            "formal": "Total inversions = sum over all bits k of (inversions contributed by pairs first differing at bit k). Each term depends only on bit k of x. So we minimize each term independently: for each bit k, choose 0 or 1 to minimize that term's contribution."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "A binary trie groups elements by shared prefix to isolate pairs by their first differing bit",
+          "description": "Insert all elements into a binary trie from the most significant bit downward, preserving their original array order within each trie node. Two elements that share the same prefix down to bit k+1 but diverge at bit k (one goes to the 0-child, the other to the 1-child) are exactly the pairs whose first differing bit is k. The trie naturally partitions all pairs by their first point of divergence.",
+          "hints": {
+            "nudge": "How can you partition the array so that elements sharing long binary prefixes are grouped together?",
+            "question": "If you insert elements into a binary trie from the MSB down, at what point in the trie do two elements that first differ at bit k get separated?",
+            "formal": "At each internal trie node at depth (29 - k), elements split into the 0-child and 1-child based on their bit k. Elements reaching the same node share all bits above k. Thus the pairs that first differ at bit k are exactly the cross-pairs between the 0-child and 1-child of each node at depth (29 - k)."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Count cross-child inversions at each trie node to get cost[0] and cost[1] per bit",
+          "description": "At each trie node at bit level k, some elements go left (bit k = 0) and some go right (bit k = 1). Among the cross-pairs (one from left, one from right), count how many are inversions in the original order (left element appears after right element in the array) versus how many are non-inversions. If x's bit k is 0, cross-pairs where left comes after right in the array are inversions. If x's bit k is 1, the relative order flips, so the other cross-pairs become inversions. This gives two counts per bit: cost[0][k] and cost[1][k].",
+          "hints": {
+            "nudge": "At a trie node, you have elements going left and elements going right. Among those cross-pairs, how does their original array order determine inversions?",
+            "question": "If the left child's elements (bit=0) have original positions L and the right child's elements (bit=1) have positions R, and bit k of x is 0, which cross-pairs form inversions?",
+            "formal": "With x's bit k = 0: a pair (i,j) with i<j where a[i] has bit k=1 and a[j] has bit k=0 is an inversion (since the 1-bit element is larger). Count these as cost[0][k]. With x's bit k = 1: the order flips, so the complementary pairs become inversions, giving cost[1][k] = (total cross-pairs) - cost[0][k]. Accumulate these counts across all trie nodes at level k."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Merge-sort style counting of cross-child inversions using position lists",
+          "description": "At each trie node, maintain the list of original array positions of elements in that subtree. When a node splits into left and right children, count how many pairs (one from each side) have the right-child element appearing earlier in the array than the left-child element. This is equivalent to counting inversions between two sorted-by-position lists, which can be done efficiently with a two-pointer merge in O(|left| + |right|) time. The total work across all nodes at each bit level is O(n), giving O(n log V) overall.",
+          "hints": {
+            "nudge": "You need to count how many elements from one list appear before elements from another list by original position. What classic technique counts such cross-list ordering violations?",
+            "question": "If you have two lists of array positions (both in increasing order), how can you count the number of pairs where a position from list R comes before a position from list L, in O(|L| + |R|) time?",
+            "formal": "Maintain position lists at each trie node (elements stored in original array order). At a node splitting into children L and R at bit k: iterate over L's positions, and for each position p in L, binary search or use a pointer to count how many positions in R are less than p. Sum these counts to get cost[0][k] for this node. The complement gives cost[1][k]. Two-pointer merge runs in linear time per node, and since each element appears in exactly one node per bit level, total work per level is O(n)."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Assemble x greedily: pick the bit that gives fewer inversions, prefer 0 for ties",
+          "description": "After computing cost[0][k] and cost[1][k] for each bit k, set bit k of x to 1 if cost[1][k] < cost[0][k], and to 0 otherwise (including ties, since we want the smallest x). The minimum inversion count is the sum of min(cost[0][k], cost[1][k]) over all bits. This greedy assembly works because the bits are independent.",
+          "hints": {
+            "nudge": "You have the cost of setting each bit to 0 or 1. How do you combine these independent choices?",
+            "question": "For each bit k, you know the inversion count if that bit is 0 and if it is 1. How do you decide each bit, and how do you handle ties to ensure the smallest x?",
+            "formal": "For each bit k from 29 down to 0: if cost[1][k] < cost[0][k], set bit k of x to 1; otherwise set it to 0. The total minimum inversions = sum of min(cost[0][k], cost[1][k]). Preferring 0 on ties ensures x is minimized since a 0 bit contributes less to x's value than a 1 bit."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

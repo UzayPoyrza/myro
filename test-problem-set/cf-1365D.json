@@ -1,0 +1,124 @@
+{
+  "contest_id": 1365,
+  "index": "D",
+  "title": "Solve The Maze",
+  "difficulty": 1700,
+  "tags": ["constructive", "greedy", "graphs", "bfs", "implementation"],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Vivek has encountered a problem. He has a maze that can be represented as an $$$n \\times m$$$ grid. Each of the grid cells may represent the following: Empty — ' . ' Wall — ' # ' Good person  — ' G ' Bad person — ' B ' The only escape from the maze is at cell $$$(n, m)$$$. A person can move to a cell only if it shares a side with their current cell and does not contain a wall. Vivek wants to block some of the empty cells by replacing them with walls in such a way, that all the good people are able to escape, while none of the bad people are able to. A cell that initially contains ' G ' or ' B ' cannot be blocked and can be travelled through . Help him determine if there exists a way to replace some (zero or more) empty cells with walls to satisfy the above conditions. It is guaranteed that the cell $$$(n,m)$$$ is empty. Vivek can also block this cell.",
+  "input_spec": "The first line contains one integer $$$t$$$ $$$(1 \\le t \\le 100)$$$ — the number of test cases. The description of the test cases follows. The first line of each test case contains two integers $$$n$$$, $$$m$$$ $$$(1 \\le n, m \\le 50)$$$ — the number of rows and columns in the maze. Each of the next $$$n$$$ lines contain $$$m$$$ characters. They describe the layout of the maze. If a character on a line equals ' . ', the corresponding cell is empty. If it equals ' # ', the cell has a wall. ' G ' corresponds to a good person and ' B ' corresponds to a bad person.",
+  "output_spec": "For each test case, print \" Yes \" if there exists a way to replace some empty cells with walls to satisfy the given conditions. Otherwise print \" No \" You may print every letter in any case (upper or lower).",
+  "examples": [
+    {
+      "input": "6\n1 1\n.\n1 2\nG.\n2 2\n#B\nG.\n2 3\nG.#\nB#.\n3 3\n#B.\n#..\nGG.\n2 2\n#B\nB.",
+      "output": "Yes\nYes\nNo\nNo\nYes\nYes"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy wall-off + BFS verification",
+      "description": "Greedily wall off all empty neighbors of bad people to contain them, then BFS from the exit to verify all good people remain reachable and no bad people escaped.",
+      "skill_tags": ["greedy", "bfs", "constructive"],
+      "observations": [
+        {
+          "title": "Contain bad people by walling their neighbors",
+          "description": "The optimal strategy is to wall off every empty cell adjacent to a bad person. Any empty neighbor of B is a potential escape route, and walling it is never worse than leaving it open since B could use it to reach the exit.",
+          "hints": {
+            "nudge": "Think about what minimal set of walls would definitely prevent bad people from moving anywhere.",
+            "question": "If you wall off every empty cell directly adjacent to each B, what effect does that have? Could any other wall placement be better?",
+            "formal": "For every cell marked B, convert all 4-directional neighboring cells that are '.' into '#'. This is the unique optimal strategy: any solution that works must block at least these cells, so if this doesn't work, nothing will."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Adjacent B and G means impossible",
+          "description": "If a bad person is directly adjacent to a good person, the answer is immediately No. You cannot wall between them because G and B cells themselves cannot be replaced with walls.",
+          "hints": {
+            "nudge": "What happens when you try to wall off a B's neighbors but one of those neighbors is a G?",
+            "question": "Can you ever separate a B from a G that is directly next to it, given that neither B nor G cells can be turned into walls?",
+            "formal": "After the walling step, check if any B has a G neighbor. If so, output No. Equivalently, during the walling step, if a neighbor of B is G, it's impossible."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "BFS from exit to check reachability",
+          "description": "After placing walls, do a BFS (or DFS) starting from the exit cell (n,m) to determine which cells are reachable. This single traversal answers both conditions at once.",
+          "hints": {
+            "nudge": "After modifying the grid, how can you check which cells can reach the exit?",
+            "question": "Instead of checking reachability from each person separately, can you reverse the direction and search from a single source?",
+            "formal": "BFS from (n,m) over non-wall cells. A cell can reach the exit if and only if the exit can reach it (since movement is symmetric). One BFS suffices for all checks."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "Verify: all G reachable, no B reachable",
+          "description": "After the BFS, scan the grid: every G must be marked visited (reachable from exit) and every B must be unvisited. If both conditions hold, output Yes; otherwise No.",
+          "hints": {
+            "nudge": "You have reachability information from BFS. What two conditions must hold simultaneously?",
+            "question": "What does it mean if a G is not visited? What does it mean if a B is visited?",
+            "formal": "For all cells: if cell is G and not visited, answer is No (a good person is trapped). If cell is B and visited, answer is No (a bad person can escape). Otherwise Yes."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Handle edge case: no bad people or no good people",
+          "description": "If there are no bad people, the answer is Yes if all good people can reach the exit on the original grid. If there are no good people, we can wall off the exit itself, so the answer is always Yes.",
+          "hints": {
+            "nudge": "What if the grid has only good people? Or only bad people? Does the algorithm still work?",
+            "question": "If there are no B cells, no walls are added and we just check G reachability. If there are no G cells, can we always block everything?",
+            "formal": "No B: skip walling, BFS from exit, check all G reachable. No G: always Yes (block exit cell or block all paths). The general algorithm handles both correctly without special-casing."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    },
+    {
+      "name": "DFS/flood-fill from exit",
+      "description": "Same greedy walling strategy but use DFS instead of BFS for the reachability check, which is slightly simpler to implement recursively.",
+      "skill_tags": ["greedy", "dfs", "constructive"],
+      "observations": [
+        {
+          "title": "Contain bad people by walling their neighbors",
+          "description": "The optimal strategy is to wall off every empty cell adjacent to a bad person. This is the strongest containment possible and is always at least as good as any other wall placement.",
+          "hints": {
+            "nudge": "Think about what minimal set of walls would definitely prevent bad people from moving anywhere.",
+            "question": "If you wall off every empty cell directly adjacent to each B, what effect does that have? Could any other wall placement be better?",
+            "formal": "For every cell marked B, convert all 4-directional neighboring cells that are '.' into '#'. This is the unique optimal strategy: blocking more would only risk cutting off good people."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Adjacent B and G means impossible",
+          "description": "If a bad person is directly adjacent to a good person, the answer is immediately No, since neither cell can be turned into a wall.",
+          "hints": {
+            "nudge": "What happens when you try to wall off a B's neighbors but one of those neighbors is a G?",
+            "question": "Can you ever separate a B from a G that is directly next to it?",
+            "formal": "During the walling step, if any neighbor of B is G, immediately output No. There is no way to separate them."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "DFS from exit for reachability",
+          "description": "Run a recursive or stack-based DFS from (n,m) to find all cells reachable from the exit. This determines which people can escape.",
+          "hints": {
+            "nudge": "How can you find all cells connected to the exit after placing walls?",
+            "question": "A simple flood fill from the exit cell would mark all reachable cells. Which traversal method would you use?",
+            "formal": "DFS from (n,m): mark cell visited, recurse on unvisited non-wall neighbors. After DFS, visited[i][j] tells if (i,j) can reach the exit."
+          },
+          "skill_tag": "dfs"
+        },
+        {
+          "title": "Verify: all G reachable, no B reachable",
+          "description": "After the flood fill, every G must be visited and every B must be unvisited. Both conditions must hold simultaneously for the answer to be Yes.",
+          "hints": {
+            "nudge": "You have reachability information. What two conditions must hold?",
+            "question": "What does it mean if a G is not visited after the DFS? What about a visited B?",
+            "formal": "Scan all cells: if any G is unvisited, output No. If any B is visited, output No. Otherwise output Yes."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

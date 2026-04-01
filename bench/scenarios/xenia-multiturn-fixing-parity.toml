@@ -1,0 +1,62 @@
+[scenario]
+name = "Xenia — multi-turn, nearly correct but parity still inverted"
+problem = "cf-339D"
+route = 0
+trigger = "test failure on test 2"
+elapsed_secs = 480
+observations_found = 2
+
+[scenario.obs_states]
+0 = "found"
+1 = "found"
+2 = "approaching"
+
+[scenario.code]
+text = """
+import sys
+input = sys.stdin.readline
+n, q = map(int, input().split())
+a = list(map(int, input().split()))
+size = 1 << n
+tree = [0] * (2 * size)
+for i in range(size):
+    tree[size + i] = a[i] if i < len(a) else 0
+for i in range(size - 1, 0, -1):
+    d = n - (i).bit_length() + 1
+    if d % 2 == 0:
+        tree[i] = tree[2*i] ^ tree[2*i+1]
+    else:
+        tree[i] = tree[2*i] | tree[2*i+1]
+
+def update(p, val):
+    p += size
+    tree[p] = val
+    p >>= 1
+    while p >= 1:
+        d = n - (p).bit_length() + 1
+        if d % 2 == 0:
+            tree[p] = tree[2*p] ^ tree[2*p+1]
+        else:
+            tree[p] = tree[2*p] | tree[2*p+1]
+        p >>= 1
+
+for _ in range(q):
+    p, b = map(int, input().split())
+    update(p - 1, b)
+    print(tree[1])
+"""
+
+[[scenario.recent_messages]]
+role = "user"
+content = "I think my parity check is backwards. When depth is even I use XOR but maybe it should be OR?"
+
+[[scenario.recent_messages]]
+role = "assistant"
+content = "Good instinct to question the parity! Think about what operation the leaves' parents should use."
+
+[expect]
+state = "approaching"
+obs_id = "cf:339D:route:1:obs:3"
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["d % 2 == 1", "swap the operations", "flip the parity"]

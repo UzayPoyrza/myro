@@ -1,0 +1,30 @@
+[scenario]
+name = "Obtain the String — overconfident student checks char existence instead of subsequence"
+problem = "cf-1015B"
+route = 0
+trigger = "test failure on test 2"
+elapsed_secs = 150
+observations_found = 0
+
+[scenario.code]
+text = """
+s = input()
+t = input()
+# This should work, the test cases must be wrong
+for c in t:
+    if c not in s:
+        print(-1)
+        exit()
+print(0)
+"""
+
+[[scenario.recent_messages]]
+role = "user"
+content = "My solution is correct but the judge is giving wrong answer. The problem just asks if t is a subsequence of s right? I check all chars exist."
+
+[expect]
+valid_states = ["approaching", "moving_away"]
+obs_id = "cf:1015B:route:1:obs:1"
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["advance both", "i and j"]

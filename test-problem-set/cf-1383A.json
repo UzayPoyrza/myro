@@ -1,0 +1,124 @@
+{
+  "contest_id": 1383,
+  "index": "A",
+  "title": "String Transformation 1",
+  "difficulty": 1700,
+  "tags": ["dsu", "graphs", "greedy", "sortings", "strings", "trees", "two pointers"],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Note that the only difference between String Transformation 1 and String Transformation 2 is in the move Koa does. In this version the letter $$$y$$$ Koa selects must be strictly greater alphabetically than $$$x$$$ (read statement for better understanding). You can make hacks in these problems independently. Koa the Koala has two strings $$$A$$$ and $$$B$$$ of the same length $$$n$$$ ($$$|A|=|B|=n$$$) consisting of the first $$$20$$$ lowercase English alphabet letters (ie. from a to t ). In one move Koa: selects some subset of positions $$$p_1, p_2, \\ldots, p_k$$$ ($$$k \\ge 1; 1 \\le p_i \\le n; p_i \\neq p_j$$$ if $$$i \\neq j$$$) of $$$A$$$ such that $$$A_{p_1} = A_{p_2} = \\ldots = A_{p_k} = x$$$ (ie. all letters on this positions are equal to some letter $$$x$$$). selects a letter $$$y$$$ (from the first $$$20$$$ lowercase letters in English alphabet) such that $$$y \\gt x$$$ (ie. letter $$$y$$$ is strictly greater alphabetically than $$$x$$$). sets each letter in positions $$$p_1, p_2, \\ldots, p_k$$$ to letter $$$y$$$. More formally: for each $$$i$$$ ($$$1 \\le i \\le k$$$) Koa sets $$$A_{p_i} = y$$$. Note that you can only modify letters in string $$$A$$$ . Koa wants to know the smallest number of moves she has to do to make strings equal to each other ($$$A = B$$$) or to determine that there is no way to make them equal. Help her!",
+  "input_spec": "Each test contains multiple test cases. The first line contains $$$t$$$ ($$$1 \\le t \\le 10$$$) — the number of test cases. Description of the test cases follows. The first line of each test case contains one integer $$$n$$$ ($$$1 \\le n \\le 10^5$$$) — the length of strings $$$A$$$ and $$$B$$$. The second line of each test case contains string $$$A$$$ ($$$|A|=n$$$). The third line of each test case contains string $$$B$$$ ($$$|B|=n$$$). Both strings consists of the first $$$20$$$ lowercase English alphabet letters (ie. from a to t ). It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$10^5$$$.",
+  "output_spec": "For each test case: Print on a single line the smallest number of moves she has to do to make strings equal to each other ($$$A = B$$$) or $$$-1$$$ if there is no way to make them equal.",
+  "examples": [
+    {
+      "input": "5\n3\naab\nbcc\n4\ncabc\nabcb\n3\nabc\ntsr\n4\naabd\ncccd\n5\nabcbd\nbcdda",
+      "output": "2\n-1\n3\n2\n-1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy letter-graph components",
+      "description": "Model required letter changes as edges in a graph on the 20-letter alphabet. The minimum number of moves equals the number of distinct letters involved minus the number of connected components they form.",
+      "skill_tags": ["greedy", "graphs", "dfs"],
+      "observations": [
+        {
+          "title": "Letters can only increase, so A[i] > B[i] is impossible",
+          "description": "Each move replaces a letter x with a strictly greater letter y. This means we can only increase characters in A. If any position has A[i] > B[i], there is no sequence of moves that can make A equal to B, so the answer is -1.",
+          "hints": {
+            "nudge": "What constraint does the move operation place on how characters can change?",
+            "question": "If a character can only be replaced by a strictly greater one, what happens when A[i] is already larger than B[i]?",
+            "formal": "Since y > x is required in every move, characters in A can only increase. If A[i] > B[i] for any i, output -1."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Positions where A[i] = B[i] need no work; focus on mismatches",
+          "description": "Positions where A and B already agree can be ignored. For each mismatched position where A[i] < B[i], we need to eventually change A[i] to B[i]. The key question is how to batch these changes efficiently.",
+          "hints": {
+            "nudge": "Which positions actually require moves? Can you focus only on those?",
+            "question": "For a position where A[i] < B[i], what specific letter transformation is needed? What if many positions need the same transformation?",
+            "formal": "Filter to positions where A[i] != B[i]. Each such position requires A[i] to eventually become B[i]. A single move can handle all positions with the same source letter x going to the same target letter y simultaneously."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "A move can chain through intermediate letters",
+          "description": "You do not need to change A[i] directly from its original value to B[i] in one move. You can change a to c by first changing a to b, then b to c. This means if you already need a->b and b->c transformations, the a->c transformation comes for free as a side effect of chaining.",
+          "hints": {
+            "nudge": "Must each character jump directly to its target, or could it pass through intermediate values?",
+            "question": "If you need to change some positions from a to b and others from b to c, how many moves does that require? What if you also had positions needing a to c?",
+            "formal": "Transformations can chain: if you perform a->b then b->c as two moves, any position originally needing a->c is automatically handled. The a->c positions ride along with the a->b move, then ride along with b->c."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Model as a graph: letters are nodes, needed transformations are edges",
+          "description": "Build a graph where the 20 possible letters are nodes. For each mismatched position (A[i] < B[i]), add an edge between letters A[i] and B[i]. Because transformations chain through connected letters, the structure of connected components determines the minimum moves.",
+          "hints": {
+            "nudge": "What if you drew a picture with the letters as nodes and drew a line for each required change?",
+            "question": "If letters a, b, and c are all connected by required transformations, how does that affect the number of moves needed to handle all of them?",
+            "formal": "Create a graph on up to 20 nodes (letters a-t). For each i where A[i] != B[i], add an undirected edge between A[i] and B[i]. Connected letters can share chained transformations."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Answer = distinct letters involved minus number of connected components",
+          "description": "Within a connected component of k letters, all needed transformations can be accomplished in exactly k-1 moves by processing letters in sorted order and chaining changes along a spanning tree. Summing over all components, the total moves equals (total distinct letters involved) minus (number of connected components).",
+          "hints": {
+            "nudge": "In a tree with k nodes, how many edges are there? How does this relate to moves?",
+            "question": "If a connected component involves letters {a, c, f, g}, what is the minimum number of moves to handle all transformations within it? Think about spanning trees.",
+            "formal": "A connected component with k letters requires exactly k-1 moves (a spanning tree has k-1 edges, and each edge represents one move). The total answer is sum over all components of (size - 1) = (total distinct letters) - (number of components). Equivalently, 20 minus the number of components among all 20 letters."
+          },
+          "skill_tag": "dfs"
+        }
+      ]
+    },
+    {
+      "name": "Greedy sorted distinct pairs",
+      "description": "Collect the distinct (A[i], B[i]) letter pairs needed, sort them, and greedily merge pairs that share a letter endpoint. Count the number of moves after merging chains.",
+      "skill_tags": ["greedy", "sorting"],
+      "observations": [
+        {
+          "title": "Letters can only increase, so A[i] > B[i] is impossible",
+          "description": "Each move replaces a letter x with a strictly greater letter y. If any position has A[i] > B[i], there is no way to make A equal to B.",
+          "hints": {
+            "nudge": "What constraint does the move operation place on how characters can change?",
+            "question": "If a character can only be replaced by a strictly greater one, what happens when A[i] is already larger than B[i]?",
+            "formal": "Since y > x is required in every move, characters in A can only increase. If A[i] > B[i] for any i, output -1."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Only distinct letter pairs matter, not positions",
+          "description": "Since a single move can change all positions with the same source letter x to the same target y simultaneously, the number and identity of positions is irrelevant. Only the set of distinct (source_letter, target_letter) pairs matters for counting moves.",
+          "hints": {
+            "nudge": "If 1000 positions all need a->c, does that cost more than if just 1 position needs a->c?",
+            "question": "A move selects all positions with a given letter and changes them. So how many moves does it take to handle all positions needing the same letter change?",
+            "formal": "One move handles all positions with the same source letter going to the same target. Reduce the problem to the set of distinct (A[i], B[i]) pairs where A[i] < B[i]."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Process letter changes from smallest to largest, merging chains",
+          "description": "Sort the needed letter changes by source letter. When changing letter x to y, all positions currently at x become y. If there is a later change from y to z, those positions will be handled by that subsequent move. This chaining means consecutive changes that share an endpoint save a move.",
+          "hints": {
+            "nudge": "If you process changes in alphabetical order of the source letter, can later changes reuse earlier results?",
+            "question": "Suppose you need a->c and c->f. After the a->c move, some positions are now at c. Does the c->f move automatically pick those up?",
+            "formal": "Process changes sorted by source letter. If change x->y is followed by any change starting from y, the positions from the x->y change are automatically included. Each such chain of length L requires only L moves instead of handling each pair independently."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Use Union-Find to count the number of independent chains",
+          "description": "Use a Union-Find (DSU) structure on the 20 letters. For each distinct pair (A[i], B[i]), union those two letters. The answer is the number of union operations that actually merged two different components (i.e., total distinct letters involved minus final number of components).",
+          "hints": {
+            "nudge": "Is there a data structure that efficiently tracks which letters are connected through chains of transformations?",
+            "question": "If you union every pair of letters that need a direct transformation, how does the number of components relate to the answer?",
+            "formal": "Initialize DSU with 20 singletons. For each pair (A[i], B[i]) where A[i] != B[i], union A[i] and B[i]. The answer equals (number of distinct letters involved in at least one pair) minus (number of components among those letters)."
+          },
+          "skill_tag": "data-structures"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "contest_id": 2072,
+  "index": "E",
+  "title": "Do You Love Your Hero and His Two-Hit Multi-Target Attacks?",
+  "difficulty": 1500,
+  "tags": [
+    "binary search",
+    "constructive algorithms",
+    "geometry",
+    "greedy",
+    "math"
+  ],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Akito decided to study a new powerful spell. Since it possesses immeasurable strength, it certainly requires a lot of space and careful preparation. For this, Akito went out into the field. Let's represent the field as a Cartesian coordinate system. For the spell, Akito needs to place $$$0 \\le n \\le 500$$$ staffs at distinct integer coordinates in the field such that there will be exactly $$$k$$$ pairs $$$(i, j)$$$ such that $$$1 \\le i  \\lt  j \\le n$$$ and $$$\\rho(i, j) = d(i, j)$$$. Here, for two points with integer coordinates $$$a = (x_a, y_a)$$$ and $$$b = (x_b, y_b)$$$, $$$\\rho(a, b) = \\sqrt{(x_a - x_b)^2 + (y_a - y_b)^2}$$$ and $$$d(a, b) = |x_a - x_b| + |y_a - y_b|$$$.",
+  "input_spec": "The first line of input contains a single number $$$t$$$ ($$$1 \\le t \\le 1000$$$) — the number of test cases. In the only line of each test case, there is a single number $$$k$$$ ($$$0 \\le k \\le 10^5$$$) — the number of pairs of staffs for which the equality $$$\\rho(i, j) = d(i, j)$$$ must hold.",
+  "output_spec": "For each test case, the first line of output should print the number $$$n$$$ ($$$0 \\le n \\le 500$$$) — the number of placed staffs. In the following $$$n$$$ lines, pairs of integers $$$x_i, y_i$$$ $$$(-10^9 \\le x_i, y_i \\le 10^9)$$$ should be printed — the coordinates of the $$$i$$$-th staff. The points in which staffs stand must be distinct.",
+  "examples": [
+    {
+      "input": "3\n0\n25",
+      "output": "6\n69 52\n4 20\n789 9308706\n1337 1337\n-1234 -5678\n23456178 707\n10\n-236 -346262358\n273568 6435267\n2365437 31441367\n246574 -45642372\n-236 56\n4743623 -192892 \n10408080 -8173135\n-237415357 31441367\n-78125638 278\n56 143231\n5\n1 1\n2 1\n1 5\n3 5\n1 10"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy collinear-group decomposition",
+      "description": "Characterize when Euclidean equals Manhattan, reduce the problem to constructing groups of axis-aligned points, then greedily decompose k into triangular numbers to determine group sizes.",
+      "skill_tags": [
+        "math",
+        "greedy",
+        "constructive",
+        "math"
+      ],
+      "observations": [
+        {
+          "title": "Euclidean equals Manhattan iff the points are axis-aligned",
+          "description": "For two points a and b, rho(a,b) = d(a,b) holds if and only if they share an x-coordinate or share a y-coordinate. Squaring both sides and expanding reveals that the equality reduces to |dx|*|dy| = 0, meaning one coordinate difference must be zero.",
+          "hints": {
+            "nudge": "When does the Euclidean distance between two points equal their Manhattan distance? Try small examples with specific coordinates.",
+            "question": "Square both sides of rho = d. Expand sqrt((dx)^2 + (dy)^2) = |dx| + |dy|. After squaring, what simplification occurs? What must be true about dx and dy?",
+            "formal": "rho(a,b)^2 = dx^2 + dy^2. d(a,b)^2 = (|dx| + |dy|)^2 = dx^2 + 2|dx||dy| + dy^2. Equality requires 2|dx||dy| = 0, so dx = 0 or dy = 0. The points must share an x-coordinate (vertical alignment) or a y-coordinate (horizontal alignment)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "A group of m collinear points contributes C(m,2) valid pairs",
+          "description": "If m points all lie on the same horizontal or vertical line, every pair among them satisfies the distance equality. The number of such pairs is m*(m-1)/2. This is the building block for constructing exactly k pairs.",
+          "hints": {
+            "nudge": "If you place several points on one horizontal line, how many valid pairs do they form?",
+            "question": "Among m points on a shared horizontal line, every pair is axis-aligned. How many pairs exist? What familiar formula gives this count?",
+            "formal": "m collinear points (same row or column) produce C(m,2) = m*(m-1)/2 valid pairs. Points from different lines that share neither x nor y contribute zero valid pairs."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Groups on separate lines must not share any coordinate",
+          "description": "If two groups lie on different horizontal lines, points from different groups could still form valid pairs if they share an x-coordinate. To ensure only within-group pairs count, place each group on its own horizontal line with x-ranges that do not overlap with any other group's x-coordinates, and use distinct y-values across groups.",
+          "hints": {
+            "nudge": "If you have two horizontal groups at different y-values, could a point from one group still form a valid pair with a point from the other?",
+            "question": "Two points on different horizontal lines satisfy the condition only if they share an x-coordinate. How can you place groups so that no cross-group x-sharing occurs?",
+            "formal": "Place group i on the horizontal line y = y_i with x-coordinates in a range disjoint from all other groups. For example, use consecutive integer x-values and offset each group. This ensures cross-group pairs never share x or y, contributing exactly zero extra valid pairs."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Decompose k as a sum of triangular numbers greedily",
+          "description": "Each group of size m contributes C(m,2) = m*(m-1)/2 pairs. To achieve exactly k total pairs, greedily pick the largest m such that m*(m-1)/2 <= k, subtract that from k, and repeat. This is equivalent to writing k as a sum of triangular numbers T(m-1) = C(m,2).",
+          "hints": {
+            "nudge": "You need exactly k pairs total. Each group contributes a triangular number of pairs. How do you split k into these chunks?",
+            "question": "If you greedily take the largest triangular number T(m) = m*(m+1)/2 that does not exceed k, subtract it, and repeat, will this always terminate? Will the total number of points stay within 500?",
+            "formal": "At each step find the largest m with m*(m-1)/2 <= k. Set k' = k - m*(m-1)/2 and place m points on a new line. Repeat until k' = 0. Since C(m,2) grows quadratically, m ~ sqrt(2k), and the total number of points across all groups is O(sqrt(k)). For k <= 10^5, the total n is well under 500."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "The total point count fits within the n <= 500 bound",
+          "description": "The greedy decomposition produces groups whose total size is bounded. The first group has size roughly sqrt(2k), and the remainder shrinks fast. For k = 10^5, a single group of 449 points gives C(449,2) = 100576 >= 10^5, so the total never exceeds 500 points. This confirms the construction is always valid.",
+          "hints": {
+            "nudge": "How many points does the greedy approach use in total? Is it always at most 500?",
+            "question": "The first group takes the bulk of k. After subtracting C(m,2), the leftover is at most m-1. What does this imply about the total point count across all groups?",
+            "formal": "After choosing group size m, the remainder r = k - C(m,2) satisfies r <= m-2. The next group has size roughly sqrt(2r). Total points sum like m + sqrt(m) + sqrt(sqrt(m)) + ..., which converges rapidly. For k <= 10^5, the maximum total n is around 450, comfortably within 500."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

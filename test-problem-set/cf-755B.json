@@ -1,0 +1,92 @@
+{
+  "contest_id": 755,
+  "index": "B",
+  "title": "PolandBall and Game",
+  "difficulty": 1100,
+  "tags": [
+    "games",
+    "greedy",
+    "strings"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "PolandBall is playing a game with EnemyBall. The rules are simple. Players have to say words in turns. You cannot say a word which was already said. PolandBall starts. The Ball which can't say a new word loses. You're given two lists of words familiar to PolandBall and EnemyBall. Can you determine who wins the game, if both play optimally?",
+  "input_spec": "The first input line contains two integers n and m (1 <= n, m <= 10^3) -- number of words PolandBall and EnemyBall know, respectively. Then n strings follow, one per line -- words familiar to PolandBall. Then m strings follow, one per line -- words familiar to EnemyBall. Note that one Ball cannot know a word more than once (strings are unique), but some words can be known by both players. Each word is non-empty and consists of no more than 500 lowercase English alphabet letters.",
+  "output_spec": "In a single line print the answer -- \"YES\" if PolandBall wins and \"NO\" otherwise. Both Balls play optimally.",
+  "examples": [
+    {
+      "input": "5 1\npolandball\nis\na\ncool\ncharacter\nnope",
+      "output": "YES"
+    },
+    {
+      "input": "2 2\nkremowka\nwadowicka\nkremowka\nwiedenska",
+      "output": "YES"
+    },
+    {
+      "input": "1 2\na\na\nb",
+      "output": "NO"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy shared-word counting",
+      "description": "Identify words known by both players (shared words) and words exclusive to each. Under optimal play, both players prioritize shared words to deny them from the opponent. PolandBall goes first, so they claim ceil(shared/2) shared words. Compare total available moves to determine the winner.",
+      "skill_tags": [
+        "greedy",
+        "math"
+      ],
+      "observations": [
+        {
+          "title": "Shared words are contested resources",
+          "description": "Some words appear in both players' lists. These shared words are the key strategic element: saying a shared word both uses your turn and removes a word your opponent could have said.",
+          "hints": {
+            "nudge": "What happens when both players know the same word?",
+            "question": "If a word appears in both lists, what effect does saying it have on your opponent's options?",
+            "formal": "Compute shared = |P intersect E|, the number of words known by both players. These words have dual value: using one costs the opponent a future move."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Optimal play means prioritizing shared words",
+          "description": "Each player should say shared words before exclusive words. A shared word is strictly more valuable than an exclusive word because it both uses your turn (like an exclusive word) and removes an option from your opponent.",
+          "hints": {
+            "nudge": "If you had a choice between saying a word only you know and a word both of you know, which is more strategic?",
+            "question": "Why is saying a shared word strictly better than saying an exclusive word? What extra effect does it have?",
+            "formal": "Greedy strategy: always play a shared word if one remains, otherwise play an exclusive word. A shared word costs the opponent one future move; an exclusive word does not."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "First player gets more shared words",
+          "description": "Since PolandBall goes first and both prioritize shared words, PolandBall claims ceil(shared/2) of them and EnemyBall claims floor(shared/2).",
+          "hints": {
+            "nudge": "If both players alternate claiming shared words and PolandBall goes first, how are the shared words divided?",
+            "question": "With s shared words and alternating turns starting with PolandBall, how many shared words does each player get to say?",
+            "formal": "Let s = |shared|. PolandBall says ceil(s/2) shared words, EnemyBall says floor(s/2). Equivalently: P gets (s+1)//2, E gets s//2."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Count total available moves per player",
+          "description": "Each player's total moves equal their exclusive words plus their share of the shared words. PolandBall wins if and only if their total exceeds EnemyBall's total.",
+          "hints": {
+            "nudge": "After splitting the shared words, how many total words can each player say?",
+            "question": "Let exclusive_P = n - s and exclusive_E = m - s. What is each player's total move count? Who wins if totals are equal?",
+            "formal": "total_P = (n - s) + ceil(s/2). total_E = (m - s) + floor(s/2). PolandBall wins iff total_P > total_E. (Equal means PolandBall runs out first since they move first.)"
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Finding shared words efficiently",
+          "description": "Use a set to store one player's words, then iterate over the other player's words checking membership. This counts shared words in O(n + m) time.",
+          "hints": {
+            "nudge": "How can you efficiently check which words appear in both lists?",
+            "question": "If you store all of PolandBall's words in a set, how do you count how many of EnemyBall's words are also in that set?",
+            "formal": "Insert all n words of PolandBall into a HashSet. For each of EnemyBall's m words, check if it is in the set. Count matches as s. Total time: O((n + m) * L) where L is word length."
+          },
+          "skill_tag": "strings"
+        }
+      ]
+    }
+  ]
+}

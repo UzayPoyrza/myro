@@ -1,0 +1,77 @@
+{
+  "contest_id": 1863,
+  "index": "E",
+  "title": "Speedrun",
+  "difficulty": 2100,
+  "tags": ["dp", "greedy", "graphs", "sorting"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are playing a video game. The game has n quests that need to be completed. However, the j-th quest can only be completed at the beginning of hour h_j of a game day. The game day is k hours long. The hours of each game day are numbered 0, 1, ..., k - 1. After the first day ends, a new one starts, and so on. Also, there are dependencies between the quests, that is, for some pairs (a_i, b_i) the b_i-th quest can only be completed after the a_i-th quest. It is guaranteed that there are no circular dependencies. You are skilled enough to complete any number of quests in a negligible amount of time (i.e. you can complete any number of quests at the beginning of the same hour, even if there are dependencies between them). You want to complete all quests as fast as possible. To do this, you can complete the quests in any valid order. The completion time is equal to the difference between the time of completing the last quest and the time of completing the first quest in this order. Find the least amount of time you need to complete the game.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases t (1 <= t <= 100000). The first line of each test case contains three integers n, m, and k (1 <= n <= 200000, 0 <= m <= 200000, 1 <= k <= 10^9) -- the number of quests, the number of dependencies between them, and the number of hours in a game day. The next line contains n integers h_1, h_2, ..., h_n (0 <= h_i < k). The next m lines each contain two integers a_i and b_i (1 <= a_i < b_i <= n) meaning that quest b_i can only be completed after quest a_i. It is guaranteed that all dependencies are pairwise distinct. Sum of n and sum of m over all test cases do not exceed 200000.",
+  "output_spec": "For each test case, output a single integer -- the minimum completion time.",
+  "examples": [
+    {
+      "input": "6\n4 4 24\n12 16 18 12\n1 2\n1 3\n2 4\n3 4\n4 3 10\n2 6 5 9\n1 4\n2 4\n3 4\n2 1 10\n5 5\n1 2\n5 0 1000\n8 800 555 35 355\n0 10\n3 2 5 4 7\n3 2 5\n4 3 2\n1 2\n2 3",
+      "output": "24\n7\n0\n480\n5\n8"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Enumerate starting hours with DAG-forced day-2 propagation",
+      "description": "Propagate dependency constraints through the DAG to determine which quests are forced onto day 2 regardless of starting hour, then enumerate each distinct quest hour as a candidate starting hour and compute the span efficiently using sorted structures.",
+      "skill_tags": ["graphs", "greedy", "sorting"],
+      "observations": [
+        {
+          "title": "The schedule spans at most two consecutive game days",
+          "description": "You choose a starting hour s and complete quests in chronological order from hour s onward, wrapping into the next game day. Every quest j has an effective time: if h[j] >= s then h[j] - s (same day), otherwise h[j] + k - s (next day). The completion time is the maximum effective time across all quests. Since every possible hour in {h_1, ..., h_n} occurs within a single cycle of length k, the schedule never needs more than two days.",
+          "hints": {
+            "nudge": "There are only n distinct quest hours within a day of length k. If you start at one of those hours, how far can the schedule extend?",
+            "question": "If you fix a starting hour s and line up all quest hours from s onward (wrapping around), what is the furthest any quest can be from the start? Can it exceed one full day cycle?",
+            "formal": "Fix starting hour s. Each quest j is at effective time (h[j] - s) mod k. Since all h[j] are in [0, k), the maximum effective time is at most k - 1. The completion time equals the maximum effective time over all quests. We want to choose s to minimize this maximum."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Dependency edges force some quests to the next day",
+          "description": "For a dependency a -> b, quest a must be completed before quest b. If h[a] > h[b], then whenever a is completed at hour h[a] on some day, b at hour h[b] has already passed on that day, so b must be done on the next day. This constraint is absolute -- it holds regardless of the chosen starting hour s. Propagate through the DAG: for each quest j, compute the maximum h-value among all of j's ancestors. If this maximum exceeds h[j], then j is forced onto day 2.",
+          "hints": {
+            "nudge": "If quest a must happen before quest b and h[a] > h[b], can they both be on the same day?",
+            "question": "Consider the dependency chain a1 -> a2 -> ... -> j. If any ancestor ai has h[ai] > h[j], what does that imply about which day j is completed on? Does this depend on the starting hour?",
+            "formal": "Process quests in topological order. For each quest j, let max_anc[j] = max(h[j], max over all predecessors a of max_anc[a]). If max_anc[j] > h[j], then j is 'forced': it must be on day 2 (its effective time is h[j] + k - s, not h[j] - s). This propagation is O(n + m)."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "The answer depends on three categories of quests for each starting hour",
+          "description": "For a fixed starting hour s, partition all quests into three groups: (1) forced quests (must be on day 2): effective time h[j] + k - s; (2) non-forced quests with h[j] >= s: effective time h[j] - s (same day); (3) non-forced quests with h[j] < s: effective time h[j] + k - s (wrapped to next day because their hour has already passed). The completion time is the maximum effective time over all three groups.",
+          "hints": {
+            "nudge": "Not all quests that end up on day 2 are forced by dependencies. Some are there simply because their hour is earlier than the starting hour s.",
+            "question": "For a non-forced quest with h[j] < s, what is its effective time? How does it compare to a forced quest's effective time? What three quantities do you need the maximum of?",
+            "formal": "Let F = set of forced quests, U = non-forced with h[j] >= s, L = non-forced with h[j] < s. Answer for starting hour s = max(max_{j in F}(h[j] + k - s), max_{j in U}(h[j] - s), max_{j in L}(h[j] + k - s)). Groups F and L both contribute h[j] + k - s terms, so combine them: max(max_forced_h + k - s, max_non_forced_geq_s - s, max_non_forced_lt_s + k - s)."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Only the n distinct quest hours need to be tried as starting hours",
+          "description": "The optimal starting hour s must equal some h[j]. Starting between two quest hours only increases the span without benefit, because shifting s down to the next lower quest hour does not increase any effective time. So we sort the non-forced quest hours, enumerate each as a candidate starting hour, and evaluate the three-group maximum.",
+          "hints": {
+            "nudge": "If no quest has hour exactly s, could you shift s to the nearest quest hour and do at least as well?",
+            "question": "Suppose s is between two consecutive quest hours h[a] < s < h[b]. If you change s to h[a], how do the effective times of quests at h[a] and h[b] change? Is it always at least as good?",
+            "formal": "If s = h[j] for some j, then quest j has effective time 0 (it is the first quest). For any s not equal to a quest hour, all quests have positive effective time. So the minimum of the maximum is achieved when s is one of the quest hours. There are at most n candidates."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Sweep over sorted starting hours for O(n log n) total",
+          "description": "Sort the non-forced quest hours. As we sweep s from smallest to largest, quests move from the 'same-day' group (h[j] >= s) to the 'wrapped' group (h[j] < s). Maintain the maximum of each group. The forced-quest maximum is a constant (max_forced_h + k - s, decreasing as s grows). For non-forced quests, use a suffix maximum array over sorted hours for the same-day group, and track the running maximum for the wrapped group. Evaluate all three maxima in O(1) per candidate. The overall answer is the minimum over all candidates.",
+          "hints": {
+            "nudge": "If you sort the quest hours, how does increasing s affect which quests are in each group? Can you precompute useful prefix/suffix information?",
+            "question": "After sorting non-forced hours, as s increases past h[j], quest j moves from same-day to wrapped. How do the max of each group change? Can you precompute suffix-max for same-day and track prefix-max for wrapped?",
+            "formal": "Sort non-forced hours as v[0] <= v[1] <= ... <= v[p-1]. Precompute suffix_max[i] = max(v[i], ..., v[p-1]). For s = v[i]: same-day max = suffix_max[i] - v[i], wrapped max = (i > 0 ? v[i-1] + k - v[i] : -inf), forced max = max_forced_h + k - v[i] (or -inf if no forced quests). Answer for this s = max of these three. If there are forced quests, also consider forced_max = max_forced_h + k - v[i]. Take min over all i. Overall O(n log n) from sorting."
+          },
+          "skill_tag": "sorting"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+[scenario]
+name = "LIS — correct O(n^2) DP but TLE on large input"
+problem = "cf-340D"
+route = 1
+trigger = "test failure on test 5"
+elapsed_secs = 300
+observations_found = 2
+
+[scenario.obs_states]
+0 = "found"
+1 = "found"
+
+[scenario.code]
+text = """
+n = int(input())
+a = list(map(int, input().split()))
+dp = [1] * n
+for i in range(1, n):
+    for j in range(i):
+        if a[j] < a[i]:
+            dp[i] = max(dp[i], dp[j] + 1)
+print(max(dp))
+"""
+
+[expect]
+state = "approaching"
+obs_id = "cf:340D:route:2:obs:3"
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["bisect", "binary search", "tails array", "patience sorting"]

@@ -1,0 +1,96 @@
+{
+  "contest_id": 1493,
+  "index": "D",
+  "title": "GCD of an Array",
+  "difficulty": 2100,
+  "tags": [
+    "brute force",
+    "data structures",
+    "hashing",
+    "implementation",
+    "math",
+    "number theory",
+    "sortings",
+    "two pointers"
+  ],
+  "time_limit": "2.5 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given an array $$$a$$$ of length $$$n$$$. You are asked to process $$$q$$$ queries of the following format: given integers $$$i$$$ and $$$x$$$, multiply $$$a_i$$$ by $$$x$$$. After processing each query you need to output the greatest common divisor (GCD) of all elements of the array $$$a$$$. Since the answer can be too large, you are asked to output it modulo $$$10^9+7$$$.",
+  "input_spec": "The first line contains two integers — $$$n$$$ and $$$q$$$ ($$$1 \\le n, q \\le 2 \\cdot 10^5$$$). The second line contains $$$n$$$ integers $$$a_1, a_2, \\ldots, a_n$$$ ($$$1 \\le a_i \\le 2 \\cdot 10^5$$$) — the elements of the array $$$a$$$ before the changes. The next $$$q$$$ lines contain queries in the following format: each line contains two integers $$$i$$$ and $$$x$$$ ($$$1 \\le i \\le n$$$, $$$1 \\le x \\le 2 \\cdot 10^5$$$).",
+  "output_spec": "Print $$$q$$$ lines: after processing each query output the GCD of all elements modulo $$$10^9+7$$$ on a separate line.",
+  "examples": [
+    {
+      "input": "4 3\n1 6 8 12\n1 12\n2 3\n3 3",
+      "output": "2\n2\n6"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Prime factorization with per-prime minimum tracking",
+      "description": "Decompose the GCD into independent per-prime problems: for each prime p, track the minimum exponent of p across all n elements, and maintain a running product as the answer.",
+      "skill_tags": ["number-theory", "data-structures", "math"],
+      "observations": [
+        {
+          "title": "GCD decomposes into independent prime factors",
+          "description": "If each a_i has prime factorization a_i = p1^e1 * p2^e2 * ..., then gcd(a_1, ..., a_n) = product over all primes p of p^(min over all i of exponent of p in a_i). This means we can track each prime independently.",
+          "hints": {
+            "nudge": "What does the GCD look like when you write each number in terms of its prime factorization?",
+            "question": "If you know the exponent of prime p in every element a_i, what is the exponent of p in gcd(a_1, ..., a_n)?",
+            "formal": "gcd(a_1, ..., a_n) = product over primes p of p^(min_i(v_p(a_i))), where v_p(a_i) is the exponent of p in a_i. Each prime can be tracked independently."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Multiplying only increases exponents, so the per-prime minimum can only increase",
+          "description": "Since each query multiplies a_i by x (never divides), the exponent of any prime p in any element can only grow or stay the same. Therefore the minimum exponent across all elements for prime p is monotonically non-decreasing over time. This means we never need to 'undo' a contribution to the answer — we only multiply new prime powers in.",
+          "hints": {
+            "nudge": "What direction can the GCD move when you only multiply elements?",
+            "question": "If v_p(a_i) can only increase over time, what can you say about how min_i(v_p(a_i)) changes?",
+            "formal": "Since v_p(a_i) is non-decreasing for every i and p, min_i(v_p(a_i)) is also non-decreasing. The answer (product of p^min) can only grow. Maintain a running answer and multiply in p each time the minimum exponent for p increases by 1."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Track the minimum exponent efficiently with a multiset or sorted structure",
+          "description": "For each prime p, we need to quickly find the minimum exponent of p across all n elements. A multiset (or equivalent) keyed by exponent lets us update one element's exponent and read the new minimum in O(log n). But there is a subtlety: elements with exponent 0 for prime p need not be stored — the minimum is 0 (hence p does not contribute to GCD) as long as any element has exponent 0. The minimum is positive only once all n elements have a positive exponent.",
+          "hints": {
+            "nudge": "You need to quickly find the minimum exponent across n elements for a given prime, and update individual elements. What data structure supports this?",
+            "question": "If you store the exponents of prime p for all elements that have a positive exponent, when does the minimum become positive? How do you detect this transition?",
+            "formal": "For each prime p, maintain a multiset of the exponents v_p(a_i) for all i where v_p(a_i) > 0. The minimum exponent contributing to the GCD is: 0 if the multiset has fewer than n entries (some element has exponent 0), otherwise the smallest element in the multiset. When an update causes the multiset to reach size n, the new minimum is its smallest element."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Use a sieve for fast factorization of values up to 2*10^5",
+          "description": "Both initial values and query multipliers are at most 2*10^5. Precompute the smallest prime factor (SPF) for every integer up to 2*10^5 using a sieve. Then any number can be factorized in O(log(value)) time by repeatedly dividing by its smallest prime factor.",
+          "hints": {
+            "nudge": "You need to factorize many numbers quickly. Can you precompute something to speed this up?",
+            "question": "If you know the smallest prime factor of every integer up to 2*10^5, how do you factorize a given number x?",
+            "formal": "Build an SPF sieve: for each i from 2 to max_val, if spf[i] is unset then spf[i] = i and for j = i*i, i*(i+1), ..., set spf[j] = i if unset. To factorize x: while x > 1, record p = spf[x], count how many times p divides x, then continue with x / p^count."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Maintain the answer as a running product modulo 10^9+7",
+          "description": "Instead of recomputing the full GCD from scratch after each query, maintain a variable ans (initially 1) representing the current GCD modulo 10^9+7. Whenever the minimum exponent for some prime p increases from old_min to new_min, multiply ans by p^(new_min - old_min) mod 10^9+7. Since the minimum only increases, this always means multiplying in additional factors.",
+          "hints": {
+            "nudge": "Recomputing the GCD from all prime factors each query would be too slow. How can you update the answer incrementally?",
+            "question": "If the minimum exponent of prime p just increased by delta, how does the GCD change? How do you reflect this in a running modular product?",
+            "formal": "Keep ans = 1 (mod 10^9+7). After each update, for each prime p whose minimum exponent increased from old_min to new_min, set ans = ans * p^(new_min - old_min) mod 10^9+7. Since exponents only grow, old_min <= new_min always holds, so we only ever multiply (never divide), avoiding the need for modular inverse."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Per-element prime maps avoid storing exponents for all (element, prime) pairs",
+          "description": "Naively storing exponents for every element-prime pair would be wasteful since most elements have few distinct prime factors. Instead, for each element i keep a map from prime to exponent (only primes that actually divide a_i). For each prime p keep a multiset of the nonzero exponents across elements. When processing query (i, x): factorize x, and for each prime factor p with additional exponent delta, update element i's map and the multiset for p.",
+          "hints": {
+            "nudge": "How many distinct prime factors can a number up to 2*10^5 have? Does this help with storage?",
+            "question": "If each number has at most about 6 distinct prime factors, what is the total work across all q queries for updating the per-element maps and per-prime multisets?",
+            "formal": "Each number up to 2*10^5 has at most 6 distinct prime factors (since 2*3*5*7*11*13*17 > 2*10^5). So each query touches O(log(max_val)) primes. Total operations across all queries: O((n + q) * log(max_val) * log(n)) where the log(n) comes from multiset operations. This comfortably fits in the 2.5 second time limit."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+[scenario]
+name = "Next Round — all observations found, correct threshold code"
+problem = "cf-158A"
+route = 0
+trigger = "user idle for 30s"
+elapsed_secs = 180
+observations_found = 3
+
+[scenario.obs_states]
+0 = "found"
+1 = "found"
+2 = "found"
+
+[scenario.code]
+text = """
+n, k = map(int, input().split())
+a = list(map(int, input().split()))
+threshold = a[k - 1]
+count = sum(1 for x in a if x >= threshold and x > 0)
+print(count)
+"""
+
+[expect]
+state = "found"
+obs_id = "cf:158A:route:1:obs:3"
+min_confidence = 0.7
+must_be_socratic = false
+banned_patterns = []

@@ -1,0 +1,104 @@
+{
+  "contest_id": 1730,
+  "index": "B",
+  "title": "Meeting on the Line",
+  "difficulty": 1600,
+  "tags": ["binary-search", "greedy", "math", "implementation"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "$$$n$$$ people live on the coordinate line, the $$$i$$$-th one lives at the point $$$x_i$$$ ($$$1 \\le i \\le n$$$). They want to choose a position $$$x_0$$$ to meet. The $$$i$$$-th person will spend $$$|x_i - x_0|$$$ minutes to get to the meeting place. Also, the $$$i$$$-th person needs $$$t_i$$$ minutes to get dressed, so in total he or she needs $$$t_i + |x_i - x_0|$$$ minutes. Here $$$|y|$$$ denotes the absolute value of $$$y$$$. These people ask you to find a position $$$x_0$$$ that minimizes the time in which all $$$n$$$ people can gather at the meeting place.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 10^3$$$) \u2014 the number of test cases. Then the test cases follow. Each test case consists of three lines. The first line contains a single integer $$$n$$$ ($$$1 \\le n \\le 10^5$$$) \u2014 the number of people. The second line contains $$$n$$$ integers $$$x_1, x_2, \\dots, x_n$$$ ($$$0 \\le x_i \\le 10^{8}$$$) \u2014 the positions of the people. The third line contains $$$n$$$ integers $$$t_1, t_2, \\dots, t_n$$$ ($$$0 \\le t_i \\le 10^{8}$$$), where $$$t_i$$$ is the time $$$i$$$-th person needs to get dressed. It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case, print a single real number \u2014 the optimum position $$$x_0$$$. It can be shown that the optimal position $$$x_0$$$ is unique. Your answer will be considered correct if its absolute or relative error does not exceed $$$10^{-6}$$$. Formally, let your answer be $$$a$$$, the jury's answer be $$$b$$$. Your answer will be considered correct if $$$\\frac{|a-b|}{max(1,|b|)} \\le 10^{-6}$$$.",
+  "examples": [
+    {
+      "input": "710323 10 021 40 031 2 30 0 031 2 34 1 233 3 35 3 365 4 7 2 10 43 2 5 1 4 6",
+      "output": "0\n2\n2.5\n2\n1\n3\n6"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Binary search on the answer",
+      "description": "Binary search on the total time T. For a given T, check whether there exists a meeting point x_0 such that every person can arrive within time T. The feasibility check reduces to intersecting intervals.",
+      "skill_tags": ["binary-search", "math"],
+      "observations": [
+        {
+          "title": "Minimize the maximum arrival time",
+          "description": "The goal is to find x_0 that minimizes max_i(t_i + |x_i - x_0|). This is a classic minimax problem: minimize the worst-case arrival time across all people.",
+          "hints": {
+            "nudge": "What exactly are you optimizing? Is it the sum or the maximum?",
+            "question": "If everyone must be gathered before the meeting can start, whose arrival time determines the total wait?",
+            "formal": "The objective is f(x_0) = max over all i of (t_i + |x_i - x_0|). We want x_0 that minimizes f(x_0)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Monotonicity enables binary search on T",
+          "description": "If everyone can gather within time T, they can also gather within any time T' > T. This monotonicity means we can binary search on the answer T and check feasibility.",
+          "hints": {
+            "nudge": "If a certain total time T works, what about a slightly larger time?",
+            "question": "Is the predicate 'all people can arrive within time T' monotone in T? What search technique exploits monotonicity?",
+            "formal": "The predicate is_feasible(T) is monotonically non-decreasing: if feasible at T, feasible at T' >= T. Binary search on T in [0, 2*10^8] to find the minimum feasible T."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "Feasibility as interval intersection",
+          "description": "For a given time budget T, person i can reach any x_0 satisfying |x_i - x_0| <= T - t_i, i.e., x_0 in [x_i - (T - t_i), x_i + (T - t_i)]. If T < t_i, person i cannot even finish dressing and their interval is empty. A valid meeting point exists iff the intersection of all intervals is non-empty.",
+          "hints": {
+            "nudge": "Given a fixed time T, what range of positions can person i reach?",
+            "question": "Person i needs t_i minutes to dress and then must travel to x_0. What constraint does this place on x_0?",
+            "formal": "Person i's reachable interval is [x_i - (T - t_i), x_i + (T - t_i)] when T >= t_i, or empty when T < t_i. Feasible iff max of all left endpoints <= min of all right endpoints."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "Recovering the optimal position",
+          "description": "Once the optimal T is found, the meeting point x_0 is any point in the intersection of the intervals. The midpoint of the intersection is a natural choice and guarantees the required precision.",
+          "hints": {
+            "nudge": "After binary search finds the optimal time, how do you get the actual position?",
+            "question": "At the optimal T, the intersection of all intervals is a single point or a small segment. Where in that segment should you pick x_0?",
+            "formal": "At the optimal T, compute L = max(x_i - (T - t_i)) and R = min(x_i + (T - t_i)). The optimal x_0 = (L + R) / 2."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    },
+    {
+      "name": "Direct greedy formula",
+      "description": "Each person's arrival function is a V-shaped curve shifted up by t_i. The maximum of these V-shapes is a convex piecewise-linear function whose minimum can be found directly by considering the leftmost and rightmost critical points.",
+      "skill_tags": ["greedy", "math"],
+      "observations": [
+        {
+          "title": "Each person defines a V-shape on the number line",
+          "description": "Person i's arrival time as a function of x_0 is t_i + |x_i - x_0|. This is a V-shaped function with vertex at x_i and minimum value t_i. The overall objective is the pointwise maximum of all these V-shapes.",
+          "hints": {
+            "nudge": "What does the function t_i + |x_i - x_0| look like if you plot it against x_0?",
+            "question": "If you graph each person's arrival time as a function of the meeting point, what shape do you get? What is the shape of the maximum of several such functions?",
+            "formal": "f_i(x_0) = t_i + |x_i - x_0| is a V-shape with apex (x_i, t_i). The objective max_i f_i(x_0) is convex (max of convex functions), so it has a unique minimum."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Transform to effective left and right boundaries",
+          "description": "The left arm of person i's V-shape hits a given value at x_i - (value - t_i), and the right arm hits it at x_i + (value - t_i). Equivalently, person i pushes the minimum leftward by t_i and rightward by t_i from their position. The critical boundaries are (x_i - t_i) and (x_i + t_i).",
+          "hints": {
+            "nudge": "What happens if you shift each position x_i left by t_i and right by t_i?",
+            "question": "Consider the points (x_i - t_i) and (x_i + t_i). How do these relate to where person i's arrival time becomes large?",
+            "formal": "Define L_i = x_i - t_i and R_i = x_i + t_i. Person i's arrival time at x_0 equals t_i + |x_i - x_0|. The extremes that determine the minimax are captured by min(L_i) and max(R_i)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The optimal point is the midpoint of the extremes",
+          "description": "The minimum of the pointwise maximum of all V-shapes occurs at the point that balances the two most extreme constraints. This is the midpoint of the leftmost (x_i - t_i) and the rightmost (x_i + t_i).",
+          "hints": {
+            "nudge": "In the classic 1D minimax problem without dressing times, the answer is the midpoint of the leftmost and rightmost positions. How does the dressing time modify the positions?",
+            "question": "If you define adjusted positions L = min(x_i - t_i) and R = max(x_i + t_i), what is the point that minimizes the maximum distance to both L and R?",
+            "formal": "Let L = min over all i of (x_i - t_i) and R = max over all i of (x_i + t_i). The optimal meeting point is x_0 = (L + R) / 2. This is an O(n) computation per test case."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

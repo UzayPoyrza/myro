@@ -1,0 +1,44 @@
+[scenario]
+name = "Remove Two Letters — multi-turn, student found the collision formula"
+problem = "cf-1800D"
+route = 0
+trigger = "user idle for 20s"
+elapsed_secs = 240
+observations_found = 3
+
+[scenario.obs_states]
+0 = "found"
+1 = "found"
+2 = "found"
+
+[scenario.code]
+text = """
+t = int(input())
+for _ in range(t):
+    n = int(input())
+    s = input()
+    collisions = 0
+    for i in range(n - 2):
+        if s[i] == s[i + 2]:
+            collisions += 1
+    print(n - 1 - collisions)
+"""
+
+[[scenario.recent_messages]]
+role = "assistant"
+content = "You've figured out that only adjacent removal positions can produce duplicates. What determines whether two adjacent removals give the same result?"
+
+[[scenario.recent_messages]]
+role = "user"
+content = "I think it's when the character that gets 'swapped in' is the same? Like if s[i] equals s[i+2]?"
+
+[[scenario.recent_messages]]
+role = "assistant"
+content = "That's exactly right! Now how do you turn that into a count?"
+
+[expect]
+state = "found"
+obs_id = "cf:1800D:route:1:obs:4"
+min_confidence = 0.7
+must_be_socratic = false
+banned_patterns = []

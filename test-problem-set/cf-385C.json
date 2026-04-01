@@ -1,0 +1,140 @@
+{
+  "contest_id": 385,
+  "index": "C",
+  "title": "Bear and Prime Numbers",
+  "difficulty": 1700,
+  "tags": [
+    "math",
+    "number theory",
+    "data structures",
+    "implementation"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "512 megabytes",
+  "description": "You are given a sequence of integers x_1, x_2, ..., x_n of length n and m queries, each characterized by two integers l_i, r_i. Define f(p) as the number of indices k such that x_k is divisible by p. The answer to query (l_i, r_i) is the sum of f(p) over all prime numbers p in the segment [l_i, r_i] (both endpoints included). Help the bear answer all queries.",
+  "input_spec": "The first line contains integer n (1 <= n <= 10^6). The second line contains n integers x_1, x_2, ..., x_n (2 <= x_i <= 10^7). The third line contains integer m (1 <= m <= 50000). Each of the following m lines contains a pair of space-separated integers l_i and r_i (2 <= l_i <= r_i <= 2*10^9).",
+  "output_spec": "Print m integers, the answers to the queries in the order they appear in the input.",
+  "examples": [
+    {
+      "input": "6\n5 5 7 10 14 15\n3\n2 11\n3 12\n4 4",
+      "output": "9\n7\n0"
+    },
+    {
+      "input": "7\n2 3 5 7 11 4 8\n2\n8 10\n2 123",
+      "output": "0\n7"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Sieve-based f(p) + prefix sums",
+      "description": "Count value frequencies, compute f(p) for each prime using a sieve-like enumeration of multiples, then build a prefix sum array to answer each query in O(1).",
+      "skill_tags": [
+        "number-theory",
+        "implementation",
+        "sieve"
+      ],
+      "observations": [
+        {
+          "title": "Build a frequency array of values",
+          "description": "Since x_i can be up to 10^7, create an array cnt of size 10^7+1 where cnt[v] = how many times value v appears in the input. This lets you count divisibility by a prime without scanning the original array each time.",
+          "hints": {
+            "nudge": "f(p) counts how many elements are divisible by p. Scanning the whole array for each prime is too slow. Can you precompute something about the values?",
+            "question": "If you knew exactly how many times each value from 2 to 10^7 appears, how would you compute the number of elements divisible by p without touching the original array?",
+            "formal": "Allocate cnt[0..10^7]. For each x_i, increment cnt[x_i]. Then f(p) = cnt[p] + cnt[2p] + cnt[3p] + ... which avoids re-scanning the input for every prime."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Compute f(p) using sieve-like enumeration of multiples",
+          "description": "For each prime p, f(p) = sum of cnt[k*p] for k = 1, 2, 3, ... up to 10^7. This is exactly the inner loop of the Sieve of Eratosthenes: iterate over multiples of p and accumulate their frequencies.",
+          "hints": {
+            "nudge": "Computing f(p) means summing cnt over all multiples of p. Does this pattern remind you of a well-known algorithm?",
+            "question": "In the Sieve of Eratosthenes, you iterate over multiples of each prime. If instead of marking composites you summed cnt values, what would you get?",
+            "formal": "First find all primes up to 10^7 via sieve. For each prime p, compute f(p) = sum_{k=1}^{floor(10^7/p)} cnt[k*p]. The total work over all primes is sum_{p prime} 10^7/p which is O(10^7 * log(log(10^7))), same as the sieve."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Store f(p) in an indexed array for prefix sums",
+          "description": "Create an array pre[] of size 10^7+1 where pre[i] = f(i) if i is prime, and pre[i] = 0 otherwise. This array captures the per-index contribution that each position makes to query answers, and is the input to the prefix sum step.",
+          "hints": {
+            "nudge": "You need to sum f(p) over primes in a range. What if you placed f(p) at position p in an array and zeroed out non-prime positions?",
+            "question": "If pre[i] = f(i) for prime i and 0 otherwise, what does the sum pre[l] + pre[l+1] + ... + pre[r] represent?",
+            "formal": "Define pre[i] = f(i) if i is prime, 0 otherwise. Then sum_{p in primes, l<=p<=r} f(p) = sum_{i=l}^{r} pre[i]. This reduces the query to a range sum on the pre array."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Build prefix sums for O(1) range queries",
+          "description": "Replace pre[] with its prefix sum: pre[i] += pre[i-1] for i from 1 to 10^7. Then the answer to query (l, r) is pre[r] - pre[l-1]. This turns each query into a constant-time subtraction.",
+          "hints": {
+            "nudge": "You have an array and need to answer many range sum queries. What classic technique handles this?",
+            "question": "If you compute cumulative sums of the pre array, how do you extract the sum over any subrange [l, r]?",
+            "formal": "Compute prefix sums: pre[i] = pre[i] + pre[i-1] for i = 1..10^7. Answer to query (l, r) = pre[min(r, 10^7)] - pre[l-1]. Each query is answered in O(1)."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Clamp r to 10^7 since all values are at most 10^7",
+          "description": "Query bounds r can be up to 2*10^9, but there are no primes beyond 10^7 that contribute to f(p) since all x_i <= 10^7. So clamp r to min(r, 10^7) before looking up the prefix sum. Also ensure l does not exceed 10^7.",
+          "hints": {
+            "nudge": "The queries allow r up to 2*10^9 but your array only goes to 10^7. Is that a problem?",
+            "question": "For a prime p > 10^7, what is f(p)? What does this tell you about primes outside your array range?",
+            "formal": "Since all x_i <= 10^7, no element is divisible by any prime > 10^7. So f(p) = 0 for p > 10^7. Clamp: r = min(r, 10^7). If l > 10^7, the answer is 0. Otherwise answer = pre[r] - pre[l-1]."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    },
+    {
+      "name": "Factorize each element + prefix sums",
+      "description": "For each input element, find its prime factors and increment f(p) for each. Then build prefix sums to answer queries in O(1). This avoids sieving multiples but requires per-element factorization.",
+      "skill_tags": [
+        "number-theory",
+        "implementation"
+      ],
+      "observations": [
+        {
+          "title": "Precompute smallest prime factor for fast factorization",
+          "description": "Use a sieve to compute spf[i] = smallest prime factor of i for all i up to 10^7. Then any number can be fully factorized in O(log(x)) time by repeatedly dividing by spf.",
+          "hints": {
+            "nudge": "Factorizing numbers up to 10^7 by trial division for each one is slow. Can you precompute something to speed this up?",
+            "question": "If you knew the smallest prime factor of every number up to 10^7, how quickly could you factorize any single number?",
+            "formal": "Run a modified Sieve of Eratosthenes: for each prime p, set spf[k*p] = p for all unmarked multiples k*p. Then factorize x by extracting spf[x], dividing, and repeating until x = 1. This is O(log x) per number."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "For each x_i, increment f(p) for each distinct prime factor",
+          "description": "Factorize each x_i using the spf table. For each distinct prime factor p of x_i, increment f(p). Be careful to count each prime factor only once per element even if it divides x_i multiple times.",
+          "hints": {
+            "nudge": "f(p) counts elements divisible by p, not the multiplicity of p. If x_i = 12 = 2^2 * 3, how many times should f(2) increase?",
+            "question": "When factorizing x_i, you might see the same prime multiple times. Should f(p) be incremented once or once per power?",
+            "formal": "For each x_i, extract distinct primes by factorizing via spf and skipping duplicate factors. Increment f(p) once per distinct prime p dividing x_i. Total work: O(n * log(max_x))."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Build prefix sums on f for O(1) queries",
+          "description": "Place f(p) at index p for each prime (0 for non-primes), then compute prefix sums. Answer each query (l, r) as pre[min(r, 10^7)] - pre[l-1], clamping r since no prime beyond 10^7 matters.",
+          "hints": {
+            "nudge": "Now you have f(p) for each prime. The queries ask for sums over ranges of primes. What technique gives O(1) range sums?",
+            "question": "If you lay out f values in an array indexed by the prime's value (zeros elsewhere), how do prefix sums help answer a range query?",
+            "formal": "Set pre[i] = f(i) if i is prime, else 0. Compute pre[i] += pre[i-1]. Answer = pre[min(r, 10^7)] - pre[l-1]. Clamp r to 10^7 since f(p) = 0 for p > max(x_i)."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Total complexity is dominated by the sieve",
+          "description": "The SPF sieve runs in O(10^7 log log 10^7). Factorizing all n elements is O(n log max_x). Prefix sums and queries are O(10^7 + m). Everything fits within 2 seconds and 512 MB.",
+          "hints": {
+            "nudge": "Check that each step fits the time and memory constraints. What is the bottleneck?",
+            "question": "The sieve goes up to 10^7, you factorize 10^6 numbers, and you answer 50000 queries. Which step takes the most time?",
+            "formal": "SPF sieve: O(10^7 log log 10^7). Factorization: O(n * log(10^7)) = O(n * 23). Prefix sums: O(10^7). Queries: O(m). Total is O(10^7 log log 10^7 + n log max_x + m), well within limits. Memory: two arrays of size 10^7 + 1 of int64 ~ 160 MB."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

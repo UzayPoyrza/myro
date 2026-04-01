@@ -1,0 +1,23 @@
+[scenario]
+name = "Obtain the String — velocity drop after starting two-pointer sketch"
+problem = "cf-1015B"
+route = 0
+trigger = "velocity drop (no edits for 30s after rapid editing)"
+elapsed_secs = 90
+observations_found = 0
+
+[scenario.code]
+text = """
+s = input()
+t = input()
+# hmm maybe I should check each char...
+i = 0
+j = 0
+"""
+
+[expect]
+state = "approaching"
+obs_id = "cf:1015B:route:1:obs:1"
+min_confidence = 0.3
+must_be_socratic = true
+banned_patterns = []

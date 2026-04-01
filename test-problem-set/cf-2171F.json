@@ -1,0 +1,161 @@
+{
+  "contest_id": 2171,
+  "index": "F",
+  "title": "Rae Taylor and Trees (hard version)",
+  "difficulty": 1600,
+  "tags": [
+    "binary search",
+    "constructive algorithms",
+    "data structures",
+    "dp",
+    "dsu",
+    "greedy",
+    "implementation",
+    "trees"
+  ],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given a permutation p of length n. Determine if there exists an undirected tree with n vertices labeled 1, 2, ..., n, satisfying: for every edge (u, v) with u < v, u appears before v in p. If such a tree exists, output any valid one.",
+  "input_spec": "The first line contains a single integer t (1 <= t <= 10^4) -- the number of test cases. The first line of each test case contains a single integer n (2 <= n <= 2 * 10^5). The second line contains n integers p_1, p_2, ..., p_n -- a permutation of 1 to n. The sum of n over all test cases does not exceed 2 * 10^5.",
+  "output_spec": "For each test case, output Yes or No. If Yes, output n-1 lines each containing two integers u and v denoting an edge.",
+  "examples": [
+    {
+      "input": "9\n6\n1 3 4 5 2 6\n4\n3 4 1 2\n5\n4 3 5 1 2\n4\n1 2 3 4\n7\n4 3 5 7 6 2 1\n6\n2 4 6 1 3 5\n3\n2 1 3\n4\n2 4 1 3\n6\n4 2 6 5 1 3",
+      "output": "Yes\n3 1\n4 1\n6 5\n6 2\n6 1\nNo\nNo\nYes\n2 1\n4 3\n4 1\nNo\nYes\n4 2\n6 2\n3 1\n5 1\n5 2\nYes\n3 2\n3 1\nYes\n4 2\n3 1\n3 2\nYes\n6 4\n6 2\n3 1\n5 4\n2 3"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Prefix-min / suffix-max block construction",
+      "description": "Define prefix minimums and suffix maximums of the permutation. The tree exists if and only if the prefix-min never exceeds the suffix-max at any split point. Construct the tree by partitioning into blocks at suffix-max positions, wiring each block internally to its suffix-max, and connecting blocks through prefix minimums.",
+      "skill_tags": [
+        "constructive",
+        "greedy",
+        "trees"
+      ],
+      "observations": [
+        {
+          "title": "The edge constraint means: for u < v sharing an edge, u appears earlier in p",
+          "description": "Restate the condition precisely. If (u, v) is an edge with u < v, then the position of u in the permutation must be smaller than the position of v. Equivalently, for any edge, the numerically smaller endpoint must come first in p. This restricts which pairs of vertices can be adjacent.",
+          "hints": {
+            "nudge": "Rewrite the tree condition in terms of which vertex pairs are allowed to share an edge.",
+            "question": "For a pair of vertices (u, v) with u < v, what does the permutation order tell you about whether they can be connected by an edge?",
+            "formal": "Let pos(x) denote the position of x in p. Edge (u, v) with u < v is allowed only if pos(u) < pos(v). This is the only constraint on the tree's edge set."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "A tree exists iff the permutation never splits into disconnected halves",
+          "description": "Define pre_i = min(p_1, ..., p_i) and suf_i = max(p_i, ..., p_n). If for some index i we have pre_{i-1} > suf_i, then every value in positions 1..i-1 is larger than every value in positions i..n. No valid edge can cross this split (the smaller vertex would be on the right, violating the ordering), so the vertices cannot form a connected tree. Conversely, if pre_{i-1} < suf_i for all i from 2 to n, a valid tree always exists.",
+          "hints": {
+            "nudge": "Think about what would make it impossible to connect the left portion of the permutation to the right portion.",
+            "question": "If the minimum value among the first i-1 positions is greater than the maximum value among positions i to n, can any edge cross from the left group to the right group?",
+            "formal": "Compute pre_i = min(p_1..p_i) and suf_i = max(p_i..p_n). If pre_{i-1} > suf_i for any 2 <= i <= n, output No. An edge (u, v) with u < v requires u in the left part and v in the right part, but pre_{i-1} > suf_i means all left values exceed all right values, making this impossible."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Suffix-max positions partition the permutation into blocks",
+          "description": "Let s_1 < s_2 < ... < s_k = n be the positions where p_i equals the suffix maximum suf_i. These are the positions where p_i is larger than everything to its right. Each block consists of the elements between consecutive suffix-max positions. Within a block ending at position s_j, all values other than p_{s_j} are smaller than p_{s_j}, because p_{s_j} is the suffix maximum for the entire block.",
+          "hints": {
+            "nudge": "Which positions in the permutation have the special property that their value is the largest among all remaining positions?",
+            "question": "If p_i is a suffix maximum (meaning p_i > p_j for all j > i), what can you say about the relationship between p_i and the values in the block of positions ending at i?",
+            "formal": "Position i is a suffix-max position if p_i = max(p_i, ..., p_n). Between consecutive suffix-max positions s_{j-1}+1, ..., s_j, every value other than p_{s_j} is strictly less than p_{s_j}. This means p_{s_j} appears after all other block values in numerical order."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Within each block, connect every non-max element to the block's suffix-max",
+          "description": "For a block ending at suffix-max position s_j, the value p_{s_j} is larger than all other values in the block, and it appears later in the permutation than none of them violate the ordering (since the smaller values appear at earlier positions within the block, and the max is at the end). So for each other element v in the block, the edge (v, p_{s_j}) is valid: v < p_{s_j} and v appears before p_{s_j} in p. This gives a star subgraph within each block.",
+          "hints": {
+            "nudge": "You have a group of values where one is larger than all the others and appears last. Can you connect them into a star?",
+            "question": "If all values in a block are smaller than the suffix-max at the block's end, and they all appear before it in the permutation, is the edge from each value to the suffix-max valid?",
+            "formal": "For each position l in [s_{j-1}+1, s_j - 1], we have p_l < p_{s_j} and pos(p_l) = l < s_j = pos(p_{s_j}). So the edge (p_l, p_{s_j}) satisfies the constraint. Connect all non-max elements to p_{s_j} forming a star."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Connect blocks by linking each block's max to the prefix minimum of earlier elements",
+          "description": "Each block is internally connected, but blocks must be linked together. For block j (where j >= 2), the prefix minimum pre_{s_{j-1}} is the smallest value seen in positions 1 through s_{j-1}. Since pre_{s_{j-1}} < p_{s_j} (guaranteed by our feasibility check) and pre_{s_{j-1}} appears before position s_j in the permutation, the edge (pre_{s_{j-1}}, p_{s_j}) is valid. This connects block j to the subgraph containing all earlier blocks.",
+          "hints": {
+            "nudge": "Each block forms a connected star. How do you link block j to the blocks that came before it? Look for a small value from the left side and a large value on the right.",
+            "question": "The prefix minimum of positions before block j is the smallest vertex seen so far. The suffix-max of block j is the largest in that block. Can you form a valid edge between them?",
+            "formal": "For block j starting at position s_{j-1}+1, let m = pre_{s_{j-1}} and M = p_{s_j}. We have m < M (from the feasibility condition) and pos(m) <= s_{j-1} < s_j = pos(M). So edge (m, M) is valid. Add it to connect block j to the earlier subgraph. By induction, the full graph is a connected tree with n-1 edges."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "Implementation runs in O(n) time with two linear scans",
+          "description": "Compute the prefix-min array in a left-to-right scan and the suffix-max array in a right-to-left scan, both in O(n). Check the feasibility condition in O(n). Then identify suffix-max positions in one pass, build edges within each block (star to the suffix max) and between blocks (suffix max to prefix min), outputting n-1 edges total. The entire algorithm is O(n) per test case.",
+          "hints": {
+            "nudge": "How many passes over the array do you need to compute prefix minimums, suffix maximums, and build the tree?",
+            "question": "Can you compute the prefix-min array, suffix-max array, check feasibility, and output all edges in a constant number of linear scans?",
+            "formal": "Pass 1 (left to right): compute pre[i] = min(pre[i-1], p[i]). Pass 2 (right to left): compute suf[i] = max(suf[i+1], p[i]). Pass 3: check pre[i-1] < suf[i] for all i >= 2. Pass 4: scan left to right, track suffix-max positions, emit star edges within each block and one inter-block edge per block. Total: O(n)."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    },
+    {
+      "name": "Greedy stack-based construction with DSU",
+      "description": "Process the permutation left to right, maintaining a stack of potential parent candidates. For each new element, find the correct parent using the invariant that it must connect to a value already seen that is smaller than it. A DSU tracks connected components to verify tree validity.",
+      "skill_tags": [
+        "greedy",
+        "data-structures",
+        "data-structures"
+      ],
+      "observations": [
+        {
+          "title": "The edge constraint means: for u < v sharing an edge, u appears earlier in p",
+          "description": "Restate the condition precisely. If (u, v) is an edge with u < v, then the position of u in the permutation must be smaller than the position of v. Equivalently, for any edge, the numerically smaller endpoint must come first in p. This restricts which pairs of vertices can be adjacent.",
+          "hints": {
+            "nudge": "Rewrite the tree condition in terms of which vertex pairs are allowed to share an edge.",
+            "question": "For a pair of vertices (u, v) with u < v, what does the permutation order tell you about whether they can be connected by an edge?",
+            "formal": "Let pos(x) denote the position of x in p. Edge (u, v) with u < v is allowed only if pos(u) < pos(v). This is the only constraint on the tree's edge set."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Process the permutation left to right, deciding parentage greedily",
+          "description": "Scan p from left to right. When we encounter value p_i, every value already seen that is smaller than p_i is a candidate parent (since it appeared earlier and is numerically smaller, the edge is valid). We need to connect each new value to exactly one earlier, smaller value to build a tree. The question is which candidate to pick.",
+          "hints": {
+            "nudge": "As you scan the permutation left to right, each new value needs to attach to one previously seen smaller value. What strategy for picking the parent keeps the most options open?",
+            "question": "When p_i arrives and multiple smaller values have been seen, does it matter which one becomes its parent in the tree?",
+            "formal": "For each p_i (i >= 2), the set of valid parents is {p_j : j < i and p_j < p_i}. We must choose exactly one parent per non-root vertex, producing a tree. A greedy or stack-based strategy selects the parent."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "A monotone stack tracks the best available parent candidates",
+          "description": "Maintain a decreasing stack of values seen so far. When value p_i arrives, pop all stack elements smaller than p_i -- these values are now 'enclosed' by p_i and can be connected to it. The top of the stack after popping (if any) is a larger value that appeared earlier; p_i itself is then pushed. The stack invariant ensures each value finds the correct parent efficiently.",
+          "hints": {
+            "nudge": "Think about maintaining a stack of candidates that shrinks as new, larger values arrive. What monotonicity property should the stack have?",
+            "question": "If you maintain a stack of seen values in decreasing order, what happens when a new value larger than the stack top arrives? Which elements get 'claimed' by it?",
+            "formal": "Maintain a stack S (decreasing from bottom to top). For each p_i: while S is nonempty and top(S) < p_i, pop top(S) and add edge (top(S), p_i). Then if S is nonempty, add edge (p_i, top(S)) if needed for connectivity. Push p_i. The popped elements are smaller and appeared earlier, so all edges are valid."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Feasibility check: if no valid parent exists for some element, output No",
+          "description": "When processing p_i, if no previously seen value is smaller than p_i and p_i is not the global minimum connecting to a larger ancestor, the tree cannot be formed. Specifically, if the permutation splits so that all earlier values are larger than all later values at some point, connectivity is impossible. This corresponds to the prefix-min exceeding the suffix-max at a split.",
+          "hints": {
+            "nudge": "Under what circumstances would a new element have no valid parent candidate at all?",
+            "question": "If every value seen so far is larger than p_i, can p_i be a child of any of them? What condition on the permutation guarantees this never happens in a problematic way?",
+            "formal": "If at position i every value in p_1..p_{i-1} is greater than every value in p_i..p_n (i.e., min(p_1..p_{i-1}) > max(p_i..p_n)), the two groups are disconnected: no valid edge can bridge them. Output No."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "DSU merges components as edges are added, confirming a spanning tree",
+          "description": "Use a Disjoint Set Union structure to track connected components. Each time an edge (u, v) is added, union the components of u and v. After processing all elements, check that there is exactly one component. The DSU also prevents adding redundant edges (if u and v are already connected, skip the edge). The final tree has exactly n-1 edges spanning all n vertices.",
+          "hints": {
+            "nudge": "How do you ensure the edges you produce form a tree and not a forest or a graph with cycles?",
+            "question": "If you add an edge between u and v but they are already in the same component, what should you do? What data structure tracks components efficiently?",
+            "formal": "Initialize DSU with n singletons. For each candidate edge (u, v): if find(u) != find(v), union them and output the edge. After all elements are processed, check that all vertices are in one component (otherwise output No). Exactly n-1 union operations succeed for a valid tree."
+          },
+          "skill_tag": "data-structures"
+        }
+      ]
+    }
+  ]
+}

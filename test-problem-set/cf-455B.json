@@ -1,0 +1,86 @@
+{
+  "contest_id": 455,
+  "index": "B",
+  "title": "A Lot of Games",
+  "difficulty": 1900,
+  "tags": [
+    "dfs and similar",
+    "dp",
+    "games",
+    "implementation",
+    "strings",
+    "trees"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Andrew, Fedor and Alex are inventive guys. Now they invent the game with strings for two players. Given a group of n non-empty strings. During the game two players build the word together, initially the word is empty. The players move in turns. On his step player must add a single letter in the end of the word, the resulting word must be prefix of at least one string from the group. A player loses if he cannot move. Andrew and Alex decided to play this game k times. The player who is the loser of the i-th game makes the first move in the (i+1)-th game. Guys decided that the winner of all games is the player who wins the last (k-th) game. Andrew and Alex already started the game. Fedor wants to know who wins the game if both players will play optimally. Help him.",
+  "input_spec": "The first line contains two integers, n and k (1 <= n <= 10^5; 1 <= k <= 10^9). Each of the next n lines contains a single non-empty string from the given group. The total length of all strings from the group doesn't exceed 10^5. Each string of the group consists only of lowercase English letters.",
+  "output_spec": "If the player who moves first wins, print \"First\", otherwise print \"Second\".",
+  "examples": [
+    {
+      "input": "2 3\na\nb",
+      "output": "First"
+    },
+    {
+      "input": "3 1\na\nb\nc",
+      "output": "First"
+    },
+    {
+      "input": "1 2\nab",
+      "output": "Second"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Trie game-theory DP",
+      "description": "Build a trie from all strings. Compute two boolean flags at the root via DFS: can the first player force a win, and can the first player force a loss. Combine these flags with the number of games k to determine the overall winner.",
+      "skill_tags": [
+        "math",
+        "trees",
+        "dp"
+      ],
+      "observations": [
+        {
+          "title": "The strings define a trie of legal moves",
+          "description": "Insert all n strings into a trie. Each node in the trie represents a prefix. At any point during a game, the current word corresponds to a trie node, and the valid moves are exactly the children of that node. A player who reaches a node with no children loses because they cannot extend the word.",
+          "hints": {
+            "nudge": "The word built so far must be a prefix of at least one string. What data structure organizes all prefixes of a set of strings?",
+            "question": "If you build a trie from all the strings, what does a node with no children mean for the player whose turn it is?",
+            "formal": "Build a trie from all strings. Each game is a traversal from the root down the trie: the current player picks a child, the opponent picks a child of that, etc. A player at a leaf (no children) cannot move and loses."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "Two independent questions: can first player force a win? Can first player force a loss?",
+          "description": "Because k games are played and the loser goes first next game, the overall strategy depends on whether the first mover in a single game can control the outcome in either direction. We need to answer two separate questions at the trie root: (1) can the first player force the opponent to lose (can_win)? (2) can the first player deliberately lose (can_lose)?",
+          "hints": {
+            "nudge": "In a multi-game series where the loser goes first next, it matters not just whether you can win a single game but also whether you can choose to lose one.",
+            "question": "If you could both win and lose on demand, what would your strategy be across k games?",
+            "formal": "Define can_win[v] = can the player at node v force a win? Define can_lose[v] = can the player at node v force a loss? These two booleans at the root fully determine the k-game outcome."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "DP recurrence: leaf base case and internal node logic",
+          "description": "At a leaf (no children), the current player cannot move, so can_win = false and can_lose = true. At an internal node v with children c1, c2, ..., the current player picks which child to go to, then the OTHER player is at that child. So can_win[v] = true if any child has can_win = false (opponent is stuck losing). can_lose[v] = true if any child has can_lose = false (opponent is stuck winning).",
+          "hints": {
+            "nudge": "At a leaf, the current player loses. Now consider an internal node: the current player picks a child, and roles swap. When can the current player guarantee a win?",
+            "question": "If the current player moves to child c, the opponent faces can_win[c] and can_lose[c]. For the current player to force a win, what must be true about at least one child's can_win value?",
+            "formal": "Base: can_win[leaf] = false, can_lose[leaf] = true. Recurrence: can_win[v] = OR over children c of (NOT can_win[c]). can_lose[v] = OR over children c of (NOT can_lose[c]). Compute via DFS from the root."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Combining can_win and can_lose with k games",
+          "description": "The root's two booleans and the number of games k determine the answer. If the first player can both win and lose at will, they lose the first k-1 games on purpose (staying first each time) then win game k: answer is First. If they can only win but not lose, the first mover always wins each game and the answer depends on whether k is odd or even. If they cannot force a win at all, the answer is always Second.",
+          "hints": {
+            "nudge": "If you can lose on purpose, you get to go first again next game. What does that let you do across k games?",
+            "question": "Consider four cases based on (can_win, can_lose). In the case (true, true), what is the optimal strategy over k games? In case (true, false), who goes first in game k?",
+            "formal": "If can_win AND can_lose: output First (lose first k-1 games to stay first, then win game k; if k=1, just win). If can_win AND NOT can_lose: first mover always wins, so output First if k is odd, Second if k is even. If NOT can_win: output Second (first player can never win a game regardless of who moves first)."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

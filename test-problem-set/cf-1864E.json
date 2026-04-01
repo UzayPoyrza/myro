@@ -1,0 +1,143 @@
+{
+  "contest_id": 1864,
+  "index": "E",
+  "title": "Guess Game",
+  "difficulty": 2100,
+  "tags": [
+    "bitmasks",
+    "data structures",
+    "games",
+    "math",
+    "probabilities",
+    "sortings",
+    "strings",
+    "trees"
+  ],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Carol has a sequence $$$s$$$ of $$$n$$$ non-negative integers. She wants to play the \"Guess Game\" with Alice and Bob. To play the game, Carol will randomly select two integer indices $$$i_a$$$ and $$$i_b$$$ within the range $$$[1, n]$$$, and set $$$a=s_{i_a}$$$, $$$b=s_{i_b}$$$. Please note that $$$i_a$$$ and $$$i_b$$$ may coincide. Carol will tell: the value of $$$a$$$ to Alice; the value of $$$b$$$ to Bob; the value of $$$a \\mid b$$$ to both Alice and Bob, where $$$|$$$ denotes the bitwise OR operation . Please note that Carol will not tell any information about $$$s$$$ to either Alice or Bob. Then the guessing starts. The two players take turns making guesses, with Alice starting first. The goal of both players is to establish which of the following is true: $$$a  \\lt  b$$$, $$$a  \\gt  b$$$, or $$$a = b$$$. In their turn, a player can do one of the following two things: say \"I don't know\", and pass the turn to the other player; say \"I know\", followed by the answer \"$$$a \\lt b$$$\", \"$$$a \\gt b$$$\", or \"$$$a=b$$$\"; then the game ends. Alice and Bob hear what each other says, and can use this information to deduce the answer. Both Alice and Bob are smart enough and only say \"I know\" when they are completely sure. You need to calculate the expected value of the number of turns taken by players in the game. Output the answer modulo $$$998\\,244\\,353$$$. Formally, let $$$M = 998\\,244\\,353$$$. It can be shown that the answer can be expressed as an irreducible fraction $$$\\frac{p}{q}$$$, where $$$p$$$ and $$$q$$$ are integers and $$$q \\not \\equiv 0 \\pmod{M}$$$. Output the integer equal to $$$p \\cdot q^{-1} \\bmod M$$$. In other words, output such an integer $$$x$$$ that $$$0 \\le x  \\lt  M$$$ and $$$x \\cdot q \\equiv p \\pmod{M}$$$.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 10^5$$$). The description of the test cases follows. The first line of each testcase contains a single integer $$$n$$$ ($$$1 \\le n \\le 2\\cdot 10^5$$$). The second line of each testcase contains $$$n$$$ integers $$$s_1,s_2,\\ldots, s_n$$$ ($$$0 \\le s_i  \\lt  2^{30}$$$). It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case, print a single integer — the answer to the problem modulo $$$998\\,244\\,353$$$.",
+  "examples": [
+    {
+      "input": "422 330 0 039 9 6834124838 0 113193378 8 321939321 113193378 9463828 99",
+      "output": "499122179\n1\n332748120\n77987843"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Bit-by-bit game analysis with trie counting",
+      "description": "Derive a closed-form expression for the number of turns T(a,b) by analyzing the game bit-by-bit from the MSB, then use a binary trie to efficiently sum T over all n^2 pairs.",
+      "skill_tags": ["math", "data-structures", "trees"],
+      "observations": [
+        {
+          "title": "Each player's knowledge comes from their value and the OR",
+          "description": "Alice knows a and v = a|b. From this she can deduce which bits b must have (the bits in v that are not in a) and which bits b might or might not have (the bits that are in both a and v). Symmetrically for Bob. A player can say 'I know' only when all values of the other player consistent with their knowledge give the same comparison result. Saying 'I don't know' is itself informative: it reveals that the speaker could not yet determine the answer, which constrains what their value must look like.",
+          "hints": {
+            "nudge": "If Alice sees that v has a bit she does not have, what can she conclude about b? What if a bit is in both a and v?",
+            "question": "Alice knows a and a|b. For a bit position k that is set in a|b but not in a, must b have that bit? For a bit set in both a and a|b, can Alice tell whether b has it?",
+            "formal": "Alice knows bits_only_b = v & ~a (bits b has that a lacks) and bits_ambiguous = v & a (bits a has, but b may or may not have). Alice can determine the comparison iff every possible b consistent with her knowledge gives the same ordering vs a. The key deduction: if v has any bit that a lacks, Alice knows b has extra high bits and can potentially resolve the comparison immediately."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The game resolves at the highest bit where a and b differ",
+          "description": "Consider bits from the MSB of a|b downward. All bits above the MSB of a XOR b are shared by both a and b (since a and b agree on all those bits). At each shared bit, the current player cannot determine the comparison because both scenarios (other player has/lacks this bit) are consistent. They say 'I don't know', which reveals they have this bit, and play passes to the other player. The game continues until the first bit where a and b differ, at which point resolution happens.",
+          "hints": {
+            "nudge": "If both a and b have the current highest bit, can either player distinguish a > b from a < b at this stage? What does saying 'I don't know' reveal?",
+            "question": "At a shared set bit, the current player has the bit and a|b has it. They cannot tell if the opponent has it. But if they did NOT have it, they would know the opponent does (from a|b). What would they say in that case, and what does their 'I don't know' therefore prove?",
+            "formal": "At the MSB k of a|b, if the current player lacks bit k, they know the opponent has it and can immediately determine the ordering. So saying 'I don't know' proves the current player has bit k. Both players pass through shared set bits one per turn. Let p = MSB(a XOR b). All set bits of a|b above position p are shared, and each consumes exactly one turn."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Turns formula: T(a,b) = q + 1 or q + 2, depending on who holds the differing bit",
+          "description": "Let p be the position of the MSB of a XOR b, and let q be the number of set bits in a (equivalently b) strictly above position p. After q turns of 'I don't know' for the shared bits, one player holds bit p and the other does not. If it is the turn of the player who LACKS bit p, they immediately know the opponent is larger (1 more turn, total q+1). If it is the turn of the player who HAS bit p, they cannot tell (the opponent might or might not have it), so they say 'I don't know' (revealing they have it), and then the opponent resolves it (2 more turns, total q+2). When a = b, there is no differing bit: q = popcount(a) and T = q + 1.",
+          "hints": {
+            "nudge": "You have counted q shared-bit turns. At the first differing bit, whose turn is it? Does it matter whether that player has the bit or lacks it?",
+            "question": "After q turns, it is Alice's turn if q is even, Bob's if q is odd. At bit p, one of a, b has it. If the current player lacks bit p, they know the other has it from a|b. Can they resolve immediately? If the current player has bit p, can they?",
+            "formal": "T(a,b) = q + 1 if the current player (Alice when q even, Bob when q odd) lacks bit p; T(a,b) = q + 2 if the current player has bit p. Equivalently: T = q + 2 when (q even and a has bit p) or (q odd and b has bit p); T = q + 1 otherwise. For a = b: T = popcount(a) + 1."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Rewrite the sum over all pairs as contributions at each trie split",
+          "description": "To compute the sum of T(a,b) over all n^2 ordered pairs, insert all values into a binary trie (MSB to LSB). At each internal trie node, values in the left subtree have bit 0 at this position and values in the right subtree have bit 1. Pairs that split at this node (one from left, one from right) have this bit as their MSB of XOR. Their contribution depends on q (shared bits above this node) and which side a and b fall on. Pairs that do NOT split descend together to a child, accumulating one more shared bit if that bit is set.",
+          "hints": {
+            "nudge": "A binary trie on the values naturally groups them by their common prefix. Where in the trie do two values first diverge, and how does that relate to the MSB of their XOR?",
+            "question": "If you insert all n values into a trie from bit 29 down to bit 0, two values a and b follow the same path until their first differing bit. At the node where they split, what is p? How many shared set bits did they pass through to get there?",
+            "formal": "At a trie node at depth d (bit position 29-d), let L and R be the sets of values in the left (bit=0) and right (bit=1) children. For any a in L and b in R (or vice versa), p = 29-d, and q = number of set bits in their shared prefix above this position. Every (a,b) pair with a != b splits at exactly one node."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Track parity statistics in each subtree for efficient summation",
+          "description": "At the trie node where a pair (a,b) splits, T depends on q and who has bit p. The value q equals the number of 1-bits in the shared prefix traversed so far, which is the same for all values at that node. Whether the current player has bit p depends on which subtree a and b are in and the parity of q. To sum contributions: at each trie node with left-count L and right-count R, all L*R ordered pairs from left-to-right and R*L from right-to-left contribute. The total contribution at this node is L*R*(q+c1) + R*L*(q+c2) where c1 and c2 are 1 or 2 depending on the parity of q. This gives a simple formula per trie node.",
+          "hints": {
+            "nudge": "At a trie node, you know q (shared set bits above) and the counts L and R. For ordered pairs (a from left, b from right), a lacks bit p and b has it. For (a from right, b from left), a has bit p and b lacks it. Plug into the T formula.",
+            "question": "For pairs where a is in the left subtree (bit p = 0 for a) and b is in the right (bit p = 1 for b): is the current player Alice (q even) or Bob (q odd)? Does the current player have bit p? What is T?",
+            "formal": "At a node with shared-prefix popcount q, L values in the 0-child and R values in the 1-child: (a in left, b in right) means a lacks bit p, b has bit p. If q is even (Alice's turn): Alice lacks bit p, so T = q+1. If q is odd (Bob's turn): Bob has bit p, so T = q+2. Symmetrically for (a in right, b in left). For a = b pairs (both in same subtree), they descend further. Sum contributions at each node and add the a=b diagonal term separately."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Build the trie and sum contributions in O(n log V) time",
+          "description": "Insert all n values into the trie bit-by-bit from bit 29 down to bit 0. At each internal node, track the count of values passing through it. When both children of a node are non-empty, compute the cross-pair contribution using the formula derived above with the current q value (number of set bits in the path from root to this node). Recurse into both children. For the a = b diagonal, add popcount(s_i) + 1 for each i. The total sum of T over all n^2 pairs, divided by n^2 modulo 998244353, gives the answer.",
+          "hints": {
+            "nudge": "You have the formula per trie node. How do you traverse the trie and accumulate q? What is the total time complexity?",
+            "question": "At each trie node, you process cross-pairs and recurse into children. When descending into the 1-child, q increases by 1 (one more shared set bit). When descending into the 0-child, q stays the same. What about the a=b pairs -- where do they get counted?",
+            "formal": "DFS on the trie, maintaining q. At node with children sizes L and R: if q even, contribution = L*R*(q+1) + R*L*(q+2) = L*R*(2q+3); if q odd, contribution = L*R*(q+2) + R*L*(q+1) = L*R*(2q+3). (The total is the same either way: L*R*(2q+3) for ordered cross-pairs.) For a=b pairs: sum over all i of (popcount(s_i) + 1). For same-value pairs with i != j: they never split in the trie, reaching the same leaf; these contribute the same T as the a=b formula. Total complexity: O(n * 30). Final answer: total_sum * inverse(n^2) mod 998244353."
+          },
+          "skill_tag": "data-structures"
+        }
+      ]
+    },
+    {
+      "name": "Sorting-based pair counting by highest differing bit",
+      "description": "Derive the T(a,b) formula, then for each bit position p, count the pairs whose MSB of XOR is p and partition them by the parity of shared high bits to compute the total expected turns.",
+      "skill_tags": ["math", "sorting", "data-structures"],
+      "observations": [
+        {
+          "title": "Game analysis yields T(a,b) = q + 1 or q + 2",
+          "description": "By analyzing the information-theoretic game bit-by-bit from the MSB, the number of turns for a pair (a,b) with a != b is determined by p (MSB of a XOR b) and q (number of set bits in a above position p). T = q + 2 when the player whose turn it is at bit p holds bit p; T = q + 1 otherwise. For a = b, T = popcount(a) + 1.",
+          "hints": {
+            "nudge": "How does each shared high bit contribute to the turn count? What happens at the first bit where a and b differ?",
+            "question": "If a and b share all bits above position p and differ at p, how many 'I don't know' rounds pass before reaching bit p? At bit p, does the current player resolve in 1 turn or 2?",
+            "formal": "Let p = MSB(a XOR b), q = popcount(a >> (p+1)). Since bits above p are shared, q counts those shared set bits. Each takes 1 turn. At bit p: if the current player (Alice if q even, Bob if q odd) lacks bit p, they know immediately (+1 turn). If they have it, they cannot tell (+2 turns)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Group pairs by their highest differing bit position",
+          "description": "For each bit position p from 0 to 29, consider all ordered pairs (a,b) whose MSB of XOR is p. These are pairs where a and b agree on all bits above p and differ at bit p. Sorting the values or grouping by high-bit prefix lets you enumerate these groups efficiently.",
+          "hints": {
+            "nudge": "Two values have MSB(XOR) = p iff they share bits 29 down to p+1 and differ at bit p. How would sorting the values help identify such pairs?",
+            "question": "If you sort all values, pairs with the same prefix above bit p are contiguous. Within such a group, which pairs differ at bit p?",
+            "formal": "For each bit position p, partition values by their bits above position p (bits 29 down to p+1). Within each group, values either have bit p set or not. Pairs that differ at bit p are exactly the cross-pairs between the two subgroups. The count is L*R + R*L = 2*L*R for ordered pairs."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Compute q for each group and sum contributions",
+          "description": "Within each group (values sharing the same prefix above bit p), the shared prefix is the same for all pairs in the group. The value q equals the popcount of this shared prefix. The contribution of cross-pairs at bit p within this group is: number_of_cross_pairs * (q + c), where c is 1 or 2 depending on the parity of q and which side the values fall on. Summing across all groups and all bit positions gives the total.",
+          "hints": {
+            "nudge": "All pairs in a group share the same high-bit prefix. What does that imply about q being the same for all of them?",
+            "question": "If the shared prefix above bit p has popcount q, and L values lack bit p while R have it, what is the total contribution of L*R ordered pairs (a from L, b from R)?",
+            "formal": "For ordered pairs (a in left, b in right) where a lacks bit p and b has it: if q even (Alice's turn, lacks bit p) then T = q+1; if q odd (Bob's turn, has bit p) then T = q+2. For (a in right, b in left): symmetric. Total per group = L*R*(2q+3). Sum over all groups across all bit positions p, plus the diagonal a=b terms."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Partition values recursively or via radix grouping in O(n log V)",
+          "description": "Process bits from 29 down to 0. At each level, partition the current groups by whether bit p is set. Cross-pairs between the 0-subgroup and 1-subgroup at this level have their MSB of XOR at position p. Compute their contribution and recurse into the two subgroups for the next bit. This is equivalent to a trie traversal but implemented via sorting or recursive partitioning, running in O(n * 30) total time.",
+          "hints": {
+            "nudge": "You need to partition values at each bit level and count cross-pairs. Recursive partitioning from the MSB downward naturally processes all pairs exactly once.",
+            "question": "At bit 29, you split all n values into those with bit 29 set and those without. Cross-pairs here have p=29, q=0. Then you recurse into each half for bit 28. How does q change when recursing into the 1-subgroup vs the 0-subgroup?",
+            "formal": "Recursive procedure: split(values, bit, q). Split values by bit. Cross-pair contribution: L*R*(2q+3). Recurse: split(left, bit-1, q) and split(right, bit-1, q+1). Base case: bit < 0 or group size <= 1. Add diagonal: for each value, popcount(val)+1. Total: sum * inverse(n^2) mod 998244353. Time: O(n * 30)."
+          },
+          "skill_tag": "sorting"
+        }
+      ]
+    }
+  ]
+}

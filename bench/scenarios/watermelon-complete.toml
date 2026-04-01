@@ -1,0 +1,28 @@
+[scenario]
+name = "Watermelon — all observations found, correct parity check"
+problem = "cf-4A"
+route = 0
+trigger = "user idle for 20s"
+elapsed_secs = 90
+observations_found = 3
+
+[scenario.obs_states]
+0 = "found"
+1 = "found"
+2 = "found"
+
+[scenario.code]
+text = """
+w = int(input())
+if w > 2 and w % 2 == 0:
+    print("YES")
+else:
+    print("NO")
+"""
+
+[expect]
+state = "found"
+obs_id = "cf:4A:route:1:obs:3"
+min_confidence = 0.8
+must_be_socratic = false
+banned_patterns = []

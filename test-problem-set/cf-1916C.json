@@ -1,0 +1,97 @@
+{
+  "contest_id": 1916,
+  "index": "C",
+  "title": "Training Before the Olympiad",
+  "difficulty": 1200,
+  "tags": [
+    "constructive algorithms",
+    "games",
+    "greedy",
+    "implementation",
+    "math"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Masha and Olya have an important team olympiad coming up soon. In honor of this, Masha, for warm-up, suggested playing a game with Olya: There is an array $$$a$$$ of size $$$n$$$. Masha goes first, and the players take turns. Each move is described by the following sequence of actions: $$$\\bullet$$$ If the size of the array is $$$1$$$, the game ends. $$$\\bullet$$$ The player who is currently playing chooses two different indices $$$i$$$, $$$j$$$ ($$$1 \\le i, j \\le |a|$$$), and performs the following operation — removes $$$a_i$$$ and $$$a_j$$$ from the array and adds to the array a number equal to $$$\\lfloor \\frac{a_i + a_j}{2} \\rfloor \\cdot 2$$$. In other words, first divides the sum of the numbers $$$a_i$$$, $$$a_j$$$ by $$$2$$$ rounding down, and then multiplies the result by $$$2$$$. Masha aims to maximize the final number, while Olya aims to minimize it. Masha and Olya decided to play on each non-empty prefix of the initial array $$$a$$$, and asked for your help. For each $$$k = 1, 2, \\ldots, n$$$, answer the following question. Let only the first $$$k$$$ elements of the array $$$a$$$ be present in the game, with indices $$$1, 2, \\ldots, k$$$ respectively. What number will remain at the end with optimal play by both players?",
+  "input_spec": "The first line contains an integer $$$t$$$ ($$$1 \\leq t \\leq 10^4$$$) — the number of test cases. The first line of each test case contains a single integer $$$n$$$ ($$$1 \\le n \\le 10^5$$$) — the size of the array. The second line contains $$$n$$$ integers $$$a_1,a_2, \\ldots,a_n$$$ ($$$1 \\leq a_i \\leq 10^9$$$) — the array on which Masha and Olya play.",
+  "output_spec": "For each test case, output $$$n$$$ integers. The $$$k$$$-th of these numbers should be equal to the number that will remain at the end with optimal play by both players, on the array consisting of the first $$$k$$$ elements of the array $$$a$$$.",
+  "examples": [
+    {
+      "input": "4\n1\n3\n6\n6 3 7 2 5 4\n3\n3 10 11\n5\n7 13 11 19 1",
+      "output": "3\n6 8 16 18 22 26\n3 12 24\n7 20 30 48 50"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Parity-based game reduction",
+      "description": "Recognize that the operation floor((a_i+a_j)/2)*2 equals a_i+a_j minus (a_i+a_j) mod 2. The total sum only decreases when an odd and even number are paired. Reduce the game to counting how many odd-even pairings occur under optimal play, which depends only on the count of odd numbers modulo 3.",
+      "skill_tags": [
+        "math",
+        "math",
+        "greedy"
+      ],
+      "observations": [
+        {
+          "title": "The operation preserves the sum except for a possible loss of 1",
+          "description": "floor((a_i + a_j)/2) * 2 equals a_i + a_j - ((a_i + a_j) mod 2). When both numbers have the same parity, a_i + a_j is even and nothing is lost. When one is odd and one is even, a_i + a_j is odd and exactly 1 is lost from the total sum. So each move either preserves the sum or decreases it by 1.",
+          "hints": {
+            "nudge": "Expand the floor-then-double operation algebraically. What is floor(x/2)*2 in terms of x?",
+            "question": "If a_i + a_j is even, what does floor((a_i+a_j)/2)*2 equal? What if a_i + a_j is odd? How much of the sum is lost in each case?",
+            "formal": "floor(x/2)*2 = x - (x mod 2). So the new element is a_i + a_j - ((a_i + a_j) mod 2). The sum decreases by 0 if a_i + a_j is even (same parity), or by 1 if a_i + a_j is odd (different parity)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Only the count of odd numbers matters, not the actual values",
+          "description": "Since the cost of each move depends solely on whether the two chosen elements have the same or different parity, the exact values are irrelevant to the game-theoretic analysis. Furthermore, pairing two odds produces an even result, pairing two evens produces an even result, and pairing odd+even produces an even result. So the count of odd numbers can only decrease with each move.",
+          "hints": {
+            "nudge": "After a move, is the new element odd or even? Does it depend on which specific numbers were chosen, or just their parities?",
+            "question": "If you pair two odd numbers, what is the parity of (a_i + a_j) and what parity is the result floor((a_i+a_j)/2)*2? What about odd+even, or even+even?",
+            "formal": "odd+odd = even, so the result is even (0 cost, odd count decreases by 2). odd+even = odd, result is even (1 cost, odd count decreases by 1). even+even = even, result is even (0 cost, odd count unchanged). The result is always even. Only the count of odd numbers c and the total sum S matter."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Masha's optimal strategy: pair two odds to avoid any loss",
+          "description": "Masha wants to maximize the final number, which means minimizing the total loss. Since pairing two odds costs 0 and produces an even number (reducing the odd count by 2 without penalty), this is Masha's best move whenever at least two odd numbers remain. If fewer than two odds remain, she pairs two evens.",
+          "hints": {
+            "nudge": "Masha wants to avoid losing any sum. Which pairing avoids the penalty of 1?",
+            "question": "If there are at least two odd numbers available, what should Masha choose to pair? What if there are fewer than two odds?",
+            "formal": "Masha's optimal move: if c >= 2, pair two odds (cost 0, c -= 2). Otherwise pair two evens (cost 0, c unchanged). She never voluntarily pairs odd+even."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Olya's optimal strategy: pair one odd with one even to force a loss of 1",
+          "description": "Olya wants to minimize the final number, which means maximizing the total loss. Pairing an odd number with an even number costs 1, so this is Olya's best move whenever both an odd and an even number are available. If only odds or only evens remain, she is forced into a zero-cost pairing.",
+          "hints": {
+            "nudge": "Olya wants to destroy as much sum as possible. Which pairing costs 1?",
+            "question": "If there is at least one odd and one even number available, what should Olya pair together? What is the cost?",
+            "formal": "Olya's optimal move: if c >= 1 and there is at least one even number, pair one odd with one even (cost 1, c -= 1). Otherwise pair two odds or two evens (cost 0)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The total loss depends on c mod 3",
+          "description": "Under optimal play, Masha and Olya alternate. Each full cycle of two turns (Masha then Olya) consumes 3 odd numbers and incurs exactly 1 loss. After floor(c/3) complete cycles, the remaining odds r = c mod 3 determine the extra loss: if r = 0 or r = 2 there is no additional loss (Masha can pair the remaining odds), but if r = 1 the lone odd must eventually be paired with an even, costing 1 more.",
+          "hints": {
+            "nudge": "Trace through the alternating turns: Masha removes 2 odds, then Olya removes 1 odd with cost 1. How many odds are consumed per cycle?",
+            "question": "If you start with c odd numbers and each Masha-Olya cycle uses 3 odds with 1 loss, what is the total loss after all cycles? What happens with the leftover 0, 1, or 2 odds?",
+            "formal": "Full cycles: floor(c/3), each with cost 1. Remainder r = c mod 3. If r = 0: total cost = floor(c/3). If r = 2: Masha pairs them (cost 0), total = floor(c/3). If r = 1 and k >= 2: the lone odd is eventually paired with an even (cost 1), total = floor(c/3) + 1."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Compute answers incrementally for all prefixes",
+          "description": "Maintain a running sum S and a running count of odd numbers c as you process each element. For each prefix of length k, apply the formula: answer = S - floor(c/3) - (1 if c mod 3 == 1 and k >= 2 else 0). This gives O(1) per prefix and O(n) total.",
+          "hints": {
+            "nudge": "Do you need to re-simulate the game for each prefix, or can you reuse the sum and odd count from the previous prefix?",
+            "question": "If you already know the sum and odd count for the first k elements, what changes when you add element a[k+1]?",
+            "formal": "Initialize S = 0, c = 0. For k = 1 to n: S += a[k], c += (a[k] mod 2). If k == 1, output S. Otherwise, output S - floor(c/3) - (1 if c mod 3 == 1 else 0)."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

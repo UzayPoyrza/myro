@@ -1,0 +1,55 @@
+{
+  "contest_id": 231,
+  "index": "A",
+  "title": "Team",
+  "difficulty": 800,
+  "tags": ["greedy", "implementation"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "One day three best friends Petya, Vasya and Tonya decided to form a team and take part in programming contests. They decided that they would participate in a contest only if at least two of them were sure about the solution. Each of them can either be sure (1) or unsure (0) about the solution to a particular problem. Given n problems and their confidence for each, determine how many problems the team will solve.",
+  "input_spec": "The first line contains a single integer n (1 <= n <= 1000). Each of the next n lines contains three integers, each either 0 or 1, representing the confidence of Petya, Vasya and Tonya respectively.",
+  "output_spec": "Print a single integer -- the number of problems the team will solve.",
+  "examples": [
+    {"input": "3\n1 1 0\n1 1 1\n1 0 0", "output": "2"},
+    {"input": "2\n1 0 0\n0 1 1", "output": "1"}
+  ],
+  "routes": [
+    {
+      "name": "Sum threshold",
+      "description": "For each problem, sum the three confidence values and check if the sum is at least 2.",
+      "skill_tags": ["implementation", "greedy"],
+      "observations": [
+        {
+          "title": "At least two must be sure",
+          "description": "The team participates if at least 2 out of 3 friends are confident. Since each value is 0 or 1, this means the sum of the three values must be >= 2.",
+          "hints": {
+            "nudge": "What is a quick way to check if 'at least two out of three' are true?",
+            "question": "If you add up three binary values, what sum corresponds to 'at least two are 1'?",
+            "formal": "For each problem with values (a, b, c), the team solves it if a + b + c >= 2."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Count the qualifying problems",
+          "description": "Iterate through all n problems, and for each one where the sum >= 2, increment a counter.",
+          "hints": {
+            "nudge": "How do you accumulate a count over multiple problems?",
+            "question": "What kind of loop structure do you need to process n problems and count the ones that pass the check?",
+            "formal": "count = 0; for each problem: read a, b, c; if a+b+c >= 2: count += 1. Print count."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "No edge cases to worry about",
+          "description": "The constraints are small (n <= 1000), each value is exactly 0 or 1, and there are no tricky edge cases. A straightforward loop is sufficient.",
+          "hints": {
+            "nudge": "Are there any boundary conditions or special inputs to handle?",
+            "question": "What happens when n = 1 and all three values are 0? Does your solution handle it correctly?",
+            "formal": "When all are 0, sum = 0 < 2, so it's not counted. When n = 0 is not possible per constraints (n >= 1). The solution is robust as-is."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

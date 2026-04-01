@@ -1,0 +1,30 @@
+[scenario]
+name = "Theatre Square — float division precision bug"
+problem = "cf-1A"
+route = 0
+trigger = "test failure on test 2"
+elapsed_secs = 240
+observations_found = 1
+
+[scenario.obs_states]
+0 = "found"
+
+[scenario.code]
+text = """
+import math
+n, m, a = map(int, input().split())
+rows = math.ceil(n / a)
+cols = math.ceil(m / a)
+print(rows * cols)
+"""
+
+[[scenario.recent_messages]]
+role = "user"
+content = "My solution fails on test 2 but I think the logic is right"
+
+[expect]
+valid_states = ["approaching", "moving_away"]
+obs_id = "cf:1A:route:1:obs:2"
+min_confidence = 0.4
+must_be_socratic = true
+banned_patterns = ["(n + a - 1) // a"]

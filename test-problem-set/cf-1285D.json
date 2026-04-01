@@ -1,0 +1,84 @@
+{
+  "contest_id": 1285,
+  "index": "D",
+  "title": "Dr. Evil Underscores",
+  "difficulty": 1900,
+  "tags": [
+    "bitmasks",
+    "brute force",
+    "dfs and similar",
+    "divide and conquer",
+    "dp",
+    "greedy",
+    "strings",
+    "trees"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Today, as a friendship gift, Bakry gave Badawy n integers a_1, a_2, ..., a_n and challenged him to choose an integer X such that the value max(a_i XOR X) over all 1 <= i <= n is minimum possible, where XOR denotes the bitwise XOR operation. Find the minimum possible value of max(a_i XOR X).",
+  "input_spec": "The first line contains integer n (1 <= n <= 10^5). The second line contains n integers a_1, a_2, ..., a_n (0 <= a_i <= 2^30 - 1).",
+  "output_spec": "Print one integer — the minimum possible value of max(a_i XOR X) over all 1 <= i <= n.",
+  "examples": [
+    {"input": "3\n1 2 3", "output": "2"},
+    {"input": "2\n1 5", "output": "4"}
+  ],
+  "routes": [
+    {
+      "name": "Bit-by-bit divide and conquer",
+      "description": "Process bits from the most significant to the least. At each bit, split numbers by their current bit and recurse, choosing X's bit to minimize the worst case.",
+      "skill_tags": ["greedy", "dp"],
+      "observations": [
+        {
+          "title": "XOR is independent per bit, but the max couples them",
+          "description": "Each bit of X independently flips the corresponding bit in all a_i XOR X. However, the max operation means we cannot optimize each bit independently — choosing a bit for X affects which element achieves the maximum.",
+          "hints": {
+            "nudge": "XOR operates bit by bit. Can you think about what happens at just one bit position?",
+            "question": "If you set bit k of X to 0, which elements contribute a 1 in bit k of (a_i XOR X)? What if you set it to 1?",
+            "formal": "Setting X's bit k to 0 means all a_i with bit k = 1 get a 1 in position k of their XOR. Setting it to 1 flips this. The max over all elements couples the bit choices."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Process from the most significant bit downward",
+          "description": "Higher bits contribute exponentially more to the result. The optimal strategy processes bits greedily from the top (bit 29 or 30) down to bit 0, making the best local choice at each level.",
+          "hints": {
+            "nudge": "Which bits matter most in determining the maximum XOR value?",
+            "question": "Bit k contributes 2^k to the result. If you could eliminate bit 29 from the max, how much would that save compared to all lower bits combined?",
+            "formal": "Since 2^k > sum of 2^0 + ... + 2^(k-1), the most significant bit dominates. Process from the top bit downward, trying to zero out high bits first."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Split into two groups by current bit",
+          "description": "At each bit position, partition the current set of numbers into those with bit = 0 and those with bit = 1. If one group is empty, we can set X's bit to match the non-empty group and eliminate this bit from the maximum at no cost.",
+          "hints": {
+            "nudge": "What happens if all numbers agree on a particular bit?",
+            "question": "If you split the numbers by their value of bit k, and one group is empty, what should you set X's bit k to?",
+            "formal": "Partition numbers into L (bit k = 0) and R (bit k = 1). If L is empty, set X's bit to 1; all XOR results have 0 in bit k. Similarly if R is empty. No cost for this bit."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Both groups non-empty forces a cost of 2^k",
+          "description": "When both groups (bit=0 and bit=1) are non-empty, no matter what X's bit is, one group will have a 1 in this bit position of a_i XOR X. We must pay 2^k and should pick the side that minimizes the remaining cost from lower bits.",
+          "hints": {
+            "nudge": "If some numbers have bit k = 0 and others have bit k = 1, can you avoid paying 2^k?",
+            "question": "If X's bit k is 0, the '1-group' contributes 2^k. If X's bit k is 1, the '0-group' contributes 2^k. Can you avoid both?",
+            "formal": "When both L and R are non-empty, the answer at this level is 2^k + min(solve(L, k-1), solve(R, k-1)). We choose X's bit to 'agree' with the group that has worse remaining cost, paying 2^k for the other group."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Recursive structure: virtual binary trie",
+          "description": "The recursion naturally follows a binary trie over the numbers. Each recursive call works on a subset of numbers sharing a common prefix. The tree has depth 30 and each number appears on exactly one root-to-leaf path, giving O(n * 30) total work.",
+          "hints": {
+            "nudge": "What data structure organizes numbers by their binary prefixes?",
+            "question": "If you imagine inserting all numbers into a binary trie (most significant bit first), how does the trie structure relate to the partition at each bit level?",
+            "formal": "The recursion is equivalent to a DFS on a binary trie of the numbers. Each number appears in exactly one leaf, so total elements across all calls at each depth level is n. With 30 levels, total work is O(30n)."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    }
+  ]
+}

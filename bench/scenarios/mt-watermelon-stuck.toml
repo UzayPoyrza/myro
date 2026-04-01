@@ -1,0 +1,45 @@
+[scenario]
+name = "Watermelon — stuck with same wrong code"
+problem = "cf-4A"
+route = 0
+
+# Turn 1: Student has even-only check
+[[turns]]
+trigger = "test failure on test 3"
+elapsed_secs = 60
+
+[turns.code]
+text = """
+w = int(input())
+if w % 2 == 0:
+    print("YES")
+else:
+    print("NO")
+"""
+
+[turns.expect]
+state = "approaching"
+min_confidence = 0.4
+must_be_socratic = true
+banned_patterns = ["w > 2", "w == 2"]
+
+# Turn 2: Same code, no changes — student is stuck
+[[turns]]
+trigger = "user idle for 90s"
+elapsed_secs = 180
+user_message = "I still don't see what's wrong. Even numbers should work."
+
+[turns.code]
+text = """
+w = int(input())
+if w % 2 == 0:
+    print("YES")
+else:
+    print("NO")
+"""
+
+[turns.expect]
+valid_states = ["approaching", "moving_away"]
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["w > 2"]

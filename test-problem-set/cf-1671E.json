@@ -1,0 +1,111 @@
+{
+  "contest_id": 1671,
+  "index": "E",
+  "title": "Preorder",
+  "difficulty": 2100,
+  "tags": [
+    "combinatorics",
+    "divide and conquer",
+    "dp",
+    "dsu",
+    "hashing",
+    "sortings",
+    "trees"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "512 megabytes",
+  "description": "You are given a rooted tree of $$$2^n - 1$$$ vertices. Every vertex of this tree has either $$$0$$$ children, or $$$2$$$ children. All leaves of this tree have the same distance from the root, and for every non-leaf vertex, one of its children is the left one, and the other child is the right one. Formally, you are given a perfect binary tree . The vertices of the tree are numbered in the following order: the root has index $$$1$$$; if a vertex has index $$$x$$$, then its left child has index $$$2x$$$, and its right child has index $$$2x+1$$$. Every vertex of the tree has a letter written on it, either A or B . Let's define the character on the vertex $$$x$$$ as $$$s_x$$$. Let the preorder string of some vertex $$$x$$$ be defined in the following way: if the vertex $$$x$$$ is a leaf, then the preorder string of $$$x$$$ be consisting of only one character $$$s_x$$$; otherwise, the preorder string of $$$x$$$ is $$$s_x + f(l_x) + f(r_x)$$$, where $$$+$$$ operator defines concatenation of strings, $$$f(l_x)$$$ is the preorder string of the left child of $$$x$$$, and $$$f(r_x)$$$ is the preorder string of the right child of $$$x$$$. The preorder string of the tree is the preorder string of its root. Now, for the problem itself... You have to calculate the number of different strings that can be obtained as the preorder string of the given tree, if you are allowed to perform the following operation any number of times before constructing the preorder string of the tree: choose any non-leaf vertex $$$x$$$, and swap its children (so, the left child becomes the right one, and vice versa).",
+  "input_spec": "The first line contains one integer $$$n$$$ ($$$2 \\le n \\le 18$$$). The second line contains a sequence of $$$2^n-1$$$ characters $$$s_1, s_2, \\dots, s_{2^n-1}$$$. Each character is either A or B . The characters are not separated by spaces or anything else.",
+  "output_spec": "Print one integer — the number of different strings that can be obtained as the preorder string of the given tree, if you can apply any number of operations described in the statement. Since it can be very large, print it modulo $$$998244353$$$.",
+  "examples": [
+    {
+      "input": "4\nBAAAAAAAABBABAB",
+      "output": "16"
+    },
+    {
+      "input": "2\nBAA",
+      "output": "1"
+    },
+    {
+      "input": "2\nABA",
+      "output": "2"
+    },
+    {
+      "input": "2\nAAB",
+      "output": "2"
+    },
+    {
+      "input": "2\nAAA",
+      "output": "1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Tree DP with subtree hashing",
+      "description": "Process the perfect binary tree bottom-up. For each vertex, compute the number of distinct preorder strings its subtree can produce. The key multiplier at each internal node depends on whether its two children produce the same or different sets of strings, which is determined by comparing subtree hashes.",
+      "skill_tags": ["dp", "trees", "hashing"],
+      "observations": [
+        {
+          "title": "Swaps at different vertices act independently",
+          "description": "Each swap operation affects only the local ordering of one vertex's children. Since the preorder string is built by concatenation of disjoint substring segments (root char + left subtree string + right subtree string), the choice at vertex x does not interfere with the choices at any other vertex. This means the total count factorizes: we can reason about each vertex's contribution independently and multiply.",
+          "hints": {
+            "nudge": "Consider two non-leaf vertices at different locations in the tree. Does swapping at one of them affect the set of strings the other can produce?",
+            "question": "The preorder string is s_x + f(left) + f(right). If you swap at vertex x, you get s_x + f(right) + f(left). Does this swap change what happens inside the left or right subtrees?",
+            "formal": "Swapping at vertex x replaces f(left_x) + f(right_x) with f(right_x) + f(left_x) in the preorder string, but the sets of possible strings for f(left_x) and f(right_x) are unchanged. Therefore swap decisions at different vertices are independent, and the total count is a product of per-vertex contributions."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "Each internal vertex contributes a factor of 1 or 2",
+          "description": "At an internal vertex x, swapping its children swaps the left-subtree and right-subtree portions of the preorder string. If the set of all possible strings from the left subtree equals the set from the right subtree, swapping produces no new strings (factor 1). If the sets differ, swapping doubles the number of distinct strings at this vertex (factor 2).",
+          "hints": {
+            "nudge": "When you swap two things, you get a different result only if those two things are not identical. What are the two things being swapped here?",
+            "question": "If the left subtree can produce exactly the strings {S1, S2} and the right subtree can also produce exactly {S1, S2}, does swapping at the root create any new preorder strings?",
+            "formal": "Let L = set of strings from left subtree, R = set of strings from right subtree. Without swapping: {s_x + l + r : l in L, r in R}. With swapping: also {s_x + r + l : l in L, r in R}. These two sets are equal iff L = R. So the vertex contributes factor 2 when L != R, and factor 1 when L = R."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "The answer is a product over all internal vertices",
+          "description": "Since each vertex independently contributes a factor of 1 or 2, the total number of distinct preorder strings is the product of these factors over all internal (non-leaf) vertices. Equivalently, it is 2^k where k is the number of internal vertices whose left and right subtrees produce different string sets.",
+          "hints": {
+            "nudge": "You know each vertex contributes either 1 or 2 independently. How do you combine independent multiplicative contributions?",
+            "question": "If there are 5 internal vertices and 3 of them have the swap-matters property, what is the total count?",
+            "formal": "Answer = product over all internal vertices x of (2 if sets_differ(x) else 1) = 2^(count of x where left and right subtree string sets differ), taken modulo 998244353."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Two subtrees produce the same string set iff they are structurally equivalent under swaps",
+          "description": "Since both subtrees are perfect binary trees of the same depth, their string sets are equal if and only if one can be transformed into the other by swapping children at internal nodes. This is a recursive equivalence: two subtrees rooted at u and v are equivalent iff they have the same root character, and their children can be matched (possibly after swapping) so that matched children are recursively equivalent.",
+          "hints": {
+            "nudge": "Two subtrees produce the same set of strings. What structural property must they share? Think recursively.",
+            "question": "If subtrees at u and v have the same root character, what conditions on their children's subtrees ensure that the full sets of producible strings are identical?",
+            "formal": "Define equiv(u, v) recursively: for leaves, equiv(u, v) iff s_u = s_v. For internal nodes, equiv(u, v) iff s_u = s_v and either (equiv(left_u, left_v) and equiv(right_u, right_v)) or (equiv(left_u, right_v) and equiv(right_u, left_v)). Two subtrees produce the same string set iff they are equivalent."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "Hashing provides efficient equivalence testing",
+          "description": "Checking recursive equivalence directly would be too slow. Instead, assign each subtree a canonical hash computed bottom-up: for leaves, hash their character; for internal nodes, hash the root character combined with the sorted pair of children's hashes (sorting makes the hash swap-invariant). Two subtrees are equivalent iff their canonical hashes match. Use polynomial hashing with multiple bases to avoid collisions.",
+          "hints": {
+            "nudge": "You need to compare whether two subtrees are equivalent, but the tree has up to 2^18 - 1 nodes. Can you summarize each subtree with a single value?",
+            "question": "If you hash a subtree as h(x) = combine(s_x, h(left), h(right)), the hash depends on child order. How can you make the hash invariant to child swaps?",
+            "formal": "Compute h(x) bottom-up. For a leaf: h(x) = hash(s_x). For an internal node: let a = h(left_x), b = h(right_x); set h(x) = hash(s_x, min(a,b), max(a,b)). Sorting the pair (a,b) makes h(x) invariant under child swaps. Two subtrees are equivalent iff h(u) = h(v). Use multi-hash (k independent hash functions) to make collision probability negligible."
+          },
+          "skill_tag": "hashing"
+        },
+        {
+          "title": "Bottom-up traversal computes the answer in O(2^n) time",
+          "description": "Process all vertices from leaves to root. At each leaf, set hash and count = 1. At each internal vertex x, compute its canonical hash from its children's hashes, then multiply count(left) * count(right) * (2 if hash(left) != hash(right) else 1). The answer is count(root). Since the tree has 2^n - 1 nodes and each is processed in O(1), total time is O(2^n).",
+          "hints": {
+            "nudge": "You have a perfect binary tree. What traversal order lets you compute children before parents?",
+            "question": "At each internal vertex, you need children's hashes and counts. If you process vertices in decreasing index order (or use recursion), are children always ready?",
+            "formal": "Recurse (or iterate from index 2^n-1 down to 1). For internal vertex x with children 2x and 2x+1: h(x) = canonical_hash(s_x, h(2x), h(2x+1)); ans(x) = ans(2x) * ans(2x+1) * (2 if h(2x) != h(2x+1) else 1) mod 998244353. Return ans(1)."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    }
+  ]
+}

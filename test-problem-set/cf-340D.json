@@ -1,0 +1,106 @@
+{
+  "contest_id": 340,
+  "index": "D",
+  "title": "Longest Increasing Subsequence",
+  "difficulty": 1500,
+  "tags": [
+    "dp",
+    "binary search"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Given a sequence of n integers, find the length of the longest strictly increasing subsequence.",
+  "input_spec": "The first line contains an integer n (1 <= n <= 2 * 10^5). The second line contains n integers a_1, ..., a_n (-10^9 <= a_i <= 10^9).",
+  "output_spec": "Print the length of the longest strictly increasing subsequence.",
+  "examples": [
+    {
+      "input": "6\n10 9 2 5 3 7",
+      "output": "3"
+    },
+    {
+      "input": "8\n0 1 0 3 2 3 4 0",
+      "output": "4"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Patience sorting (O(n log n))",
+      "description": "Maintain an array of smallest tail elements. Use binary search to find the correct position for each new element.",
+      "skill_tags": [
+        "dp",
+        "binary-search"
+      ],
+      "observations": [
+        {
+          "title": "Tails array invariant",
+          "description": "Maintain array tails[] where tails[i] = smallest possible tail element of an increasing subsequence of length i+1.",
+          "hints": {
+            "nudge": "Instead of tracking entire subsequences, what minimal information per length do you need?",
+            "question": "For each possible LIS length, what single value would be most useful to remember?",
+            "formal": "tails[i] = smallest element that ends an increasing subsequence of length i+1. This array is always sorted."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Binary search for position",
+          "description": "For each new element, binary search tails[] for the leftmost value >= element. Replace it, or append if element is larger than all.",
+          "hints": {
+            "nudge": "Since tails is sorted, how can you efficiently find where a new element fits?",
+            "question": "When you see a new element x, you want to find the first tail >= x. What algorithm finds this in a sorted array?",
+            "formal": "Use bisect_left (lower_bound) to find position p. If p == len(tails), append x; else tails[p] = x. This is O(log n) per element."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "Answer is length of tails",
+          "description": "After processing all elements, the length of the tails array equals the LIS length.",
+          "hints": {
+            "nudge": "After processing all elements, where is the answer?",
+            "question": "What does the length of the tails array represent?",
+            "formal": "len(tails) after processing all elements = LIS length. Note: tails itself is NOT the LIS, just its tails."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    },
+    {
+      "name": "O(n^2) DP",
+      "description": "Classic quadratic DP where dp[i] = length of LIS ending at index i.",
+      "skill_tags": [
+        "dp"
+      ],
+      "observations": [
+        {
+          "title": "DP state: LIS ending at i",
+          "description": "dp[i] = length of longest increasing subsequence that ends with a[i].",
+          "hints": {
+            "nudge": "What if you defined a subproblem based on where the subsequence ends?",
+            "question": "If dp[i] represents the LIS length ending at position i, how would you compute it?",
+            "formal": "dp[i] = 1 + max(dp[j] for all j < i where a[j] < a[i]). Base: dp[i] = 1."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Answer is max of all dp[i]",
+          "description": "The LIS could end at any position. The answer is max(dp[0], dp[1], ..., dp[n-1]).",
+          "hints": {
+            "nudge": "The LIS doesn't have to end at the last element. Where could it end?",
+            "question": "After computing dp[i] for all i, how do you get the final answer?",
+            "formal": "Answer = max(dp[i]) for 0 <= i < n. The subsequence can end anywhere."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "O(n^2) may be too slow for n = 2*10^5",
+          "description": "This approach is O(n^2). With n up to 2*10^5, it may TLE. Consider the O(n log n) patience sorting approach.",
+          "hints": {
+            "nudge": "Check the constraints. Is O(n^2) fast enough?",
+            "question": "n can be 2*10^5. How many operations is n^2? Is that within the time limit?",
+            "formal": "n^2 = 4*10^10 operations -- way too slow. You need the O(n log n) approach using binary search on a tails array."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    }
+  ]
+}

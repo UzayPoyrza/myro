@@ -1,0 +1,129 @@
+{
+  "contest_id": 514,
+  "index": "B",
+  "title": "Han Solo and Lazer Gun",
+  "difficulty": 1400,
+  "tags": [
+    "geometry",
+    "math",
+    "implementation"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "There are n Imperial stormtroopers on the field. The battle field is a plane with Cartesian coordinate system. Each stormtrooper is associated with his coordinates (x, y) on this plane. Han Solo has the newest duplex lazer gun to fight these stormtroopers. It is situated at the point (x0, y0). In one shot it can destroy all the stormtroopers situated on some line that crosses point (x0, y0). Your task is to determine what minimum number of shots Han Solo needs to defeat all the stormtroopers. The gun shoots very quickly and the stormtroopers don't have time to change their location.",
+  "input_spec": "The first line contains three integers n, x0 and y0 (1 <= n <= 1000, -10^4 <= x0, y0 <= 10^4) -- the number of stormtroopers and the coordinates of the gun. Next n lines contain two integers each xi, yi (-10^4 <= xi, yi <= 10^4) -- the coordinates of the stormtroopers. No stormtrooper stands at the same point as the gun. Multiple stormtroopers can stand at the same point.",
+  "output_spec": "Print a single integer -- the minimum number of shots Han Solo needs to destroy all the stormtroopers.",
+  "examples": [
+    {
+      "input": "4 0 0\n1 1\n2 2\n2 0\n-1 -1",
+      "output": "2"
+    },
+    {
+      "input": "2 1 2\n1 1\n1 0",
+      "output": "1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Normalized direction vectors with a set",
+      "description": "Translate all stormtrooper coordinates relative to the gun, reduce each direction vector to its canonical form using GCD and sign normalization, and count distinct directions with a set.",
+      "skill_tags": [
+        "math",
+        "math",
+        "implementation"
+      ],
+      "observations": [
+        {
+          "title": "One shot per distinct line through the gun",
+          "description": "Each shot fires along a line through (x0, y0). All stormtroopers on the same line are destroyed in one shot. So the answer is the number of distinct lines passing through the gun that contain at least one stormtrooper.",
+          "hints": {
+            "nudge": "What does each shot actually destroy? How does that connect to counting something?",
+            "question": "If multiple stormtroopers lie on the same line through the gun, how many shots do they require? What are you really counting?",
+            "formal": "The answer equals the number of distinct lines through (x0, y0) that pass through at least one stormtrooper. Two stormtroopers need the same shot if and only if they are collinear with the gun."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Translate coordinates to make the gun the origin",
+          "description": "Subtract (x0, y0) from every stormtrooper's coordinates. Now the gun is at the origin, and each stormtrooper is at (dx, dy) = (xi - x0, yi - y0). Two stormtroopers lie on the same line through the origin if and only if their direction vectors are parallel.",
+          "hints": {
+            "nudge": "Can you simplify the geometry by moving the coordinate system?",
+            "question": "If you place the gun at the origin, what does each stormtrooper's position represent? When do two of them share a line through the origin?",
+            "formal": "Set dx = xi - x0, dy = yi - y0 for each stormtrooper. Two vectors (dx1, dy1) and (dx2, dy2) define the same line through the origin iff dx1 * dy2 == dx2 * dy1 (the cross product is zero)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Reduce direction vectors using GCD",
+          "description": "Divide each (dx, dy) by gcd(|dx|, |dy|) to get the simplest integer direction vector. For example, (4, 6) becomes (2, 3) and (2, 3) stays (2, 3). This gives a canonical form for parallel vectors with the same sign.",
+          "hints": {
+            "nudge": "How can you tell that (2, 3) and (4, 6) represent the same direction?",
+            "question": "If you divide both components by their greatest common divisor, what property does the resulting vector have? Does it uniquely represent the direction?",
+            "formal": "Let g = gcd(|dx|, |dy|). Replace (dx, dy) with (dx/g, dy/g). All positive scalar multiples of the same direction now map to the same reduced pair."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Normalize sign so opposite directions map to the same line",
+          "description": "A line through the origin extends in both directions, so (1, 2) and (-1, -2) are the same line. After GCD reduction, enforce a canonical sign: if dy < 0, or if dy == 0 and dx < 0, negate both components. This ensures each line has exactly one representative.",
+          "hints": {
+            "nudge": "After GCD reduction, do (2, 3) and (-2, -3) represent the same line or different lines?",
+            "question": "A line passes through the origin in both directions. How do you ensure that opposite direction vectors produce the same canonical form?",
+            "formal": "After dividing by GCD, if dy < 0, set (dx, dy) = (-dx, -dy). If dy == 0 and dx < 0, set dx = -dx. Now each undirected line through the origin has a unique (dx, dy) representative."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Count distinct canonical pairs with a set",
+          "description": "Insert each normalized (dx, dy) pair into a set. The size of the set at the end is the number of distinct lines, which is the answer.",
+          "hints": {
+            "nudge": "Once every direction has a unique canonical form, how do you count distinct directions?",
+            "question": "What data structure lets you efficiently collect unique items and report how many there are?",
+            "formal": "Use a HashSet (or equivalent) of (dx, dy) tuples. For each stormtrooper, compute the canonical direction and insert it. The answer is the set's size."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    },
+    {
+      "name": "Collinearity check with cross product",
+      "description": "For each stormtrooper, check whether it is collinear with the gun and any already-counted stormtrooper using the cross product. Count each new direction encountered.",
+      "skill_tags": [
+        "math",
+        "implementation"
+      ],
+      "observations": [
+        {
+          "title": "One shot per distinct line through the gun",
+          "description": "Each shot fires along a line through (x0, y0). All stormtroopers on the same line are destroyed in one shot. So the answer is the number of distinct lines passing through the gun that contain at least one stormtrooper.",
+          "hints": {
+            "nudge": "What does each shot actually destroy? How does that connect to counting something?",
+            "question": "If multiple stormtroopers lie on the same line through the gun, how many shots do they require? What are you really counting?",
+            "formal": "The answer equals the number of distinct lines through (x0, y0) that pass through at least one stormtrooper. Two stormtroopers need the same shot if and only if they are collinear with the gun."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Cross product detects collinearity",
+          "description": "Three points A, B, C are collinear if and only if the cross product of vectors AB and AC is zero: (Bx - Ax)(Cy - Ay) - (By - Ay)(Cx - Ax) == 0. Use the gun as point A to test whether two stormtroopers share a line through it.",
+          "hints": {
+            "nudge": "How can you check whether three points lie on the same line using only integer arithmetic?",
+            "question": "Given the gun at A and two stormtroopers at B and C, what does the cross product (B-A) x (C-A) tell you? What value means they are collinear?",
+            "formal": "Points (x0,y0), (x1,y1), (x2,y2) are collinear iff (x1-x0)*(y2-y0) - (y1-y0)*(x2-x0) == 0. This is exact integer arithmetic with no floating-point issues."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Mark stormtroopers as destroyed to avoid double-counting",
+          "description": "Iterate through stormtroopers. When you encounter one that has not been destroyed, fire a shot: mark all stormtroopers collinear with it and the gun as destroyed. Increment the shot counter. The total count is the answer.",
+          "hints": {
+            "nudge": "Once you decide to fire a shot through a particular stormtrooper, which other stormtroopers does it also hit?",
+            "question": "If stormtrooper i needs a new shot, how do you find all other stormtroopers on the same line through the gun? How do you avoid counting them again?",
+            "formal": "Use a boolean array destroyed[]. For each i where destroyed[i] is false: increment answer, then for each j > i, if cross product of (xi-x0, yi-y0) and (xj-x0, yj-y0) is zero, set destroyed[j] = true. This is O(n^2), which is fine for n <= 1000."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

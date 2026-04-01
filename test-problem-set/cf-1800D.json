@@ -1,0 +1,67 @@
+{
+  "contest_id": 1800,
+  "index": "D",
+  "title": "Remove Two Letters",
+  "difficulty": 1200,
+  "tags": ["greedy", "hashing", "strings"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Dmitry has a string $$$s$$$, consisting of lowercase Latin letters. Dmitry decided to remove two consecutive characters from the string $$$s$$$ and you are wondering how many different strings can be obtained after such an operation. For example, Dmitry has a string \" aaabcc \". You can get the following different strings: \" abcc \"(by deleting the first two or second and third characters), \" aacc \"(by deleting the third and fourth characters),\" aaac \"(by deleting the fourth and the fifth character) and \" aaab \" (by deleting the last two).",
+  "input_spec": "The first line of input data contains a single integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — number of test cases. The descriptions of the test cases follow. The first line of the description of each test case contains an integer $$$n$$$ ($$$3 \\le n \\le 2 \\cdot 10^5$$$). The second line of the description of each test case contains a string $$$s$$$ of length $$$n$$$ consisting of lowercase Latin letters. It is guaranteed that the sum of $$$n$$$ for all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case print one integer — the number of distinct strings that can be obtained by removing two consecutive letters.",
+  "examples": [
+    {
+      "input": "76aaabcc10aaaaaaaaaa6abcdef7abacaba6cccfff4abba5ababa",
+      "output": "4\n1\n5\n3\n3\n3\n1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Adjacent-duplicate counting",
+      "description": "Enumerate all n-1 removal positions, recognize that only adjacent positions can produce duplicates, characterize exactly when two adjacent removals collide (s[i] == s[i+2]), and subtract the collision count from n-1.",
+      "skill_tags": ["strings", "greedy"],
+      "observations": [
+        {
+          "title": "There are exactly n-1 candidate removal positions",
+          "description": "Removing two consecutive characters starting at index i (0-indexed) is possible for i = 0, 1, ..., n-2. This gives exactly n-1 candidate operations, each producing a string of length n-2.",
+          "hints": {
+            "nudge": "How many ways can you choose a pair of consecutive characters in a string of length n?",
+            "question": "If the string has length n, what are the valid starting indices for removing two consecutive characters? How many such indices exist?",
+            "formal": "The starting index i ranges from 0 to n-2, giving n-1 total removal positions. Each produces a string s[0..i-1] + s[i+2..n-1] of length n-2."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Only adjacent removal positions can produce duplicates",
+          "description": "Removing at position i gives s[0..i-1] + s[i+2..n-1]. If two removal positions differ by 2 or more, the resulting strings differ in length of the shared prefix or suffix and cannot be equal. Only positions i and i+1 can possibly yield the same result.",
+          "hints": {
+            "nudge": "Compare the results of removing at two positions that are far apart. Do the resulting strings look the same?",
+            "question": "If you remove at position i, the prefix is s[0..i-1]. If you remove at position j where j >= i+2, what is the prefix? Can these two strings ever be identical character-by-character?",
+            "formal": "Removing at position i produces prefix s[0..i-1] and removing at position j > i+1 produces prefix s[0..j-1]. Since j-1 >= i+1, the prefixes have different lengths, so the resulting strings differ at index i where one has s[i+2] and the other has s[i]. For non-adjacent positions, these necessarily differ."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Two adjacent removals collide iff s[i] == s[i+2]",
+          "description": "Removing at position i gives s[0..i-1] + s[i+2..n-1]. Removing at position i+1 gives s[0..i] + s[i+3..n-1]. These two strings share the prefix s[0..i-1] and the suffix s[i+3..n-1]. They differ only at index i of the result: the first has s[i+2] there and the second has s[i]. So they are equal if and only if s[i] == s[i+2].",
+          "hints": {
+            "nudge": "Write out the two resulting strings side by side. Which character position is the only one that could differ?",
+            "question": "When you remove at position i, the character at index i in the result is s[i+2]. When you remove at position i+1, what character sits at that same index? When are they equal?",
+            "formal": "Result of removing at i: s[0], ..., s[i-1], s[i+2], s[i+3], ..., s[n-1]. Result of removing at i+1: s[0], ..., s[i-1], s[i], s[i+3], ..., s[n-1]. These agree everywhere except at index i, where the first has s[i+2] and the second has s[i]. Equal iff s[i] == s[i+2]."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Answer is (n-1) minus the number of collisions",
+          "description": "Start with n-1 candidate strings. Each pair of adjacent positions where s[i] == s[i+2] produces a duplicate, reducing the distinct count by one. Count these collisions for i = 0, 1, ..., n-3 and subtract from n-1.",
+          "hints": {
+            "nudge": "You know the total number of candidates and which pairs produce duplicates. How do you combine these?",
+            "question": "If there are n-1 removal positions and you find that k pairs of adjacent positions produce the same string, how many distinct strings are there?",
+            "formal": "Let collisions = |{i : 0 <= i <= n-3 and s[i] == s[i+2]}|. The answer is (n-1) - collisions. This runs in O(n) time with a single pass through the string."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

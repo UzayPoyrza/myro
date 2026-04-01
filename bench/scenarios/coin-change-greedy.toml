@@ -1,0 +1,30 @@
+[scenario]
+name = "Coin Change — greedy largest-first (wrong for general coins)"
+problem = "cf-996B"
+route = 0
+trigger = "test failure on test 1"
+elapsed_secs = 180
+observations_found = 0
+
+[scenario.code]
+text = """
+n, S = map(int, input().split())
+coins = sorted(map(int, input().split()), reverse=True)
+count = 0
+remaining = S
+for c in coins:
+    while remaining >= c:
+        remaining -= c
+        count += 1
+if remaining == 0:
+    print(count)
+else:
+    print(-1)
+"""
+
+[expect]
+state = "moving_away"
+obs_id = "cf:996B:route:1:obs:1"
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["dp[", "dp =", "dynamic programming"]

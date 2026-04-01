@@ -1,0 +1,66 @@
+[scenario]
+name = "Xenia — alternating ops but wrong level parity"
+problem = "cf-339D"
+route = 0
+trigger = "test failure on test 2"
+elapsed_secs = 360
+observations_found = 2
+
+[scenario.obs_states]
+1 = "found"
+2 = "approaching"
+
+[scenario.code]
+text = """
+import sys
+input = sys.stdin.readline
+
+n, q = map(int, input().split())
+a = list(map(int, input().split()))
+size = 1 << n
+tree = [0] * (2 * size)
+
+def depth(i):
+    d = 0
+    while i > 1:
+        i >>= 1
+        d += 1
+    return d
+
+# Build
+for i in range(size):
+    tree[size + i] = a[i] if i < len(a) else 0
+for i in range(size - 1, 0, -1):
+    d = depth(i)
+    if d % 2 == 0:  # BUG: parity is inverted
+        tree[i] = tree[2*i] ^ tree[2*i+1]
+    else:
+        tree[i] = tree[2*i] | tree[2*i+1]
+
+def update(p, val):
+    p += size
+    tree[p] = val
+    p >>= 1
+    while p >= 1:
+        d = depth(p)
+        if d % 2 == 0:  # same bug
+            tree[p] = tree[2*p] ^ tree[2*p+1]
+        else:
+            tree[p] = tree[2*p] | tree[2*p+1]
+        p >>= 1
+
+for _ in range(q):
+    p, b = map(int, input().split())
+    update(p - 1, b)
+    print(tree[1])
+"""
+
+[[scenario.recent_messages]]
+role = "user"
+content = "I have alternating OR and XOR but the sample output doesn't match"
+
+[expect]
+valid_states = ["approaching", "moving_away"]
+min_confidence = 0.4
+must_be_socratic = true
+banned_patterns = ["d % 2 == 1", "d % 2 != 0", "swap the operations"]

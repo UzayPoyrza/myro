@@ -1,0 +1,22 @@
+[scenario]
+name = "Xenia — basic array, no segment tree"
+problem = "cf-339D"
+route = 0
+trigger = "user idle for 60s"
+elapsed_secs = 180
+observations_found = 0
+
+[scenario.code]
+text = """
+n, q = map(int, input().split())
+a = list(map(int, input().split()))
+for _ in range(q):
+    p, b = map(int, input().split())
+    a[p - 1] = b
+    print("???")
+"""
+
+[expect]
+valid_states = ["uncertain", "moving_away", "approaching"]
+must_be_socratic = true
+banned_patterns = ["tree[2*i]", "tree[2i]", "tree[i//2]", "tree[i>>1]"]

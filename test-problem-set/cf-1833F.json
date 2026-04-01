@@ -1,0 +1,85 @@
+{
+  "contest_id": 1833,
+  "index": "F",
+  "title": "Ira and Flamenco",
+  "difficulty": 1700,
+  "tags": [
+    "combinatorics",
+    "constructive algorithms",
+    "data structures",
+    "implementation",
+    "math",
+    "sortings",
+    "two pointers"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Ira loves Spanish flamenco dance very much. She decided to start her own dance studio and found $$$n$$$ students, $$$i$$$th of whom has level $$$a_i$$$. Ira can choose several of her students and set a dance with them. So she can set a huge number of dances, but she is only interested in magnificent dances. The dance is called magnificent if the following is true: exactly $$$m$$$ students participate in the dance; levels of all dancers are pairwise distinct ; levels of every two dancers have an absolute difference strictly less than $$$m$$$. For example, if $$$m = 3$$$ and $$$a = [4, 2, 2, 3, 6]$$$, the following dances are magnificent (students participating in the dance are highlighted in red): $$$[\\color{red}{4}, 2, \\color{red}{2}, \\color{red}{3}, 6]$$$, $$$[\\color{red}{4}, \\color{red}{2}, 2, \\color{red}{3}, 6]$$$. At the same time dances $$$[\\color{red}{4}, 2, 2, \\color{red}{3}, 6]$$$, $$$[4, \\color{red}{2}, \\color{red}{2}, \\color{red}{3}, 6]$$$, $$$[\\color{red}{4}, 2, 2, \\color{red}{3}, \\color{red}{6}]$$$ are not magnificent . In the dance $$$[\\color{red}{4}, 2, 2, \\color{red}{3}, 6]$$$ only $$$2$$$ students participate, although $$$m = 3$$$. The dance $$$[4, \\color{red}{2}, \\color{red}{2}, \\color{red}{3}, 6]$$$ involves students with levels $$$2$$$ and $$$2$$$, although levels of all dancers must be pairwise distinct. In the dance $$$[\\color{red}{4}, 2, 2, \\color{red}{3}, \\color{red}{6}]$$$ students with levels $$$3$$$ and $$$6$$$ participate, but $$$|3 - 6| = 3$$$, although $$$m = 3$$$. Help Ira count the number of magnificent dances that she can set. Since this number can be very large, count it modulo $$$10^9 + 7$$$. Two dances are considered different if the sets of students participating in them are different.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — number of testcases. The first line of each testcase contains integers $$$n$$$ and $$$m$$$ ($$$1 \\le m \\le n \\le 2 \\cdot 10^5$$$) — the number of Ira students and the number of dancers in the magnificent dance. The second line of each testcase contains $$$n$$$ integers $$$a_1, a_2, \\ldots, a_n$$$ ($$$1 \\le a_i \\le 10^9$$$) — levels of students. It is guaranteed that the sum of $$$n$$$ over all testcases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each testcase, print a single integer — the number of magnificent dances. Since this number can be very large, print it modulo $$$10^9 + 7$$$.",
+  "examples": [
+    {
+      "input": "97 48 10 10 9 6 11 75 34 2 2 3 68 21 5 2 2 3 1 3 33 33 3 35 13 4 3 10 712 35 2 1 1 4 3 5 5 5 2 7 51 113 21 2 32 21 2",
+      "output": "5\n2\n10\n0\n5\n11\n1\n2\n1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Sliding window over sorted distinct values",
+      "description": "Sort and deduplicate the levels, count occurrences of each. Slide a window of m consecutive distinct values; when the window spans exactly m consecutive integers, multiply the counts. Sum over all valid windows modulo 10^9+7.",
+      "skill_tags": ["sorting", "sliding-window", "math"],
+      "observations": [
+        {
+          "title": "Distinct levels must form m consecutive integers",
+          "description": "Since we need exactly m pairwise distinct levels where every pair differs by strictly less than m, the only way to fit m distinct integers into a range of width less than m is if they are m consecutive integers (e.g., v, v+1, ..., v+m-1).",
+          "hints": {
+            "nudge": "If you pick m distinct integers and the max minus min must be less than m, how tight is that constraint?",
+            "question": "What is the minimum possible range (max - min) for m distinct integers? How does that compare to the constraint < m?",
+            "formal": "m distinct integers have max - min >= m - 1. The constraint max - min < m forces max - min = m - 1 exactly, meaning the values are {v, v+1, ..., v+m-1} for some v."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Deduplicate and count frequencies",
+          "description": "Sort the array and compress it into distinct values with their frequency counts. This transforms the problem from working with individual elements to working with distinct levels and how many students share each level.",
+          "hints": {
+            "nudge": "Many students can share the same level. How should you group them?",
+            "question": "After sorting, how can you find out which distinct levels exist and how many students have each level?",
+            "formal": "Sort the array. Use unique or a map to extract k distinct values v_0 < v_1 < ... < v_{k-1} and their counts cnt_0, cnt_1, ..., cnt_{k-1}."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Slide a window of size m over distinct values",
+          "description": "Iterate over all windows of m consecutive entries in the sorted distinct array. A window is valid only if the last value minus the first value equals m-1, meaning they form m consecutive integers with no gaps.",
+          "hints": {
+            "nudge": "Once you have sorted distinct values, how do you check all possible sets of m consecutive integers?",
+            "question": "If you look at distinct values v_i through v_{i+m-1}, what simple arithmetic check tells you they are consecutive integers with no gaps?",
+            "formal": "For each window [i, i+m-1] in the distinct array, check v_{i+m-1} - v_i == m-1. If true, the m values are consecutive integers; otherwise there is a gap and the window is invalid."
+          },
+          "skill_tag": "sliding-window"
+        },
+        {
+          "title": "Count dances as the product of frequencies",
+          "description": "For a valid window of m consecutive levels, each level contributes one dancer chosen from its group. The number of dances is the product of the counts of all m levels, since we independently pick one student per level.",
+          "hints": {
+            "nudge": "If you must pick one student from each of m groups, how do you count the combinations?",
+            "question": "If level v has cnt[v] students and you need exactly one from each level, what is the total number of ways to form the dance?",
+            "formal": "For a valid window with levels v, v+1, ..., v+m-1, the number of dances = cnt[v] * cnt[v+1] * ... * cnt[v+m-1] (mod 10^9+7). This is the multiplication principle."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Maintain the product efficiently as the window slides",
+          "description": "Recomputing the product from scratch for each window would be O(m) per window. Instead, when the window slides right by one, divide out the departing count and multiply in the arriving count. Use modular inverse for division under a prime modulus.",
+          "hints": {
+            "nudge": "Computing the product of m values for every window is expensive. Can you update it incrementally?",
+            "question": "When the window moves from [i..i+m-1] to [i+1..i+m], which factor leaves and which enters? How do you divide modulo a prime?",
+            "formal": "As the window slides: product = product * cnt[i+m] * modular_inverse(cnt[i]) mod p. Use Fermat's little theorem: inverse of x mod p = x^(p-2) mod p. Alternatively, use a two-stack trick to avoid modular inverses entirely."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "contest_id": 71,
+  "index": "A",
+  "title": "Way Too Long Words",
+  "difficulty": 800,
+  "tags": ["strings", "implementation"],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Sometimes some words like \"localization\" or \"internationalization\" are so long that writing them many times in one text is quite tiresome. So let's write such words in a special abbreviated way. We replace the letters between the first and the last letter with the number of those letters. For example, \"internationalization\" becomes \"i18n\", and \"localization\" becomes \"l10n\". Write a program that shortens words in this way. A word is only abbreviated if it is strictly more than 10 characters long.",
+  "input_spec": "The first line contains an integer n (1 <= n <= 100). Each of the following n lines contains one word. All words consist of lowercase Latin letters and are at most 100 characters long.",
+  "output_spec": "For each word, print its abbreviation if the word has more than 10 characters, or the word itself otherwise.",
+  "examples": [
+    {"input": "4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis", "output": "word\nl10n\ni18n\np43s"}
+  ],
+  "routes": [
+    {
+      "name": "Direct string manipulation",
+      "description": "Check the word length and construct the abbreviation from the first letter, middle count, and last letter.",
+      "skill_tags": ["strings", "implementation"],
+      "observations": [
+        {
+          "title": "Identify when to abbreviate",
+          "description": "A word is only abbreviated when its length is strictly greater than 10. Otherwise, it is printed as-is.",
+          "hints": {
+            "nudge": "Re-read the problem statement -- when exactly should you abbreviate?",
+            "question": "What is the length threshold? Is a 10-character word abbreviated or not?",
+            "formal": "If len(word) > 10, abbreviate. If len(word) <= 10, print the word unchanged."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Compute the middle count",
+          "description": "The abbreviation replaces all characters between the first and last with their count. The count is len(word) - 2.",
+          "hints": {
+            "nudge": "How many letters are between the first and last characters?",
+            "question": "If the word has length L, and you keep the first and last characters, how many characters are in between?",
+            "formal": "The middle count is len(word) - 2. The abbreviation is word[0] + str(len(word) - 2) + word[-1]."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Construct the output string",
+          "description": "Concatenate the first character, the middle count as a string, and the last character to form the abbreviation.",
+          "hints": {
+            "nudge": "You have three pieces to glue together. What are they?",
+            "question": "How do you build the final abbreviated string from the first character, the number, and the last character?",
+            "formal": "result = word[0] + str(len(word) - 2) + word[-1]. For 'internationalization' (length 20): 'i' + '18' + 'n' = 'i18n'."
+          },
+          "skill_tag": "strings"
+        }
+      ]
+    }
+  ]
+}

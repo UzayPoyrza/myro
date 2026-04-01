@@ -1,0 +1,90 @@
+{
+  "contest_id": 2072,
+  "index": "F",
+  "title": "Goodbye, Banker Life",
+  "difficulty": 1700,
+  "tags": [
+    "2-sat",
+    "bitmasks",
+    "combinatorics",
+    "constructive algorithms",
+    "fft",
+    "math",
+    "number theory"
+  ],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Monsters are approaching the city, and to protect it, Akito must create a protective field around the city. As everyone knows, protective fields come in various levels. Akito has chosen the field of level $$$n$$$. To construct the field, a special phrase is required, which is the $$$n$$$-th row of the Great Magical Triangle, represented as a two-dimensional array. We will call this array $$$T$$$. The triangle is defined as follows: In the $$$i$$$-th row, there are $$$i$$$ integers. The single integer in the first row is $$$k$$$. Let the $$$j$$$-th element of the $$$i$$$-th row be denoted as $$$T_{i,j}$$$. Then $$$$$$T_{i,j} = \\begin{cases} T_{i-1,j-1} \\oplus T_{i-1,j}, &\\textrm{if } 1  \\lt  j  \\lt  i \\\\ T_{i-1,j}, &\\textrm{if } j = 1 \\\\ T_{i-1,j-1}, &\\textrm{if } j = i \\end{cases}$$$$$$ where $$$a \\oplus b$$$ is the bitwise exclusive \"OR\" ( XOR ) of the integers $$$a$$$ and $$$b$$$. Help Akito find the integers in the $$$n$$$-th row of the infinite triangle before the monsters reach the city.",
+  "input_spec": "The first line contains the integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — the number of test cases. In the only line of each test case, there are two integers $$$n$$$ and $$$k$$$ ($$$1 \\le n \\le 10^6,\\ 1 \\le k  \\lt  2^{31}$$$) — the row index that Akito needs and the integer in the first row of the Great Magical Triangle, respectively. It is guaranteed that the sum of $$$n$$$ across all test cases does not exceed $$$10^6$$$.",
+  "output_spec": "For each test case, output $$$n$$$ integers — the elements of the $$$n$$$-th row of the Great Magical Triangle.",
+  "examples": [
+    {
+      "input": "51 52 103 169 11 52",
+      "output": "5\n10 10\n16 0 16\n1 0 0 0 0 0 0 0 1\n52"
+    }
+  ],
+  "routes": [
+    {
+      "name": "XOR Pascal's triangle via Lucas' theorem",
+      "description": "Recognize the triangle as Pascal's triangle under XOR (mod-2 arithmetic), so each entry is either k or 0 depending on whether the corresponding binomial coefficient is odd. Use Kummer's theorem (equivalently Lucas' theorem) to test parity of C(n-1, j-1) efficiently via the 2-adic valuation of factorials.",
+      "skill_tags": [
+        "math",
+        "number-theory",
+        "math",
+        "dp"
+      ],
+      "observations": [
+        {
+          "title": "XOR behaves like addition modulo 2 on each bit independently",
+          "description": "Since XOR operates on each bit position independently and is equivalent to addition mod 2 within each bit, the entire triangle decomposes into independent single-bit problems. For any fixed bit position, the triangle on that bit is exactly Pascal's triangle modulo 2. This means each entry T_{i,j} depends only on how many times k appears in the sum C(i-1, j-1) * k under mod-2 arithmetic: T_{i,j} = k if C(i-1, j-1) is odd, and T_{i,j} = 0 if C(i-1, j-1) is even.",
+          "hints": {
+            "nudge": "XOR is addition without carries. What well-known triangle uses addition to combine entries from the row above?",
+            "question": "If you replace + with XOR in Pascal's triangle recurrence and start with k instead of 1, what is the general formula for the entry at row i, position j?",
+            "formal": "XOR is addition in GF(2) applied bitwise. So T_{i,j} = C(i-1, j-1) * k in GF(2)^{31}, meaning T_{i,j} = k when C(i-1, j-1) is odd, and T_{i,j} = 0 when C(i-1, j-1) is even."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Verify with small examples: the XOR triangle matches Pascal's triangle mod 2",
+          "description": "Row 3 with k=16: Pascal's row 2 is [1, 2, 1], and mod 2 that is [1, 0, 1], giving [16, 0, 16]. Row 9 with k=1: Pascal's row 8 is [1,8,28,56,70,56,28,8,1], and mod 2 only the endpoints are odd, giving [1,0,0,0,0,0,0,0,1]. These match the sample outputs exactly, confirming the connection to binomial coefficient parity.",
+          "hints": {
+            "nudge": "Try computing the first few rows by hand with k=1. Does the pattern of 0s and non-zeros remind you of a famous fractal?",
+            "question": "Compute row 3 (i=3) by hand using the XOR recurrence. Compare C(2,0), C(2,1), C(2,2) modulo 2. Do they match?",
+            "formal": "Row 3 of XOR triangle: T_{3,1} = T_{2,1} = k, T_{3,2} = T_{2,1} XOR T_{2,2} = k XOR k = 0, T_{3,3} = T_{2,2} = k. C(2,0)=1 (odd), C(2,1)=2 (even), C(2,2)=1 (odd). Pattern matches: k, 0, k."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "C(n, j) is odd iff there are no carries when adding j and n-j in binary (Kummer's theorem)",
+          "description": "By Kummer's theorem, the highest power of prime p dividing C(n, j) equals the number of carries when adding j and n-j in base p. For p=2, C(n, j) is odd if and only if there are zero carries, which happens if and only if every bit of j is <= the corresponding bit of n. Equivalently, C(n, j) is odd iff (j AND n) == j, i.e., j is a submask of n in binary.",
+          "hints": {
+            "nudge": "There is a classical theorem relating the prime factorization of binomial coefficients to carries in base-p addition. What is it called?",
+            "question": "Kummer's theorem says v_p(C(a+b, a)) equals the number of carries in base-p addition of a and b. For p=2, when are there zero carries?",
+            "formal": "By Kummer's theorem, v_2(C(n, j)) = number of carries when adding j and (n-j) in binary. Zero carries occur iff for every bit position, bit_j + bit_{n-j} <= 1, which is equivalent to j being a submask of n: (j & n) == j."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Reformulate using 2-adic valuation of factorials for efficient precomputation",
+          "description": "Define v(m) = the 2-adic valuation of m! (the total number of times 2 divides m!). By Legendre's formula, v(m) = sum_{i>=1} floor(m / 2^i). Then C(n, j) is odd iff v(n) = v(j) + v(n-j), because v(n) - v(j) - v(n-j) counts the carries. Precompute v(m) for all m from 0 to max(n)-1 using a simple recurrence: v(0) = 0, v(m) = v(m-1) + (number of times 2 divides m). This runs in O(n) time.",
+          "hints": {
+            "nudge": "You need to check the parity condition for each j in row n. Can you precompute some function of factorials to make each check O(1)?",
+            "question": "If v(m) is the exponent of 2 in m!, what is the relationship between v(n), v(j), and v(n-j) when C(n, j) is odd?",
+            "formal": "v_2(C(n, j)) = v_2(n!) - v_2(j!) - v_2((n-j)!). So C(n, j) is odd iff v(n) == v(j) + v(n-j). Precompute v incrementally: v(0) = 0; for m >= 1, v(m) = v(m-1) + ctz(m), where ctz(m) counts trailing zeros of m in binary (equivalently, the 2-adic valuation of m itself)."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Output k or 0 per position using the precomputed valuation array",
+          "description": "For each test case with parameters n and k, iterate j from 0 to n-1. Output k if v(n-1) == v(j) + v(n-1-j), and 0 otherwise. The precomputation of v is done once across all test cases. Since the sum of n is at most 10^6 and each position requires O(1) work, the total time is O(sum of n), which fits within the time limit.",
+          "hints": {
+            "nudge": "You have reduced the problem to a single equality check per position. What do you output for each position?",
+            "question": "Given the precomputed array v, what is the complete loop body for outputting row n?",
+            "formal": "Precompute c[0..MAXN] where c[0]=0 and c[m] = c[m-1] + v_2(m). For each test case (n, k): let r = n-1. For j = 0 to r: print k if c[r] == c[j] + c[r-j], else print 0. Total complexity: O(MAXN) precomputation + O(sum of n) per test."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

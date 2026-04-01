@@ -1,0 +1,55 @@
+{
+  "contest_id": 158,
+  "index": "A",
+  "title": "Next Round",
+  "difficulty": 800,
+  "tags": ["implementation"],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "\"Contestant who earns a score equal to or greater than the k-th place finisher's score will advance to the next round, as long as the contestant earns a positive score...\" -- anass-backwards rule from some programming contest. In other words, a contestant advances if their score is at least the score of the contestant in k-th place AND their score is positive. Given the scores of all n contestants in non-increasing order, determine how many contestants advance to the next round.",
+  "input_spec": "The first line contains two integers n and k (1 <= k <= n <= 50). The second line contains n integers a_1, a_2, ..., a_n (0 <= a_i <= 100) -- the scores in non-increasing order.",
+  "output_spec": "Print a single integer -- the number of contestants who advance to the next round.",
+  "examples": [
+    {"input": "8 5\n10 9 8 7 7 7 5 5", "output": "6"},
+    {"input": "4 2\n0 0 0 0", "output": "0"}
+  ],
+  "routes": [
+    {
+      "name": "Threshold comparison",
+      "description": "Determine the k-th place score, then count how many contestants meet both conditions.",
+      "skill_tags": ["implementation"],
+      "observations": [
+        {
+          "title": "Find the threshold score",
+          "description": "The threshold is the score of the contestant in k-th place. Since the array is 0-indexed, this is a[k-1].",
+          "hints": {
+            "nudge": "What score does the k-th place contestant have?",
+            "question": "The scores are given in non-increasing order. How do you access the k-th place score using 0-based indexing?",
+            "formal": "threshold = a[k-1]. Any contestant with score >= threshold AND score > 0 advances."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Two conditions for advancing",
+          "description": "A contestant advances if and only if their score is >= the threshold AND their score is strictly positive (> 0).",
+          "hints": {
+            "nudge": "There are two conditions a contestant must satisfy. What are they?",
+            "question": "What happens if the k-th place score is 0? Do contestants with score 0 advance?",
+            "formal": "advance if score >= threshold and score > 0. The second example shows that if threshold = 0, nobody advances because scores must be positive."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Count qualifying contestants",
+          "description": "Iterate through all scores and count those satisfying both conditions.",
+          "hints": {
+            "nudge": "How do you count elements in a list that satisfy a condition?",
+            "question": "Can you use a simple loop or a list comprehension to count contestants who meet both criteria?",
+            "formal": "count = sum(1 for x in a if x >= threshold and x > 0). Since the array is sorted, you could also stop early, but a simple count works within the constraints."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "contest_id": 996,
+  "index": "B",
+  "title": "Coin Change",
+  "difficulty": 1400,
+  "tags": ["dp"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You have an unlimited supply of coins with denominations c_1, c_2, ..., c_n. Find the minimum number of coins needed to make a total of amount S, or determine it's impossible.",
+  "input_spec": "The first line contains two integers n and S (1 <= n <= 100, 1 <= S <= 10^4). The second line contains n distinct integers c_1, ..., c_n (1 <= c_i <= S).",
+  "output_spec": "Print the minimum number of coins, or -1 if impossible.",
+  "examples": [
+    {"input": "3 11\n1 5 6", "output": "2"},
+    {"input": "2 3\n2 4", "output": "-1"}
+  ],
+  "routes": [
+    {
+      "name": "Bottom-up DP",
+      "description": "Build a DP table where dp[i] = minimum coins to make amount i.",
+      "skill_tags": ["dp"],
+      "observations": [
+        {
+          "title": "Optimal substructure",
+          "description": "If the optimal solution for amount S uses coin c, then the remaining S-c must also be solved optimally.",
+          "hints": {
+            "nudge": "If you knew the last coin used, what problem remains?",
+            "question": "If you use a coin of value c, what's the remaining problem? How does that relate to the original?",
+            "formal": "dp[s] = min over all coins c of (dp[s - c] + 1) where s - c >= 0. This is the recurrence."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Base case and infinity",
+          "description": "dp[0] = 0 (zero coins for zero amount). Initialize all other dp[i] = infinity (impossible until proven otherwise).",
+          "hints": {
+            "nudge": "What's the simplest amount to make? How many coins does it take?",
+            "question": "What should dp[0] be? What should you initialize unreachable amounts to?",
+            "formal": "dp[0] = 0. For i > 0, dp[i] = INF initially. After filling, if dp[S] is still INF, output -1."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Iterate amounts 1 to S",
+          "description": "Process amounts in order from 1 to S. For each amount, try every coin denomination.",
+          "hints": {
+            "nudge": "In what order should you fill the DP table?",
+            "question": "When computing dp[i], which smaller subproblems do you need? Are they already computed?",
+            "formal": "for i in 1..=S: for c in coins: if i >= c: dp[i] = min(dp[i], dp[i-c] + 1). Order ensures dp[i-c] is ready."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    }
+  ]
+}

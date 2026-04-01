@@ -1,0 +1,149 @@
+{
+  "contest_id": 1979,
+  "index": "D",
+  "title": "Fixing a Binary String",
+  "difficulty": 1800,
+  "tags": [
+    "bitmasks",
+    "brute force",
+    "constructive algorithms",
+    "greedy",
+    "hashing",
+    "strings"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given a binary string $$$s$$$ of length $$$n$$$, consisting of zeros and ones. You can perform the following operation exactly once : Choose an integer $$$p$$$ ($$$1 \\le p \\le n$$$). Reverse the substring $$$s_1 s_2 \\ldots s_p$$$. After this step, the string $$$s_1 s_2 \\ldots s_n$$$ will become $$$s_p s_{p-1} \\ldots s_1 s_{p+1} s_{p+2} \\ldots s_n$$$. Then, perform a cyclic shift of the string $$$s$$$ to the left $$$p$$$ times. After this step, the initial string $$$s_1s_2 \\ldots s_n$$$ will become $$$s_{p+1}s_{p+2} \\ldots s_n s_p s_{p-1} \\ldots s_1$$$. For example, if you apply the operation to the string 110001100110 with $$$p=3$$$, after the second step, the string will become 011 001100110 , and after the third step, it will become 001100110 011 . A string $$$s$$$ is called $$$k$$$-proper if two conditions are met: $$$s_1=s_2=\\ldots=s_k$$$; $$$s_{i+k} \\neq s_i$$$ for any $$$i$$$ ($$$1 \\le i \\le n - k$$$). For example, with $$$k=3$$$, the strings 000 , 111000111 , and 111000 are $$$k$$$-proper, while the strings 000000 , 001100 , and 1110000 are not. You are given an integer $$$k$$$, which is a divisor of $$$n$$$. Find an integer $$$p$$$ ($$$1 \\le p \\le n$$$) such that after performing the operation, the string $$$s$$$ becomes $$$k$$$-proper, or determine that it is impossible. Note that if the string is initially $$$k$$$-proper, you still need to apply exactly one operation to it.",
+  "input_spec": "Each test consists of multiple test cases. The first line contains one integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — the number of test cases. The description of the test cases follows. The first line of each test case contains two integers $$$n$$$ and $$$k$$$ ($$$1 \\le k \\le n$$$, $$$2 \\le n \\le 10^5$$$) — the length of the string $$$s$$$ and the value of $$$k$$$. It is guaranteed that $$$k$$$ is a divisor of $$$n$$$. The second line of each test case contains a binary string $$$s$$$ of length $$$n$$$, consisting of the characters 0 and 1 . It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case, output a single integer — the value of $$$p$$$ to make the string $$$k$$$-proper, or $$$-1$$$ if it is impossible. If there are multiple solutions, output any of them.",
+  "examples": [
+    {
+      "input": "78 4111000014 2111012 31110001000115 5000006 11010018 40111000112 2110001100110",
+      "output": "3\n-1\n7\n5\n4\n-1\n3"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Target matching: check both k-proper targets",
+      "description": "Observe that the operation produces s[p+1..n] + reverse(s[1..p]). There are only 2 possible k-proper target strings (starting with 0 or 1). For each target, find the unique valid p by matching the suffix of s against the target's prefix and the reversed prefix of s against the target's suffix.",
+      "skill_tags": [
+        "strings",
+        "constructive",
+        "greedy"
+      ],
+      "observations": [
+        {
+          "title": "The operation produces suffix + reversed prefix",
+          "description": "After choosing p, the string becomes s[p+1..n] concatenated with s[p] s[p-1] ... s[1]. That is, the suffix from position p+1 onward stays in place at the front, and the first p characters appear reversed at the end. The net effect is: result = s[p+1..n] + reverse(s[1..p]).",
+          "hints": {
+            "nudge": "Trace through both steps of the operation. What does the final string look like in terms of the original?",
+            "question": "Step 1 reverses the prefix to get s[p]...s[1] s[p+1]...s[n]. Step 2 left-shifts p times, moving the first p characters to the end. What is the resulting string?",
+            "formal": "After reversing the prefix: s[p] s[p-1] ... s[1] s[p+1] ... s[n]. After cyclic left-shift by p: s[p+1] s[p+2] ... s[n] s[p] s[p-1] ... s[1]. So result = s[p+1..n] + reverse(s[1..p])."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "There are exactly two possible k-proper target strings",
+          "description": "A k-proper string of length n is fully determined by its first character: blocks of k identical characters that alternate. Since the string is binary, there are exactly 2 targets -- one starting with k zeros, one starting with k ones. We can generate both and check each.",
+          "hints": {
+            "nudge": "The definition says the first k characters are equal and every k-th step flips. How many distinct k-proper strings of length n exist?",
+            "question": "If you know s[1], the first k characters are all s[1], the next k are all (1 - s[1]), and so on. How many choices does that leave?",
+            "formal": "Target T starting with character c: T[i] = c if floor((i-1)/k) is even, 1-c otherwise. There are exactly 2 such strings (c=0 or c=1). Both can be constructed in O(n)."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "For a given target, p is determined by matching s's suffix to the target's prefix",
+          "description": "The result's first n-p characters are s[p+1..n], and these must equal the target's first n-p characters. Equivalently, the suffix of s starting at position p+1 must match a prefix of the target. For each target, find the longest suffix of s that matches a prefix of the target. This determines the valid cut point p = n minus that matching length.",
+          "hints": {
+            "nudge": "The first part of the result comes directly from the suffix of s. What must that suffix look like?",
+            "question": "If result = s[p+1..n] + reverse(s[1..p]) and result must equal target T, what equation must s[p+1..n] satisfy? How does this constrain p?",
+            "formal": "s[p+1..n] = T[1..n-p]. So we need the suffix s[p+1..n] to equal the prefix T[1..n-p]. Scan from the end of s and the start of T simultaneously. The matching length determines n-p, hence p."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "The reversed prefix must match the remaining suffix of the target",
+          "description": "Once p is determined, we must verify that reverse(s[1..p]) equals T[n-p+1..n]. This is equivalent to checking that s[1..p] equals reverse(T[n-p+1..n]). Since T is k-proper (alternating blocks of k), the reverse of T's suffix is also a structured pattern that can be checked in O(p) time.",
+          "hints": {
+            "nudge": "You have matched the suffix of s to the prefix of the target. What about the prefix of s?",
+            "question": "After fixing p from the suffix match, the remaining characters of the result come from reverse(s[1..p]). What must these equal? How do you verify it?",
+            "formal": "Check that reverse(s[1..p]) == T[n-p+1..n], i.e., s[j] == T[n-p+j] for j = 1..p (reading s forward and comparing to the target suffix). If this holds, output p. If not, this target has no valid p."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Handle the edge case where s is already k-proper",
+          "description": "If s is already k-proper, we must still apply exactly one operation. Choosing p = n reverses the entire string and then rotates it back, producing reverse(s). For a k-proper string, reverse(s) is also k-proper (the block structure is preserved). So p = n always works when s is already k-proper. Alternatively, p = k works by rotating one block to the end.",
+          "hints": {
+            "nudge": "The problem says you must perform the operation exactly once. What happens if the string is already valid?",
+            "question": "If s is already k-proper, is there always some p that keeps it k-proper? Try p = n. What string does the operation produce?",
+            "formal": "With p = n, the result is reverse(s). A k-proper string reversed is still k-proper because the block lengths are preserved (just read right-to-left). So p = n is always valid for an already k-proper string. This case is automatically handled by the target-matching logic if implemented correctly."
+          },
+          "skill_tag": "constructive"
+        }
+      ]
+    },
+    {
+      "name": "Block (run-length) analysis of the trailing run",
+      "description": "Decompose s into maximal runs of identical characters. Analyze the trailing run of length x. The operation appends reversed-prefix material to the end, so the trailing run of the RESULT is determined by the leading characters of s[1..p]. Case-split on x versus k to determine which block to split and where to cut.",
+      "skill_tags": [
+        "strings",
+        "greedy",
+        "constructive"
+      ],
+      "observations": [
+        {
+          "title": "Decompose s into runs and identify the trailing run length x",
+          "description": "Parse s into maximal blocks of consecutive identical characters. Let x be the length of the last block (the trailing run). For example, s = 11100011 has runs [111, 000, 11] and x = 2. The value of x relative to k determines the structure of the solution.",
+          "hints": {
+            "nudge": "Start by looking at the end of the string. How many identical characters are there at the tail?",
+            "question": "Count the length of the last maximal run of identical characters. Call it x. Why is this value important for the result of the operation?",
+            "formal": "Let x = max {j : s[n-j+1] = s[n-j+2] = ... = s[n]}. The trailing run has length x and character s[n]. This x determines which case of the solution applies."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "In the result, the trailing characters come from the start of s (reversed)",
+          "description": "The result is s[p+1..n] + reverse(s[1..p]). The very last character of the result is s[1], the second-to-last is s[2], and so on. So the trailing run of the result is determined by a leading run of s. If we want the result's trailing run to have length exactly k, we need to carefully choose p so that the junction between the suffix and the reversed prefix forms proper k-length blocks.",
+          "hints": {
+            "nudge": "The result ends with s[1]. What determines the length of the trailing run in the result?",
+            "question": "The result's last characters are s[1], s[2], ... (reading the reversed prefix from the end). For the result to be k-proper, its trailing block must have length exactly k. What does this require of s's leading characters?",
+            "formal": "The result's trailing run starts from the end: s[1], s[2], s[3], .... The trailing run of the result has length equal to the leading run of s (up to the cut point p). For k-properness, this trailing block must have length exactly k, or combine with matching characters from s[p+1..n]'s end."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Case x = k: the trailing block is already correct, find a block to split",
+          "description": "When the trailing run has length exactly k, the end of the original string already forms one valid k-block. We need to find a 'defect' in the rest of s -- a run whose length is not k -- and cut there. Specifically, scan from the end toward the start: if all runs from the end have length k, the string is already k-proper and p = n works. Otherwise, find the first run (from the end) with length greater than k and cut it so that exactly k characters go with the suffix.",
+          "hints": {
+            "nudge": "If the tail is already a valid k-block, look inward. Where is the first block that violates the k-proper pattern?",
+            "question": "Starting from the right, check each run. When you find a run of length not equal to k, what should you do with it? Remember you must cut the string at position p.",
+            "formal": "Scan from position n-k inward. Find the first position i where s[i] = s[i+k] (violating the alternation). Set p = i. The suffix s[p+1..n] is already the valid tail of a k-proper string, and we need reverse(s[1..p]) to complete it. Verify the full result."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Case x > k: no solution exists",
+          "description": "If the trailing run of s has length greater than k, no valid p exists. The trailing block of s contributes to the middle or end of the result. Since the operation only appends reversed characters at the end, it cannot break apart the suffix's trailing run. A run longer than k in the suffix part of the result violates k-properness and cannot be fixed.",
+          "hints": {
+            "nudge": "If the last block of s has more than k identical characters, can any cut point fix this?",
+            "question": "Consider any p < n. The suffix s[p+1..n] still ends with the trailing run of s. If that run has length > k, does it appear intact in the result?",
+            "formal": "For any p < n - x, the trailing run of s appears entirely in the suffix portion of the result (positions among the first n-p characters). A run of length > k violates k-properness. For p >= n - x, only part of the trailing run is in the suffix, but the reversed prefix starts with s[p]...s[1], and s[p] must differ from s[n] for the junction to work, which forces an even longer combined run or an impossible configuration."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Case x < k: find a block of length k-x or 2k-x to complete the trailing run",
+          "description": "When the trailing run has length x < k, we need to append k-x more of the same character to complete a k-block at the end of the result. The appended material comes from reverse(s[1..p]), so s[1] through s[k-x] must equal s[n]. Find a run of the correct character with length at least k-x. If that run has length exactly k-x or exactly 2k-x (so splitting off k-x leaves a valid k-block), cut there. Verify the full result is k-proper.",
+          "hints": {
+            "nudge": "The trailing run is too short by k-x characters. Where in the reversed prefix can you get those extra matching characters?",
+            "question": "The result's last x characters come from s's trailing run. The next characters (going left in the result) come from reverse(s[1..p]). For the trailing block to reach length k, what must s[1], s[2], ..., s[k-x] be?",
+            "formal": "We need s[1] = s[2] = ... = s[k-x] = s[n]. Find a run in s of character s[n] with length exactly k-x or 2k-x. If length is k-x, set p to the end of that run. If length is 2k-x, set p to position (start of run) + (k-x) - 1, splitting off k-x characters. Verify that the full result is k-proper by checking all block boundaries."
+          },
+          "skill_tag": "constructive"
+        }
+      ]
+    }
+  ]
+}

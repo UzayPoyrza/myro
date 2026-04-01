@@ -1,0 +1,89 @@
+{
+  "contest_id": 1537,
+  "index": "E2",
+  "title": "Erase and Extend (Hard Version)",
+  "difficulty": 2200,
+  "tags": [
+    "binary search",
+    "data structures",
+    "greedy",
+    "hashing",
+    "string suffix structures",
+    "strings",
+    "two pointers"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "This is the hard version of the problem. The only difference is the constraints on $$$n$$$ and $$$k$$$. You can make hacks only if all versions of the problem are solved. You have a string $$$s$$$, and you can do two types of operations on it: Delete the last character of the string. Duplicate the string: $$$s:=s+s$$$, where $$$+$$$ denotes concatenation. You can use each operation any number of times (possibly none). Your task is to find the lexicographically smallest string of length exactly $$$k$$$ that can be obtained by doing these operations on string $$$s$$$. A string $$$a$$$ is lexicographically smaller than a string $$$b$$$ if and only if one of the following holds: $$$a$$$ is a prefix of $$$b$$$, but $$$a\\ne b$$$; In the first position where $$$a$$$ and $$$b$$$ differ, the string $$$a$$$ has a letter that appears earlier in the alphabet than the corresponding letter in $$$b$$$.",
+  "input_spec": "The first line contains two integers $$$n$$$, $$$k$$$ ($$$1 \\leq n, k \\leq 5\\cdot 10^5$$$) — the length of the original string $$$s$$$ and the length of the desired string. The second line contains the string $$$s$$$, consisting of $$$n$$$ lowercase English letters.",
+  "output_spec": "Print the lexicographically smallest string of length $$$k$$$ that can be obtained by doing the operations on string $$$s$$$.",
+  "examples": [
+    {
+      "input": "8 16\ndbcadabc",
+      "output": "dbcadabcdbcadabc"
+    },
+    {
+      "input": "4 5\nabcd",
+      "output": "aaaaa"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy prefix selection with Z-function",
+      "description": "The result is always some prefix of s repeated cyclically to length k. Scan left to right, maintaining the best prefix, and use the Z-function for O(1) comparisons when cyclic repetitions tie at the current position.",
+      "skill_tags": ["greedy", "strings", "hashing"],
+      "observations": [
+        {
+          "title": "The reachable strings are exactly cyclic repetitions of prefixes",
+          "description": "Any sequence of delete-last and duplicate operations produces a string that is some prefix s[1..m] repeated cyclically to the target length k. Deleting trims to a prefix, and duplicating repeats it. So the problem reduces to choosing the prefix length m in [1..n] that yields the lexicographically smallest cyclic repetition of length k.",
+          "hints": {
+            "nudge": "What does the string look like after a sequence of deletes and duplications? Can you characterize the set of all reachable strings?",
+            "question": "If you first delete down to a prefix of length m, then duplicate enough times, what is the resulting string in terms of s[1..m]?",
+            "formal": "Any reachable string of length k is s[1..m] repeated cyclically: position i has character s[i mod m]. The problem is to find m in {1,...,n} minimizing this cyclic string lexicographically."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Extend greedily: only extend the prefix when the new character is not worse",
+          "description": "Start with prefix length 1. When considering extending to length i+1, compare s[i] against s[i mod m] where m is the current best prefix length. If s[i] > s[i mod m], the extension makes it worse and no further extension can help, so stop. If s[i] < s[i mod m], the extension is strictly better, so update the best prefix. The tricky case is when s[i] = s[i mod m].",
+          "hints": {
+            "nudge": "If you are scanning positions left to right, when can you immediately rule out extending the prefix further?",
+            "question": "When you compare the character at position i to what the current best prefix would place at that position (via cycling), what do the three cases <, =, > tell you?",
+            "formal": "Let m be the current best prefix. At position i, compare s[i] vs s[i mod m]. If s[i] > s[i mod m], stop: extending cannot improve. If s[i] < s[i mod m], set m = i+1 (strictly better). If equal, more analysis is needed."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "The equal case induces a periodicity structure",
+          "description": "When s[i] = s[i mod m], let t = (i+1) - m (the offset into the cycle). The equality at all positions from m to i implies that s[1..t] = s[m+1..m+t], meaning the current best prefix s[1..m] starts with the same t characters that now repeat. We need to compare the infinite repetition of s[1..m] against the infinite repetition of s[1..m+t], which reduces to comparing the strings AB... vs BA... where A = s[1..t] and B = s[t+1..m].",
+          "hints": {
+            "nudge": "When the characters keep matching, what structural relationship develops between the old prefix and the new, longer prefix?",
+            "question": "If the best prefix is s[1..m] and all characters from position m through i match the cyclic pattern, what can you say about s[1..t] vs s[m+1..m+t] where t = i - m + 1?",
+            "formal": "Let A = s[1..t], B = s[t+1..m]. The old prefix repeats as ABABAB... The new prefix (length m+t) repeats as ABAABA... Comparing these reduces to comparing the strings AB and BA starting from where they first differ."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Z-function enables O(1) comparison of cyclic repetitions",
+          "description": "To compare AB vs BA (where A = s[1..t], B = s[t+1..m]), we need to find the first position where they differ. The Z-function of s gives, for each position j, the length of the longest substring starting at j that matches a prefix of s. Using z[t] and z[m-t], we can determine in O(1) whether AB < BA, AB > BA, or AB = BA, and thus whether extending the prefix is beneficial.",
+          "hints": {
+            "nudge": "You need to compare two strings quickly. What classic string algorithm gives you prefix-match information for every suffix?",
+            "question": "The Z-function z[j] tells you the length of the longest match between s[j..] and s[0..]. How can z[t] help you find the first mismatch between AB and BA?",
+            "formal": "Precompute the Z-array of s. To compare AB vs BA: the first mismatch in AB vs BA is at position min(z[t], m-t) (comparing BA against the prefix AB). Use z[t] and z[m-t] to find where AB and BA diverge, then compare single characters to determine order. This is O(1) per position."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Linear overall complexity from amortized analysis",
+          "description": "The Z-function is computed in O(n). The main scan visits each position once. At each position we do O(1) work (character comparison plus at most one Z-array lookup). The best prefix length m only increases, so updates are bounded. Total time is O(n), which handles the hard version constraints of n, k up to 5*10^5.",
+          "hints": {
+            "nudge": "What is the complexity of the entire algorithm? Think about how many times each step executes.",
+            "question": "The Z-function is O(n). The greedy scan visits each position once with O(1) work. Are there any hidden quadratic loops?",
+            "formal": "Z-function: O(n). Greedy scan: each position visited once, O(1) comparison using Z-values, m is monotonically non-decreasing. Total: O(n). Output is O(k). Overall: O(n + k)."
+          },
+          "skill_tag": "strings"
+        }
+      ]
+    }
+  ]
+}

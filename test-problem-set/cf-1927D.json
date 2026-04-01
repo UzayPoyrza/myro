@@ -1,0 +1,124 @@
+{
+  "contest_id": 1927,
+  "index": "D",
+  "title": "Find the Different Ones!",
+  "difficulty": 1300,
+  "tags": [
+    "binary search",
+    "data structures",
+    "greedy"
+  ],
+  "time_limit": "5 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given an array $$$a$$$ of $$$n$$$ integers, and $$$q$$$ queries. Each query is represented by two integers $$$l$$$ and $$$r$$$ ($$$1 \\le l \\le r \\le n$$$). Your task is to find, for each query, two indices $$$i$$$ and $$$j$$$ (or determine that they do not exist) such that: $$$l \\le i \\le r$$$; $$$l \\le j \\le r$$$; $$$a_i \\ne a_j$$$. In other words, for each query, you need to find a pair of different elements among $$$a_l, a_{l+1}, \\dots, a_r$$$, or report that such a pair does not exist.",
+  "input_spec": "The first line of the input contains a single integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — the number of test cases. The descriptions of the test cases follow. The first line of each test case contains a single integer $$$n$$$ ($$$2 \\le n \\le 2 \\cdot 10^5$$$) — the length of the array $$$a$$$. The second line of each test case contains $$$n$$$ integers $$$a_1, a_2, \\dots, a_n$$$ ($$$1 \\le a_i \\le 10^6$$$) — the elements of the array $$$a$$$. The third line of each test case contains a single integer $$$q$$$ ($$$1 \\le q \\le 2 \\cdot 10^5$$$) — the number of queries. The next $$$q$$$ lines contain two integers each, $$$l$$$ and $$$r$$$ ($$$1 \\le l  \\lt  r \\le n$$$) — the boundaries of the query. It is guaranteed that the sum of the values of $$$n$$$ across all test cases does not exceed $$$2 \\cdot 10^5$$$. Similarly, it is guaranteed that the sum of the values of $$$q$$$ across all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each query, output two integers separated by space: $$$i$$$ and $$$j$$$ ($$$l \\le i, j \\le r$$$), for which $$$a_i \\ne a_j$$$. If such a pair does not exist, output $$$i=-1$$$ and $$$j=-1$$$. You may separate the outputs for the test cases with empty lines. This is not a mandatory requirement.",
+  "examples": [
+    {
+      "input": "551 1 2 1 131 51 21 3630 20 20 10 10 2051 22 32 42 63 545 2 3 441 21 42 32 451 4 3 2 451 52 43 43 54 552 3 1 4 271 21 41 52 42 53 54 5",
+      "output": "2 3\n-1 -1\n1 3\n\n2 1\n-1 -1\n4 2\n4 6\n5 3\n\n1 2\n1 2\n2 3\n3 2\n\n1 3\n2 4\n3 4\n5 3\n5 4\n\n1 2\n4 2\n1 3\n2 3\n3 2\n5 4\n5 4"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Precompute nearest transition, answer in O(1)",
+      "description": "For each index i, precompute the position of the nearest earlier adjacent-pair transition (where a[j] != a[j-1] for some j <= i). Then for each query (l, r), check whether such a transition exists inside the range. This gives O(n) preprocessing and O(1) per query.",
+      "skill_tags": [
+        "greedy",
+        "data-structures"
+      ],
+      "observations": [
+        {
+          "title": "A range has no valid pair if and only if all its elements are equal",
+          "description": "The query asks for any two indices i, j in [l, r] with a[i] != a[j]. This is impossible only when every element in the range has the same value. Equivalently, a valid pair exists if and only if there is at least one position k in [l+1, r] where a[k] != a[k-1].",
+          "hints": {
+            "nudge": "When is it impossible to find two different elements in a subarray?",
+            "question": "If every consecutive pair in a[l..r] satisfies a[k] = a[k-1], what can you conclude about all elements in the range?",
+            "formal": "All elements in a[l..r] are equal iff a[k] = a[k-1] for every k in [l+1, r]. Thus a valid pair (i, j) with a[i] != a[j] exists iff there is some k in [l+1, r] where a[k] != a[k-1]. That adjacent pair (k-1, k) is itself a valid answer."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Finding one adjacent difference in the range is sufficient",
+          "description": "You do not need to find an arbitrary pair -- any position k where a[k] != a[k-1] within [l, r] directly gives the answer indices k-1 and k. So the problem reduces to: for a query range [l, r], does there exist any adjacent transition inside it?",
+          "hints": {
+            "nudge": "Do you need to find the optimal or most separated pair, or will any pair of different elements work?",
+            "question": "If you know a specific position k in [l+1, r] where a[k] != a[k-1], what pair of indices would you output?",
+            "formal": "Any position k with l < k <= r and a[k] != a[k-1] gives a valid output: the pair (k-1, k). This is the simplest witness of a non-constant range."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Precompute the nearest transition at or before each index",
+          "description": "Define p[i] as the largest index j <= i such that a[j] != a[j-1] (or -1 if no such j exists for j <= i). Build p in a single left-to-right pass: if a[i] != a[i-1] then p[i] = i, otherwise p[i] = p[i-1]. This array lets you quickly find the rightmost transition in any prefix.",
+          "hints": {
+            "nudge": "Can you precompute something for each index that tells you where the most recent change happened?",
+            "question": "If p[i-1] stores the latest transition up to index i-1, and you now look at position i, how do you compute p[i]?",
+            "formal": "Set p[0] = -1 (no transition possible at the first element). For i from 1 to n-1: if a[i] != a[i-1] then p[i] = i, else p[i] = p[i-1]. After this O(n) scan, p[i] is the largest j <= i where a[j] != a[j-1], or -1 if no transition exists in a[0..i]."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Answer each query in O(1) using the precomputed array",
+          "description": "For query (l, r), look up p[r] (the rightmost transition at or before index r). If p[r] >= l+1 (using 0-indexed: the transition is inside the query range), output the pair (p[r]-1, p[r]). Otherwise, no transition exists in [l, r] and the answer is -1 -1. Each query is answered in O(1).",
+          "hints": {
+            "nudge": "You have the latest transition at or before r. How do you check whether it falls inside the query range?",
+            "question": "If p[r] < l (the latest transition before r is entirely before the query starts), what does that tell you about the subarray a[l..r]?",
+            "formal": "Convert to 0-indexed: l' = l-1, r' = r-1. If p[r'] >= l' + 1 (there is a transition a[p[r']] != a[p[r']-1] with both indices in [l', r']), output (p[r']-1+1, p[r']+1) in 1-indexed form. Otherwise output -1 -1. Total complexity: O(n + q) per test case."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    },
+    {
+      "name": "Binary search on stored transition positions",
+      "description": "Collect all positions where adjacent elements differ into a sorted list. For each query (l, r), binary search for the first transition position in [l+1, r]. If one exists, output the adjacent pair; otherwise output -1 -1.",
+      "skill_tags": [
+        "binary-search",
+        "data-structures"
+      ],
+      "observations": [
+        {
+          "title": "A range has no valid pair if and only if all its elements are equal",
+          "description": "The query asks for any two indices i, j in [l, r] with a[i] != a[j]. This is impossible only when every element in the range has the same value. Equivalently, a valid pair exists if and only if there is at least one adjacent transition a[k] != a[k-1] for some k in [l+1, r].",
+          "hints": {
+            "nudge": "When is it impossible to find two different elements in a subarray?",
+            "question": "If every consecutive pair in a[l..r] satisfies a[k] = a[k-1], what can you conclude about all elements in the range?",
+            "formal": "All elements in a[l..r] are equal iff a[k] = a[k-1] for every k in [l+1, r]. A valid pair exists iff there is some k in [l+1, r] where a[k] != a[k-1]."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Collect all adjacent transition positions into a sorted list",
+          "description": "Scan the array once and record every index k (1-indexed, from 2 to n) where a[k] != a[k-1]. Store these in a list. Since you scan left to right, the list is already sorted in increasing order.",
+          "hints": {
+            "nudge": "What if you wrote down every position where the array value changes compared to the previous position?",
+            "question": "If you iterate from index 2 to n and record i whenever a[i] != a[i-1], what property does the resulting list have?",
+            "formal": "Build list T = [k for k in range(2, n+1) if a[k] != a[k-1]]. T is sorted since we iterate left to right. T has at most n-1 entries."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Binary search for a transition inside the query range",
+          "description": "For a query (l, r), you need any k in T with l+1 <= k <= r. Use binary search (lower_bound) to find the first element in T that is >= l+1. If that element exists and is <= r, you have found a transition inside the range.",
+          "hints": {
+            "nudge": "You have a sorted list of transition positions. How do you quickly check if any of them fall in a given interval?",
+            "question": "What standard algorithm finds the smallest element in a sorted array that is at least some value? What do you check after finding it?",
+            "formal": "Use lower_bound on T for value l+1. Let it point to T[idx]. If idx < |T| and T[idx] <= r, then k = T[idx] is a transition in [l+1, r], and (k-1, k) is a valid pair. Otherwise output -1 -1. Each query takes O(log n)."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "Output the adjacent pair at the found transition",
+          "description": "Once you find a transition position k (where a[k] != a[k-1]) inside the query range, output the pair (k-1, k). Both indices are within [l, r] and their values differ, satisfying the query. The total complexity is O(n + q log n) per test case.",
+          "hints": {
+            "nudge": "You found a position k where a[k] != a[k-1]. What two indices do you output?",
+            "question": "Is k-1 guaranteed to be >= l? Why?",
+            "formal": "Since k >= l+1 (from the binary search condition k >= l+1), we have k-1 >= l. And k <= r from the range check. So both k-1 and k are in [l, r], and a[k-1] != a[k]. Output (k-1, k)."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

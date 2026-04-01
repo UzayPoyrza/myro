@@ -1,0 +1,31 @@
+[scenario]
+name = "Knapsack — greedy value/weight ratio (wrong for 0/1)"
+problem = "cf-730J"
+route = 0
+trigger = "user idle for 45s"
+elapsed_secs = 120
+observations_found = 0
+
+[scenario.code]
+text = """
+n, W = map(int, input().split())
+items = []
+for _ in range(n):
+    w, v = map(int, input().split())
+    items.append((w, v))
+# sort by value/weight ratio - greedy
+items.sort(key=lambda x: x[1]/x[0], reverse=True)
+total_w, total_v = 0, 0
+for w, v in items:
+    if total_w + w <= W:
+        total_w += w
+        total_v += v
+print(total_v)
+"""
+
+[expect]
+state = "moving_away"
+obs_id = "cf:730J:route:1:obs:1"
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["dp[i][w]", "dp[i-1][w-w_i]", "max(dp"]

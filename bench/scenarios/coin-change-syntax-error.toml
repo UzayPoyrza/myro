@@ -1,0 +1,27 @@
+[scenario]
+name = "Coin Change — correct DP structure but syntax error (missing colon)"
+problem = "cf-996B"
+route = 0
+trigger = "syntax error on run attempt"
+elapsed_secs = 240
+observations_found = 0
+
+[scenario.code]
+text = """
+n, S = map(int, input().split())
+coins = list(map(int, input().split()))
+dp = [float('inf')] * (S + 1)
+dp[0] = 0
+for i in range(1, S + 1)
+    for c in coins:
+        if i >= c:
+            dp[i] = min(dp[i], dp[i - c] + 1)
+print(dp[S] if dp[S] != float('inf') else -1)
+"""
+
+[expect]
+state = "approaching"
+obs_id = "cf:996B:route:1:obs:1"
+min_confidence = 0.3
+must_be_socratic = true
+banned_patterns = []

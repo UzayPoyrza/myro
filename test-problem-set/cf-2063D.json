@@ -1,0 +1,154 @@
+{
+  "contest_id": 2063,
+  "index": "D",
+  "title": "Game With Triangles",
+  "difficulty": 2000,
+  "tags": [
+    "binary search",
+    "brute force",
+    "data structures",
+    "geometry",
+    "greedy",
+    "implementation",
+    "math",
+    "ternary search",
+    "two pointers"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Even Little John needs money to buy a house. But he recently lost his job; how will he earn money now? Of course, by playing a game that gives him money as a reward! Oh well, maybe not those kinds of games you are thinking about. There are $$$n+m$$$ distinct points $$$(a_1,0), (a_2,0), \\ldots, (a_{n},0), (b_1,2), (b_2,2), \\ldots, (b_{m},2)$$$ on the plane. Initially, your score is $$$0$$$. To increase your score, you can perform the following operation: Choose three distinct points which are not collinear ; Increase your score by the area of the triangle formed by these three points; Then, erase the three points from the plane. An instance of the game, where the operation is performed twice. Let $$$k_{\\max}$$$ be the maximum number of operations that can be performed. For example, if it is impossible to perform any operation, $$$k_\\max$$$ is $$$0$$$. Additionally, define $$$f(k)$$$ as the maximum possible score achievable by performing the operation exactly $$$k$$$ times . Here, $$$f(k)$$$ is defined for all integers $$$k$$$ such that $$$0 \\le k \\le k_{\\max}$$$. Find the value of $$$k_{\\max}$$$, and find the values of $$$f(x)$$$ for all integers $$$x=1,2,\\ldots,k_{\\max}$$$ independently.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le {3 \\cdot 10^4}$$$). The description of the test cases follows. The first line of each test case contains two integers $$$n$$$ and $$$m$$$ ($$$1 \\le n,m \\le 2 \\cdot 10^5$$$). The second line of each test case contains $$$n$$$ pairwise distinct integers $$$a_1,a_2,\\ldots,a_{n}$$$ — the points on $$$y=0$$$ ($$$-10^9 \\le a_i \\le 10^9$$$). The third line of each test case contains $$$m$$$ pairwise distinct integers $$$b_1,b_2,\\ldots,b_{m}$$$ — the points on $$$y=2$$$ ($$$-10^9 \\le b_i \\le 10^9$$$).",
+  "output_spec": "For each test case, given that the maximum number of operations is $$$k_{\\max}$$$, you must output at most two lines: The first line contains the value of $$$k_{\\max}$$$; The second line contains $$$k_{\\max}$$$ integers denoting $$$f(1),f(2),\\ldots,f(k_{\\max})$$$. You are allowed to omit this line if $$$k_{\\max}$$$ is $$$0$$$. Note that under the constraints of this problem, it can be shown that all values of $$$f(x)$$$ are integers no greater than $$$10^{16}$$$.",
+  "examples": [
+    {
+      "input": "51 300 1 -12 40 100-100 -50 0 502 40 1000-100 -50 0 506 620 1 27 100 43 42100 84 1 24 22 778 2564040265 -509489796 469913620 198872582 -400714529 553177666 131159391 -20796763-1000000000 1000000000",
+      "output": "1\n2\n2\n150 200\n2\n1000 200\n4\n99 198 260 283\n2\n2000000000 2027422256"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy pairing with ternary search over split",
+      "description": "Simplify triangle areas using the fixed y-coordinates, sort each line and greedily pair extremes for maximum base lengths, precompute prefix sums of these pairing values, then for each target k use ternary search over the split between the two lines to maximize the combined score.",
+      "skill_tags": [
+        "math",
+        "greedy",
+        "math",
+        "binary-search"
+      ],
+      "observations": [
+        {
+          "title": "Every triangle uses exactly 2 points from one line and 1 from the other",
+          "description": "All points lie on two horizontal lines y=0 and y=2. Three points on the same line are collinear and cannot form a triangle. Therefore every valid triangle picks either 2 points from y=0 and 1 from y=2, or 2 points from y=2 and 1 from y=0. Each operation consumes exactly 3 points total, but the split between the two lines is always 2-and-1.",
+          "hints": {
+            "nudge": "What configurations of three points from two parallel lines can form a non-degenerate triangle?",
+            "question": "If you pick 3 points all from y=0, what happens geometrically? What are the only two valid triangle configurations given the constraint that points lie on exactly two horizontal lines?",
+            "formal": "Three collinear points have zero area, so we cannot pick 3 from the same line. The only valid triangles are (2 from y=0, 1 from y=2) or (1 from y=0, 2 from y=2). Each operation therefore removes 2 points from one line and 1 from the other."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Triangle area depends only on the base: area = |x_right - x_left|",
+          "description": "For a triangle with two points on the same horizontal line and one point on the other line, the base is the horizontal distance between the two same-line points and the height is the vertical distance between the lines, which is always |2 - 0| = 2. So area = base * height / 2 = |x_right - x_left| * 2 / 2 = |x_right - x_left|. The x-coordinate of the apex (the single point on the other line) does not affect the area at all.",
+          "hints": {
+            "nudge": "The two horizontal lines are at y=0 and y=2. For a triangle with base on one line and apex on the other, what is the height?",
+            "question": "If two points share the same y-coordinate and a third point is on the other line, what is the triangle's area in terms of the x-coordinates? Does the apex's x-coordinate matter?",
+            "formal": "Area = (1/2) * base * height = (1/2) * |x2 - x1| * 2 = |x2 - x1|, where x1 and x2 are the x-coordinates of the two points on the same line. The apex x-coordinate is irrelevant. This means the problem reduces to: choose pairs of points from the same line to maximize the sum of pairwise distances, subject to consumption constraints."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Greedy optimal pairing: sort and pair outermost elements",
+          "description": "To maximize the sum of pairwise distances when selecting p pairs from a sorted array, always pair the largest with the smallest, the second-largest with the second-smallest, and so on. If the sorted array is [s_1, s_2, ..., s_N], the i-th pair (1-indexed) gives distance s_{N-i+1} - s_{i}. Each successive pair's marginal contribution is strictly smaller than the previous one, making this a greedy strategy that is provably optimal.",
+          "hints": {
+            "nudge": "If you sort the points on one line, which pairing of points maximizes the first distance? Given that pairing, which remaining pair maximizes the next distance?",
+            "question": "After sorting array a, the largest gap is a[N-1] - a[0]. If you commit to that pair, what is the best second pair from the remaining elements a[1], ..., a[N-2]?",
+            "formal": "Sort each array. For array a of size N, define diff_a[i] = a[N-i] - a[i-1] for i = 1, 2, ..., floor(N/2). The maximum total distance using p pairs is sum of diff_a[1..p]. This sequence is strictly decreasing because diff_a[i] = a[N-i] - a[i-1] > a[N-i-1] - a[i] = diff_a[i+1]. The same applies to array b."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Prefix sums encode the best score for any number of pairs from each line",
+          "description": "After sorting and computing the greedy pairing distances for each line, build prefix sums: asum[p] = sum of the p largest pair distances from the a-array, and bsum[q] = sum of the q largest pair distances from the b-array. Now, if we decide to take x_a pairs from the a-line (each consuming 2 a-points and 1 b-point) and x_b pairs from the b-line (each consuming 1 a-point and 2 b-points), the total score is asum[x_a] + bsum[x_b], and we need to find the best split for each total k = x_a + x_b.",
+          "hints": {
+            "nudge": "You know the best score for using exactly p pairs from one line. How do you combine the scores from both lines?",
+            "question": "If asum[p] is the max score from p pairs on y=0 and bsum[q] is the max score from q pairs on y=2, what is the total score for a particular split (x_a, x_b) with x_a + x_b = k?",
+            "formal": "Define asum[i] = asum[i-1] + (a[n-i] - a[i-1]) for i >= 1, asum[0] = 0. Similarly bsum[i] = bsum[i-1] + (b[m-i] - b[i-1]). For a given k, the score with split (x_a, x_b) where x_a + x_b = k is asum[x_a] + bsum[x_b] = asum[x_a] + bsum[k - x_a]. We maximize over valid x_a."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Feasibility constraints on the split and on k_max",
+          "description": "Using x_a pairs from y=0 consumes 2*x_a points from the a-array and x_a points from the b-array. Using x_b pairs from y=2 consumes x_b points from the a-array and 2*x_b from the b-array. Total consumption: 2*x_a + x_b points from a (must be <= n) and x_a + 2*x_b points from b (must be <= m). With k = x_a + x_b, these become x_a <= n - k and x_a >= 2k - m. The total k_max is the largest k such that valid x_a exists, i.e., max(0, 2k - m) <= min(k, n - k) and both asum and bsum are within their array bounds.",
+          "hints": {
+            "nudge": "Each pair-type consumes a different number of points from each line. What are the two inequality constraints on x_a given k = x_a + x_b?",
+            "question": "If 2*x_a + (k - x_a) <= n and x_a + 2*(k - x_a) <= m, what range of x_a is valid? When does no valid x_a exist for a given k?",
+            "formal": "Constraints: (1) 2*x_a + x_b <= n => x_a + k <= n => x_a <= n - k. (2) x_a + 2*x_b <= m => 2k - x_a <= m => x_a >= 2k - m. (3) 0 <= x_a <= k. (4) x_a <= floor(n/2), k - x_a <= floor(m/2). Combined: L = max(0, 2k - m) and R = min(k, n - k), clamped to array bounds. k_max is the largest k where L <= R."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Ternary search over the split exploits concavity",
+          "description": "For fixed k, the function g(x_a) = asum[x_a] + bsum[k - x_a] is the sum of two concave functions of x_a (since each prefix sum has decreasing marginal increments), making g itself concave (unimodal). This means ternary search over x_a in the valid range [L, R] finds the maximum in O(log n) time. Iterating over all k from 1 to k_max gives O(k_max * log n) total time, which is efficient enough.",
+          "hints": {
+            "nudge": "The greedy pairing distances are strictly decreasing. What does that imply about the shape of asum as a function of the number of pairs?",
+            "question": "If asum has decreasing marginal gains (concave) and bsum has decreasing marginal gains (concave), what is the shape of g(x_a) = asum[x_a] + bsum[k - x_a]? What optimization technique works for unimodal functions on integers?",
+            "formal": "asum is concave (discrete): asum[i+1] - asum[i] > asum[i+2] - asum[i+1]. Similarly for bsum. Then g(x_a) = asum[x_a] + bsum[k - x_a] is concave in x_a since the second difference is negative. Apply ternary search on the integer interval [L, R]: repeatedly compare g at the two tertile points, narrowing the interval until R - L <= 3, then check all remaining points. Total per k: O(log(n + m)). Overall: O((n + m) log(n + m))."
+          },
+          "skill_tag": "binary-search"
+        }
+      ]
+    },
+    {
+      "name": "Two-pointer / linear scan over split",
+      "description": "Instead of ternary search, observe that as k increases by 1, the optimal split point x_a can only change by 0 or 1 in each direction, allowing a two-pointer approach that amortizes the search over all k values to linear total time.",
+      "skill_tags": [
+        "math",
+        "greedy",
+        "math",
+        "two-pointers"
+      ],
+      "observations": [
+        {
+          "title": "Every triangle uses exactly 2 points from one line and 1 from the other",
+          "description": "All points lie on two horizontal lines y=0 and y=2. Three points on the same line are collinear and cannot form a triangle. Therefore every valid triangle picks either 2 points from y=0 and 1 from y=2, or 2 points from y=2 and 1 from y=0.",
+          "hints": {
+            "nudge": "What configurations of three points from two parallel lines can form a non-degenerate triangle?",
+            "question": "If you pick 3 points all from y=0, what happens? What are the only two valid configurations?",
+            "formal": "Three collinear points cannot form a triangle. The only non-degenerate configurations are (2 from y=0, 1 from y=2) and (1 from y=0, 2 from y=2)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Area simplification and greedy pairing with prefix sums",
+          "description": "Since height is always 2, area = |x2 - x1| for the two same-line points. Sorting each line and pairing outermost elements gives the maximum sum of distances. Build prefix sums asum[p] and bsum[q] for the best p pairs from the a-line and q pairs from the b-line respectively.",
+          "hints": {
+            "nudge": "The height of every triangle is the same constant. What does the area reduce to?",
+            "question": "After simplifying the area formula and sorting each array, how do you pick p pairs from one array to maximize total distance? How do you store these partial results for quick lookup?",
+            "formal": "Sort arrays a and b. asum[i] = asum[i-1] + (a[n-i] - a[i-1]), bsum[i] = bsum[i-1] + (b[m-i] - b[i-1]). The score for split (x_a, x_b) is asum[x_a] + bsum[x_b]."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "The objective g(x_a) = asum[x_a] + bsum[k - x_a] is concave in x_a",
+          "description": "The marginal gains of asum are strictly decreasing (each successive pair contributes less), and the same holds for bsum. The function g(x_a) is therefore concave (unimodal) in x_a for fixed k. Its maximum is achieved at a single point (or two adjacent points), and this optimum shifts monotonically as k changes.",
+          "hints": {
+            "nudge": "Each additional pair from a sorted array contributes less than the previous one. What does that tell you about the shape of the total score as a function of the split?",
+            "question": "If both asum and bsum have decreasing differences, what is the shape of their sum when one argument increases and the other decreases by the same amount?",
+            "formal": "Discrete concavity: asum[i+1] - asum[i] is strictly decreasing. For g(x_a) = asum[x_a] + bsum[k - x_a], the discrete derivative dg = (asum[x_a+1] - asum[x_a]) - (bsum[k-x_a] - bsum[k-x_a-1]) is decreasing in x_a, so g is concave."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Monotonicity of the optimal split enables a two-pointer scan",
+          "description": "Let x_a*(k) be the optimal split for total operations k. As k increases to k+1, the feasible range shifts and the concave optimum moves by at most 1. By tracking the current optimal x_a and adjusting it by checking neighbors as k increments, the total work across all values of k is O(n + m) rather than O(k_max * log(n + m)).",
+          "hints": {
+            "nudge": "If the optimal x_a for k operations is known, how much can it change when you go to k+1 operations?",
+            "question": "Concave optimization on a shifting interval: if the interval [L, R] shifts right by 1 as k increases, how does the argmax move? Can you maintain it incrementally?",
+            "formal": "As k increases by 1, L and R each change by at most 1. The argmax of a concave function on a shifting interval changes by at most 1. Initialize x_a at L for k=1, then for each subsequent k, check x_a-1, x_a, x_a+1 (clamped to [L, R]) and update. Total pointer movement across all k is O(n + m)."
+          },
+          "skill_tag": "two-pointers"
+        }
+      ]
+    }
+  ]
+}

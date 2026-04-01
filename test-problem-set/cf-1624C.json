@@ -1,0 +1,124 @@
+{
+  "contest_id": 1624,
+  "index": "C",
+  "title": "Division by Two and Permutation",
+  "difficulty": 1100,
+  "tags": ["greedy", "constructive", "math"],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given an array $$$a$$$ consisting of $$$n$$$ positive integers. You can perform operations on it. In one operation you can replace any element of the array $$$a_i$$$ with $$$\\lfloor \\frac{a_i}{2} \\rfloor$$$, that is, by an integer part of dividing $$$a_i$$$ by $$$2$$$ (rounding down). See if you can apply the operation some number of times (possible $$$0$$$) to make the array $$$a$$$ become a permutation of numbers from $$$1$$$ to $$$n$$$ —that is, so that it contains all numbers from $$$1$$$ to $$$n$$$, each exactly once. For example, if $$$a = [1, 8, 25, 2]$$$, $$$n = 4$$$, then the answer is yes. You could do the following: Replace $$$8$$$ with $$$\\lfloor \\frac{8}{2} \\rfloor = 4$$$, then $$$a = [1, 4, 25, 2]$$$. Replace $$$25$$$ with $$$\\lfloor \\frac{25}{2} \\rfloor = 12$$$, then $$$a = [1, 4, 12, 2]$$$. Replace $$$12$$$ with $$$\\lfloor \\frac{12}{2} \\rfloor = 6$$$, then $$$a = [1, 4, 6, 2]$$$. Replace $$$6$$$ with $$$\\lfloor \\frac{6}{2} \\rfloor = 3$$$, then $$$a = [1, 4, 3, 2]$$$.",
+  "input_spec": "The first line of input data contains an integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) —the number of test cases. Each test case contains exactly two lines. The first one contains an integer $$$n$$$ ($$$1 \\le n \\le 50$$$), the second one contains integers $$$a_1, a_2, \\dots, a_n$$$ ($$$1 \\le a_i \\le 10^9$$$).",
+  "output_spec": "For each test case, output on a separate line: YES if you can make the array $$$a$$$ become a permutation of numbers from $$$1$$$ to $$$n$$$, NO otherwise. You can output YES and NO in any case (for example, strings yEs , yes , Yes and YES will be recognized as a positive response).",
+  "examples": [
+    {
+      "input": "641 8 25 221 199 8 3 4 2 7 1 5 638 2 1424 7 16 7522 6 22 4 22",
+      "output": "YES\nNO\nYES\nNO\nNO\nYES"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy assignment: most constrained first",
+      "description": "For each element, compute which values in [1,n] it can reach by repeated halving. Sort elements so the most constrained (fewest reachable values) are assigned first, then greedily pick the largest available value each element can reach.",
+      "skill_tags": ["greedy", "sorting", "constructive"],
+      "observations": [
+        {
+          "title": "Each element produces a chain of candidate values",
+          "description": "By repeatedly halving a[i], you get the sequence a[i], floor(a[i]/2), floor(a[i]/4), ..., down to 0. The values in this sequence that fall within [1, n] are exactly the target values this element could be assigned to.",
+          "hints": {
+            "nudge": "What happens when you keep dividing an element by 2? Which of the intermediate values are useful?",
+            "question": "If you halve a[i] repeatedly until it becomes 0, which of those intermediate values could serve as the final value for this element in the permutation?",
+            "formal": "For each a[i], compute the set S_i = {x : x is obtained by halving a[i] some number of times, and 1 <= x <= n}. These are the candidates this element can become."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "This is a bipartite matching / assignment problem",
+          "description": "Each element needs to be assigned to exactly one value in [1, n], and each value must be used exactly once. Element i can only be assigned to values in its candidate set S_i. This is a bipartite matching between elements and target values.",
+          "hints": {
+            "nudge": "You have n elements and n target values, each element can map to certain targets. What classical problem structure does this resemble?",
+            "question": "If you draw edges from each element to the target values it can reach, what must be true about the matching for the answer to be YES?",
+            "formal": "Construct a bipartite graph: left nodes = elements, right nodes = values 1..n. Edge (i, v) exists if v is in S_i. The answer is YES if and only if a perfect matching exists."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Greedy works: sort by decreasing value and assign greedily",
+          "description": "Sort elements from largest to smallest. For each element, halve it repeatedly until it lands on a value in [1, n] that has not yet been used, then mark that value as used. Larger elements have more candidate values (longer halving chains), so processing them first lets the more constrained smaller elements keep their options open.",
+          "hints": {
+            "nudge": "If you process elements in a particular order, the greedy assignment always finds a valid matching when one exists. Which order?",
+            "question": "A larger element can reach more values in [1, n] through halving than a smaller one. How does processing order affect whether the greedy succeeds?",
+            "formal": "Sort a[] in decreasing order. For each element x: while x > n or used[x], set x = floor(x/2). If x >= 1, mark used[x] = true. If x == 0, output NO. If all elements are assigned, output YES."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Larger elements should take larger targets",
+          "description": "When a large element is halved to reach some value v in [1, n], it could also reach any value obtainable by further halving. But a smaller element might only be able to reach a small target. By assigning the first (largest) available target to each large element, you avoid stealing targets that smaller elements critically need.",
+          "hints": {
+            "nudge": "Why does halving a large number until it first fits in [1, n] produce the right assignment?",
+            "question": "If element 100 takes target 3 instead of target 50, could that block another element that can only reach 3? How does the greedy avoid this?",
+            "formal": "For a sorted-descending element x, halving until x <= n gives the largest reachable target. Taking it is optimal: any smaller element that also reaches this target could reach it only by also being large, but we already handled those. The first available value via halving is always safe."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "An element that halves to 0 before finding an unused value means NO",
+          "description": "If during greedy assignment an element is halved all the way to 0 without ever landing on an unused value in [1, n], it cannot be assigned. Since every element must map to exactly one distinct value, the answer is NO.",
+          "hints": {
+            "nudge": "What is the failure condition during the greedy process?",
+            "question": "When halving an element, what happens if every value it passes through in [1, n] is already taken by a previous element?",
+            "formal": "If for some element x, the while loop x = floor(x/2) terminates with x == 0, then no valid target exists for this element. Output NO immediately."
+          },
+          "skill_tag": "constructive"
+        }
+      ]
+    },
+    {
+      "name": "Greedy assignment: assign targets top-down per element",
+      "description": "For each target value from n down to 1, count how many elements can reach it. Assign the most constrained targets first by processing elements that have the fewest options.",
+      "skill_tags": ["greedy", "sorting", "constructive"],
+      "observations": [
+        {
+          "title": "Each element produces a chain of candidate values",
+          "description": "By repeatedly halving a[i], you get a decreasing sequence of values. The subset that falls within [1, n] is the set of target values this element can be assigned to. Since n <= 50, each chain has at most about 30 steps.",
+          "hints": {
+            "nudge": "What happens when you keep dividing an element by 2? Which of the intermediate values are useful?",
+            "question": "If a[i] = 25 and n = 4, which values in [1, 4] can you reach by halving? List them.",
+            "formal": "S_i = {x : x obtained by halving a[i] zero or more times, 1 <= x <= n}. For a[i] = 25, n = 4: 25 -> 12 -> 6 -> 3 -> 1, so S_i = {3, 1}."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Elements with fewer candidates are more constrained",
+          "description": "An element that can only reach one value in [1, n] must be assigned that value. An element that can reach many values is flexible. Processing the most constrained elements first avoids conflicts.",
+          "hints": {
+            "nudge": "If one element can only become the value 1, and another element can become 1, 2, or 4, which should you assign first?",
+            "question": "What ordering of elements would minimize the chance that a greedy assignment fails?",
+            "formal": "Compute |S_i| for each element. Sort elements by |S_i| ascending (fewest options first). For each element, assign the largest available value in its candidate set."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Sort by candidate count and assign largest available",
+          "description": "After sorting elements by how many targets they can reach (ascending), iterate through them. For each element, pick the largest unused value from its candidate set. This greedy choice is safe because the most constrained elements get first pick.",
+          "hints": {
+            "nudge": "Once you know which elements are most constrained, how do you decide which target value to give each one?",
+            "question": "Among the available values an element can reach, should you give it the largest or the smallest? Why?",
+            "formal": "Sort by |S_i| ascending. For each element i in order, iterate through S_i from largest to smallest and assign the first unused value. If no unused value exists in S_i, output NO."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "If any element has an empty candidate set, answer is NO",
+          "description": "An element whose value is already 0 or that halves to 0 before ever entering [1, n] cannot be assigned to any target. If a[i] starts at 0 this is immediate; otherwise, since a[i] >= 1 and n >= 1, the chain always passes through some value in [1, n] -- but all of those might already be taken.",
+          "hints": {
+            "nudge": "Can an element ever have no possible target values at all?",
+            "question": "Since a[i] >= 1, the halving chain always reaches 1 eventually. So what is the only reason assignment could fail?",
+            "formal": "Every element has at least value 1 in its candidate set (since halving any positive integer eventually reaches 1). Failure occurs only when all candidate values are already used by other elements."
+          },
+          "skill_tag": "constructive"
+        }
+      ]
+    }
+  ]
+}

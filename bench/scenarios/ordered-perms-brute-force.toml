@@ -1,0 +1,38 @@
+[scenario]
+name = "Ordered Permutations — brute force enumeration won't scale"
+problem = "cf-2040C"
+route = 0
+trigger = "test failure on test 2"
+elapsed_secs = 180
+observations_found = 0
+
+[scenario.code]
+text = """
+from itertools import permutations
+
+def S(p):
+    n = len(p)
+    total = 0
+    for l in range(n):
+        for r in range(l, n):
+            total += min(p[l:r+1])
+    return total
+
+t = int(input())
+for _ in range(t):
+    n, k = map(int, input().split())
+    perms = sorted(permutations(range(1, n+1)))
+    max_s = max(S(p) for p in perms)
+    optimal = [p for p in perms if S(p) == max_s]
+    if k > len(optimal):
+        print(-1)
+    else:
+        print(*optimal[k-1])
+"""
+
+[expect]
+state = "moving_away"
+obs_id = "cf:2040C:route:1:obs:1"
+min_confidence = 0.4
+must_be_socratic = true
+banned_patterns = ["endpoint", "2^(n-1)", "binary representation", "two pointers"]

@@ -1,0 +1,124 @@
+{
+  "contest_id": 1800,
+  "index": "E2",
+  "title": "Unforgivable Curse (hard version)",
+  "difficulty": 1500,
+  "tags": ["constructive", "greedy", "graphs", "strings"],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "This is a complex version of the problem. This version has no additional restrictions on the number $$$k$$$. The chief wizard of the Wizengamot once caught the evil wizard Drahyrt, but the evil wizard has returned and wants revenge on the chief wizard. So he stole spell $$$s$$$ from his student Harry. The spell — is a $$$n$$$-length string of lowercase Latin letters. Drahyrt wants to replace spell with an unforgivable curse — string $$$t$$$. Dragirt, using ancient magic, can swap letters at a distance $$$k$$$ or $$$k+1$$$ in spell as many times as he wants. In other words, Drahyrt can change letters in positions $$$i$$$ and $$$j$$$ in spell $$$s$$$ if $$$|i-j|=k$$$ or $$$|i-j|=k+1$$$. For example, if $$$k = 3, s = $$$ \" talant \" and $$$t = $$$ \" atltna \", Drahyrt can act as follows: swap the letters at positions $$$1$$$ and $$$4$$$ to get spell \" aaltnt \". swap the letters at positions $$$2$$$ and $$$6$$$ to get spell \" atltna \". You are given spells $$$s$$$ and $$$t$$$. Can Drahyrt change spell $$$s$$$ to $$$t$$$?",
+  "input_spec": "The first line of input gives a single integer $$$T$$$ ($$$1 \\le T \\le 10^4$$$) — the number of test cases in the test. Descriptions of the test cases are follow. The first line contains two integers $$$n, k$$$ ($$$1 \\le n \\le 2 \\cdot 10^5$$$, $$$1 \\le k \\le 2 \\cdot 10^5$$$) — the length spells and the number $$$k$$$ such that Drahyrt can change letters in a spell at a distance $$$k$$$ or $$$k+1$$$. The second line gives spell $$$s$$$ — a string of length $$$n$$$ consisting of lowercase Latin letters. The third line gives spell $$$t$$$ — a string of length $$$n$$$ consisting of lowercase Latin letters. It is guaranteed that the sum of $$$n$$$ values over all test cases does not exceed $$$2 \\cdot 10^5$$$. Note that there is no limit on the sum of $$$k$$$ values over all test cases.",
+  "output_spec": "For each test case, output on a separate line \" YES \" if Drahyrt can change spell $$$s$$$ to $$$t$$$ and \" NO \" otherwise. You can output the answer in any case (for example, lines \" yEs \", \" yes \", \" Yes \" and \" YES \" will be recognized as positive answer).",
+  "examples": [
+    {
+      "input": "76 3talantatltna7 1abacabaaaaabbc12 6abracadabraaavadakedavra5 3acciocicao5 4lumosmolus4 3uwjttwju4 3kvpxvxpk",
+      "output": "YES\nYES\nNO\nYES\nNO\nYES\nNO"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Reachability analysis via swap distance composition",
+      "description": "Determine which positions are movable by analyzing whether they can participate in at least one swap, then check that movable positions have matching character multisets and immovable positions already match between s and t.",
+      "skill_tags": ["constructive", "greedy", "math"],
+      "observations": [
+        {
+          "title": "Necessary condition: character frequencies must match",
+          "description": "If s and t do not contain the same multiset of characters, transformation is impossible regardless of what swaps are available. Swaps only rearrange existing characters, never create or destroy them.",
+          "hints": {
+            "nudge": "Swaps are permutations of the string. What invariant does every permutation preserve?",
+            "question": "If you count the frequency of each letter in s and in t, what relationship must hold for any transformation to be possible?",
+            "formal": "Count occurrences of each character in s and t. If freq_s[c] != freq_t[c] for any character c, output NO. This is necessary but not sufficient."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Composing k and k+1 swaps to reach any distance >= k",
+          "description": "Since gcd(k, k+1) = 1, by combining chains of swaps at distances k and k+1, you can effectively move a character by any distance that is at least k. Two swaps of distance k yield distance 1 (via intermediate), and from distance 1 you can reach anything. The key insight is that if a position can participate in at least one swap, it can eventually reach any other position that can also participate in a swap.",
+          "hints": {
+            "nudge": "What distances can you achieve by chaining two swaps? Think about what happens when you swap at distance k and then at distance k+1.",
+            "question": "If position i can swap with position i+k, and position i+k can swap with position i+2k+1 (distance k+1), what net distance did the character travel? Can you generalize this to reach any distance?",
+            "formal": "Two consecutive k-swaps move a character by 2k. A k-swap followed by a (k+1)-swap moves by 2k+1. Since gcd(2k, 2k+1) = 1, by Bezout's identity, any sufficiently large distance is achievable. In practice, any position reachable by at least one swap can reach any other such position."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Identifying immovable positions",
+          "description": "A position i (0-indexed) is immovable if it cannot participate in any swap at all. This happens when both i < k (cannot swap leftward by k or k+1) and i + k >= n (cannot swap rightward by k or k+1). Equivalently, position i is stuck when i < k AND n - i - 1 < k, meaning it is too close to both ends of the string.",
+          "hints": {
+            "nudge": "For a position to be swapped, it needs a partner at distance k or k+1 that is still within the string. When does no such partner exist?",
+            "question": "Position i can swap with i+k or i+k+1 (if in bounds) or i-k or i-k-1 (if in bounds). Under what condition on i, n, and k do all four options fall outside the string?",
+            "formal": "Position i is immovable iff i < k AND i + k >= n. This simplifies to: the position is within distance k-1 from both the start and the end, which only happens when n < 2k. In this zone, s[i] must equal t[i]."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "When n >= 2k, every position is movable",
+          "description": "If the string length is at least 2k, then every position can participate in at least one swap: positions in the first half can swap rightward, positions in the second half can swap leftward. This means the anagram check alone is sufficient.",
+          "hints": {
+            "nudge": "For large enough n relative to k, can any position be stuck? Think about the boundary condition you derived.",
+            "question": "If n >= 2k, is it possible for a position i to satisfy both i < k and i + k >= n simultaneously?",
+            "formal": "If n >= 2k, then for any i in [0, n): either i >= k (can swap left) or i + k < n (can swap right). No position is immovable, so the answer is YES if and only if s and t are anagrams."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Final check: immovable positions must already match",
+          "description": "For positions that cannot participate in any swap, s[i] must already equal t[i]. For all movable positions, the character frequency check guarantees rearrangement is possible. The algorithm checks both conditions: immovable positions match, and movable positions have the same character multiset.",
+          "hints": {
+            "nudge": "You have two classes of positions: movable and immovable. What must be true about each class independently?",
+            "question": "For immovable positions, what is the only way s[i] can become t[i]? For movable positions, given that any movable position can reach any other, what condition suffices?",
+            "formal": "For each position i where i < k and i + k >= n: if s[i] != t[i], output NO. For all other positions, count character frequencies in s and t separately; if they match, output YES, otherwise NO."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    },
+    {
+      "name": "Graph connectivity approach",
+      "description": "Model positions as nodes in a graph with edges between positions at distance k or k+1, then observe that all nodes with at least one edge form a single connected component, reducing the problem to an anagram check on the connected component plus exact matching for isolated nodes.",
+      "skill_tags": ["graphs", "constructive", "strings"],
+      "observations": [
+        {
+          "title": "Model positions as a graph",
+          "description": "Create a graph where each position 0..n-1 is a node, and add an edge between i and j if |i-j| = k or |i-j| = k+1. Two characters can be swapped if and only if their positions are connected by an edge, and characters can be arbitrarily rearranged within a connected component.",
+          "hints": {
+            "nudge": "Think of each string position as a node. What edges naturally arise from the allowed swaps?",
+            "question": "If you build a graph where edges connect positions at distance k or k+1, what does connectivity in this graph tell you about which characters can be rearranged?",
+            "formal": "Build graph G on vertices {0, ..., n-1}. Add edge (i, j) iff |i-j| in {k, k+1}. Within each connected component, any permutation of characters is achievable (since the symmetric group is generated by transpositions on a connected graph)."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "All non-isolated nodes form one connected component",
+          "description": "Any node that has at least one neighbor is connected to all other non-isolated nodes. This is because consecutive positions that each have an edge can chain together: if i has edge to i+k, and i+1 has edge to i+1+k, then through shared neighbors the entire non-isolated set becomes connected. There is never more than one non-trivial component.",
+          "hints": {
+            "nudge": "Consider two adjacent positions i and i+1 that both have at least one edge. Can they reach each other through their neighbors?",
+            "question": "If node i connects to i+k and node i+1 connects to i+k+1, and i+k connects to i+k+1 (distance 1 = |k - (k+1)| ... no). Think differently: can i reach i+1 via a path of swaps?",
+            "formal": "Node i with edge to i+k, and node i+k with edge to i+k+1 (distance 1, but only if in bounds ... actually distance k from position i+1). The key: if i and i+k are connected, and i+1 and i+k+1 are connected, and i+k and i+k+1 are connected (distance 1 via two steps of k and k+1), then i, i+1, i+k, i+k+1 are all in one component. This propagates across the entire non-isolated set."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Isolated nodes cannot be swapped",
+          "description": "A node i is isolated (degree 0) when it has no valid swap partner: all of i-k, i-k-1, i+k, i+k+1 fall outside [0, n). This happens precisely when i < k and i + k >= n. Characters at isolated positions are frozen in place.",
+          "hints": {
+            "nudge": "Which positions in the graph have no edges at all? What does the string length need to be relative to k for such positions to exist?",
+            "question": "Position i is isolated when it cannot reach any other position. Given swaps at distance k and k+1, when are all four potential partners out of bounds?",
+            "formal": "Position i is isolated iff max(i, n-1-i) < k. Equivalently, k <= i < n-k has no isolated positions; only positions where both i < k and i + k >= n are isolated. Isolated positions exist only when n < 2k."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Check anagram on the connected component, exact match on isolated nodes",
+          "description": "The answer is YES if and only if: (1) for every isolated position i, s[i] == t[i], and (2) the multiset of characters at non-isolated positions in s equals that in t. Since all non-isolated nodes form one component, any rearrangement within them is possible.",
+          "hints": {
+            "nudge": "You have two groups of positions: those that can move and those that cannot. What condition must each group satisfy?",
+            "question": "For the single large connected component, what is the necessary and sufficient condition for rearrangement? For isolated nodes?",
+            "formal": "Partition positions into movable (has >= 1 edge) and frozen (isolated). For frozen: require s[i] == t[i]. For movable: require that frequency of each char in s restricted to movable positions equals that in t. Both conditions together are necessary and sufficient."
+          },
+          "skill_tag": "constructive"
+        }
+      ]
+    }
+  ]
+}

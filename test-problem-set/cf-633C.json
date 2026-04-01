@@ -1,0 +1,134 @@
+{
+  "contest_id": 633,
+  "index": "C",
+  "title": "Spy Syndrome 2",
+  "difficulty": 1900,
+  "tags": [
+    "data structures",
+    "dp",
+    "hashing",
+    "implementation",
+    "strings"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "After observing the results of Spy Syndrome, Yash realised the errors of his ways. He now believes that a super spy such as Siddhant can't use a cipher as basic and ancient as Caesar cipher. After many weeks of observation of Siddhant's sentences, Yash determined a new cipher technique. For a given sentence, the cipher is processed as: Convert all letters of the sentence to lowercase. Reverse each of the words of the sentence individually. Remove all the spaces in the sentence. For example, when this cipher is applied to the sentence Kira is childish and he hates losing the resulting string is ariksihsidlihcdnaehsetahgnisol Now Yash is given some ciphered string and a list of words. Help him to find out any original sentence composed using only words from the list. Note, that any of the given words could be used in the sentence multiple times.",
+  "input_spec": "The first line of the input contains a single integer n ( 1 ≤ n ≤ 10 000 ) — the length of the ciphered text. The second line consists of n lowercase English letters — the ciphered text t . The third line contains a single integer m ( 1 ≤ m ≤ 100 000 ) — the number of words which will be considered while deciphering the text. Each of the next m lines contains a non-empty word w i ( | w i | ≤ 1 000 ) consisting of uppercase and lowercase English letters only. It's guaranteed that the total length of all words doesn't exceed 1 000 000 .",
+  "output_spec": "Print one line — the original sentence. It is guaranteed that at least one solution exists. If there are multiple solutions, you may output any of those.",
+  "examples": [
+    {
+      "input": "30\nariksihsidlihcdnaehsetahgnisol\n10\nKira\nhates\nis\nhe\nlosing\ndeath\nchildish\nLand\nNote",
+      "output": "Kira is childish and he hates losing"
+    },
+    {
+      "input": "12\niherehtolleh\n5\nHI\nHo\nthere\nHeLLo\nhello",
+      "output": "HI there HeLLo"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Trie of reversed words + DP",
+      "description": "Build a trie from the dictionary words after lowercasing and reversing them. Then use DP over positions in the ciphered string, walking the trie at each position to find all matching words and reconstruct a valid sentence.",
+      "skill_tags": ["data-structures", "dp", "strings"],
+      "observations": [
+        {
+          "title": "Understand the cipher inversion",
+          "description": "The cipher lowercases, reverses each word, and concatenates. To decode, we must partition the ciphered string into segments where each segment is the lowercase-reverse of some dictionary word. Equivalently, if we read a segment of the ciphered string left-to-right, it matches the reverse of some word (lowercased). So matching a dictionary word at position i in the ciphered string means matching that word's reversed-lowercase form starting at position i.",
+          "hints": {
+            "nudge": "Trace through the cipher process on a single word. What does the ciphered form of a word look like compared to the original?",
+            "question": "If the original word is 'Kira', its ciphered form is 'arik'. If you reverse 'Kira' and lowercase it, what do you get? How does that relate to what appears in the ciphered string?",
+            "formal": "For each dictionary word w, its appearance in the ciphered string is reverse(lowercase(w)). To find matches in the ciphered string, preprocess each word by lowercasing and reversing it, then look for these preprocessed forms as substrings starting at valid partition boundaries."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Build a trie from reversed-lowercase dictionary words",
+          "description": "Insert the lowercase-reversed form of each dictionary word into a trie. This allows efficiently checking all dictionary words that match starting at any position in the ciphered string by walking down the trie character by character. Without a trie, checking all m words at each position would be too slow.",
+          "hints": {
+            "nudge": "There are up to 100,000 words. At each position you need to find which words match. What data structure lets you check multiple strings simultaneously by scanning characters one at a time?",
+            "question": "If you store all reversed-lowercase words in a trie, how would you find all words that match starting at position i in the ciphered string?",
+            "formal": "Build a trie with 26-way branching. For each word w_i, insert lowercase(reverse(w_i)) into the trie, storing the original word index at the terminal node. Total insertion cost is O(total length of all words) = O(10^6)."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "DP over positions to partition the ciphered string",
+          "description": "Define dp[i] = true if the prefix of length i of the ciphered string can be partitioned into valid dictionary words. For each position i where dp[i] is true, walk the trie starting from character i to find all dictionary words that match starting at position i. For each such word of length L, set dp[i + L] = true and record a back-pointer.",
+          "hints": {
+            "nudge": "If you know the first i characters can be validly decoded, how do you extend the partition?",
+            "question": "At position i, you walk the trie consuming characters t[i], t[i+1], ... and hitting terminal nodes at various depths. Each terminal at depth L means a word of length L matches. What should you do with dp[i + L]?",
+            "formal": "dp[0] = true. For each i with dp[i] = true, walk the trie from root following t[i], t[i+1], .... At each trie node that is a terminal (some word of length L ends here), set dp[i + L] = true and store parent[i + L] = i. Stop the walk when there is no child for the current character or i + depth > n."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Trie walk bounds the total work to O(n * max_word_len)",
+          "description": "At each position i, the trie walk proceeds at most max_word_length steps before either exhausting the string or hitting a missing trie edge. Since max word length is at most 1000 and n is at most 10000, the total work across all positions is at most O(n * max_word_len) = O(10^7), well within the 2-second time limit.",
+          "hints": {
+            "nudge": "How deep can the trie walk go at each position? What bounds the total number of character comparisons across all positions?",
+            "question": "If the longest dictionary word has length W and the ciphered string has length n, what is the worst-case total number of trie steps?",
+            "formal": "At each of the n positions, the trie walk takes at most min(W, n - i) steps where W = max word length (<= 1000). Total steps <= n * W = 10^7. Each step is a single array lookup in the trie node, so this is fast enough."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Reconstruct the sentence preserving original case",
+          "description": "Follow the back-pointers from position n back to position 0 to recover which words were used. At each terminal trie node, store the original (pre-lowercasing, pre-reversal) word so the output preserves the dictionary's casing. Output the words in order separated by spaces.",
+          "hints": {
+            "nudge": "You need to output words in their original case from the dictionary, not lowercase. Where should you store this information?",
+            "question": "The trie contains lowercased-reversed words, but the output needs the original casing. When you insert a word into the trie, what extra data should the terminal node hold?",
+            "formal": "Each trie terminal node stores a reference to the original dictionary word (with its original casing). After DP, trace parent[] pointers from position n to 0, collecting word indices. Reverse the collected list to get left-to-right order, then join with spaces."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    },
+    {
+      "name": "Rabin-Karp hashing + DP",
+      "description": "Precompute rolling hashes of the ciphered string. Hash each reversed-lowercase dictionary word. Use DP over positions, checking for word matches via hash comparison with verification on collision.",
+      "skill_tags": ["hashing", "dp", "strings"],
+      "observations": [
+        {
+          "title": "Reverse the ciphered string to simplify matching",
+          "description": "If we reverse the entire ciphered string, then the cipher process becomes: each original word was lowercased and appended (in order) to form the reversed ciphered string. So we can work with the reversed string and match lowercase dictionary words directly, without needing to reverse each word individually.",
+          "hints": {
+            "nudge": "The ciphered string has words reversed and concatenated. What happens if you reverse the whole ciphered string?",
+            "question": "If the cipher reverses each word and concatenates, and then you reverse the entire result, what is the relationship between the final string and the original lowercase words?",
+            "formal": "Let the original sentence be w_1 w_2 ... w_k. Cipher = rev(lower(w_1)) + rev(lower(w_2)) + ... + rev(lower(w_k)). Reversing: rev(cipher) = lower(w_k) + ... + lower(w_1). So the reversed cipher is the concatenation of lowercase words in reverse order. DP from left to right on rev(cipher) matches lowercase words and recovers them in reverse order."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Group dictionary words by length for efficient lookup",
+          "description": "Instead of checking all m words at each position, group the words by their length. At each DP position i, only check words whose length L satisfies i + L <= n. Store hashes in a dictionary keyed by (length, hash_value) for O(1) expected-time lookup.",
+          "hints": {
+            "nudge": "There are up to 100,000 words but only up to 1,000 distinct lengths. How can you reduce the number of hash comparisons at each position?",
+            "question": "If you know all distinct word lengths in the dictionary, how many substring hashes do you need to compute at each position i?",
+            "formal": "Collect all distinct word lengths L_1, L_2, ..., L_d (d <= 1000). At position i, for each distinct length L_j, compute hash(t[i..i+L_j]) and look it up in a hash map for words of that length. This gives at most d lookups per position."
+          },
+          "skill_tag": "hashing"
+        },
+        {
+          "title": "Rolling hash enables O(1) substring hash queries",
+          "description": "Precompute prefix hashes of the ciphered string using a polynomial rolling hash (e.g., base 31, modulus a large prime). Then the hash of any substring t[i..i+L] can be computed in O(1) using the prefix hash array. This avoids recomputing hashes from scratch at each position.",
+          "hints": {
+            "nudge": "Computing the hash of a substring from scratch each time is O(L). Can you precompute something to make it O(1)?",
+            "question": "If H[i] = hash(t[0..i]), how do you compute hash(t[i..j]) from H[i] and H[j]?",
+            "formal": "Let H[i] = t[0]*B^(i-1) + t[1]*B^(i-2) + ... + t[i-1] (mod P). Then hash(t[i..j]) = (H[j] - H[i]*B^(j-i)) mod P. Precompute B^k mod P for all k. Each substring hash query is O(1)."
+          },
+          "skill_tag": "hashing"
+        },
+        {
+          "title": "DP with hash lookups and back-pointers",
+          "description": "Define dp[i] = true if the first i characters of the (possibly reversed) ciphered string can be partitioned into dictionary words. For each valid position i and each distinct word length L, compute the hash of t[i..i+L], look it up in the hash map, and if found set dp[i+L] = true with a back-pointer. On hash collision, verify by direct string comparison.",
+          "hints": {
+            "nudge": "The DP recurrence is the same as the trie approach. What changes is how you check whether a substring matches a dictionary word.",
+            "question": "At position i with dp[i] = true, you try each distinct word length L. How do you check if t[i..i+L] matches any dictionary word of length L?",
+            "formal": "dp[0] = true. For each i with dp[i] = true and each distinct length L: compute h = hash(t[i..i+L]). If h matches a word's hash (and string comparison confirms), set dp[i+L] = true, parent[i+L] = (i, word_index). Reconstruct by following parent pointers from n to 0."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    }
+  ]
+}

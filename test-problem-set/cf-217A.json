@@ -1,0 +1,129 @@
+{
+  "contest_id": 217,
+  "index": "A",
+  "title": "Ice Skating",
+  "difficulty": 1200,
+  "tags": [
+    "brute force",
+    "dfs and similar",
+    "dsu",
+    "graphs"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Bajtek is learning to skate on ice. He's a beginner, so his only mode of transportation is pushing off from a snow drift to the north, east, south or west and sliding until he lands in another snow drift. He has noticed that in this way it's impossible to get from some snow drifts to some other by any sequence of moves. He now wants to heap up some additional snow drifts, so that he can get from any snow drift to any other one. He asked you to find the minimal number of snow drifts that need to be created. We assume that Bajtek can only heap up snow drifts at integer coordinates.",
+  "input_spec": "The first line of input contains a single integer n (1 <= n <= 100) -- the number of snow drifts. Each of the following n lines contains two integers xi and yi (1 <= xi, yi <= 1000) -- the coordinates of the i-th snow drift. Note that the north direction coincides with the direction of Oy axis, so the east direction coincides with the direction of the Ox axis. All snow drift locations are distinct.",
+  "output_spec": "Output the minimal number of snow drifts that need to be created in order for Bajtek to be able to reach any snow drift from any other one.",
+  "examples": [
+    {
+      "input": "2\n2 1\n1 2",
+      "output": "1"
+    },
+    {
+      "input": "2\n2 1\n4 1",
+      "output": "0"
+    }
+  ],
+  "routes": [
+    {
+      "name": "DSU on shared coordinates",
+      "description": "Model drifts as nodes and union any two that share an x or y coordinate using a union-find structure. The answer is the number of connected components minus one.",
+      "skill_tags": [
+        "data-structures",
+        "graphs"
+      ],
+      "observations": [
+        {
+          "title": "Two drifts on the same row or column are reachable",
+          "description": "Bajtek slides in a straight line (N/S/E/W) until hitting another drift. Two drifts that share the same x-coordinate or the same y-coordinate can reach each other directly, possibly through intermediate drifts on that line.",
+          "hints": {
+            "nudge": "What determines whether Bajtek can slide from one drift to another in a single move?",
+            "question": "If two drifts share an x-coordinate, can Bajtek always slide between them? What about sharing a y-coordinate?",
+            "formal": "Drift i and drift j are directly connected if xi = xj or yi = yj. Even if other drifts lie between them on the same line, transitivity through those intermediate drifts still connects them."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Reachability forms connected components",
+          "description": "The reachability relation is transitive: if A connects to B (same row) and B connects to C (same column), then A can reach C via B. The drifts partition into connected components under this relation.",
+          "hints": {
+            "nudge": "If drift A shares a row with drift B, and drift B shares a column with drift C, can A reach C?",
+            "question": "How would you describe the groups of drifts that can all reach each other? What graph structure does this form?",
+            "formal": "Build an undirected graph where each drift is a node and edges connect pairs sharing a coordinate. The connected components of this graph are exactly the sets of mutually reachable drifts."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Answer is number of components minus one",
+          "description": "To connect k separate components into one, you need exactly k - 1 additional drifts. Each new drift can bridge two previously disconnected components by sharing a coordinate with a drift in each.",
+          "hints": {
+            "nudge": "If you have k separate groups of drifts, what is the minimum number of new drifts to link them all?",
+            "question": "Think of each component as a single node. How many edges do you need to connect k isolated nodes into one tree?",
+            "formal": "A forest of k components requires k - 1 edges to become connected. Each new snow drift placed on a shared row or column of two components acts as a bridge. Answer = (number of connected components) - 1."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Union-Find to count components",
+          "description": "Use a DSU (disjoint set union) structure. For each pair of drifts, if they share an x or y coordinate, union them. The number of distinct roots at the end is the component count.",
+          "hints": {
+            "nudge": "What data structure efficiently tracks which elements belong to the same group after a series of merge operations?",
+            "question": "If you iterate over all pairs of drifts and union those sharing a coordinate, how do you count the final number of groups?",
+            "formal": "Initialize DSU with n elements. For all pairs (i, j) with i < j: if x[i] == x[j] or y[i] == y[j], union(i, j). Count distinct find(i) values for i = 0..n-1. Answer = count - 1."
+          },
+          "skill_tag": "data-structures"
+        }
+      ]
+    },
+    {
+      "name": "DFS/BFS graph traversal",
+      "description": "Build an adjacency list connecting drifts that share a coordinate, then count connected components using DFS or BFS. The answer is the component count minus one.",
+      "skill_tags": [
+        "graphs",
+        "dfs"
+      ],
+      "observations": [
+        {
+          "title": "Two drifts on the same row or column are reachable",
+          "description": "Bajtek slides in a straight line until hitting another drift. Sharing the same x-coordinate or same y-coordinate means two drifts can reach each other, so they should be connected by an edge.",
+          "hints": {
+            "nudge": "What determines whether Bajtek can slide from one drift to another?",
+            "question": "If two drifts share an x-coordinate, can Bajtek always get between them? What about a shared y-coordinate?",
+            "formal": "Create an edge between drift i and drift j whenever xi = xj or yi = yj. This captures all direct reachability."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Build the adjacency graph",
+          "description": "With n <= 100, checking all O(n^2) pairs is efficient. For each pair sharing a coordinate, add an edge. This produces an undirected graph.",
+          "hints": {
+            "nudge": "How many pairs of drifts do you need to check? Is that feasible given the constraints?",
+            "question": "With n up to 100, iterating over all pairs gives at most how many comparisons? Is that fast enough?",
+            "formal": "For i in 0..n, for j in i+1..n: if x[i] == x[j] or y[i] == y[j], add edge (i, j). At most C(100, 2) = 4950 pairs. Trivially fast."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Count connected components via DFS",
+          "description": "Run a DFS (or BFS) from each unvisited node, incrementing a component counter each time. The number of times you start a new traversal equals the number of connected components.",
+          "hints": {
+            "nudge": "How do you count separate groups in a graph using traversal?",
+            "question": "If you maintain a visited array and start a DFS from each unvisited node, what does each new DFS invocation correspond to?",
+            "formal": "visited = [false] * n; components = 0. For each i: if not visited[i], run DFS(i) marking all reachable nodes as visited, increment components. Answer = components - 1."
+          },
+          "skill_tag": "dfs"
+        },
+        {
+          "title": "Answer is number of components minus one",
+          "description": "Each additional snow drift can merge two disconnected components. To unify k components into one requires exactly k - 1 new drifts.",
+          "hints": {
+            "nudge": "If you have k separate groups, how many bridges do you need to connect them all?",
+            "question": "Think of each component as a single node. How many edges connect k isolated nodes into a single tree?",
+            "formal": "Minimum edges to connect k components = k - 1. Each new drift placed at a coordinate shared with two components bridges them. Answer = components - 1."
+          },
+          "skill_tag": "graphs"
+        }
+      ]
+    }
+  ]
+}

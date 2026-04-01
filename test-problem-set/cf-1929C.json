@@ -1,0 +1,77 @@
+{
+  "contest_id": 1929,
+  "index": "C",
+  "title": "Sasha and the Casino",
+  "difficulty": 1400,
+  "tags": ["greedy", "math"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Sasha decided to give his girlfriend the best handbag, but unfortunately for Sasha, it is very expensive. Therefore, Sasha wants to earn it. After looking at earning tips on the internet, he decided to go to the casino. Sasha knows that the casino operates under the following rules. If Sasha places a bet of $$$y$$$ coins (where $$$y$$$ is a positive integer), then in case of winning, he will receive $$$y \\cdot k$$$ coins (i.e., his number of coins will increase by $$$y \\cdot (k - 1)$$$). And in case of losing, he will lose the entire bet amount (i.e., his number of coins will decrease by $$$y$$$). Note that the bet amount must always be a positive ($$$ \\gt  0$$$) integer and cannot exceed Sasha's current number of coins. Sasha also knows that there is a promotion at the casino: he cannot lose more than $$$x$$$ times in a row. Initially, Sasha has $$$a$$$ coins. He wonders whether he can place bets such that he is guaranteed to win any number of coins. In other words, is it true that for any integer $$$n$$$, Sasha can make bets so that for any outcome that does not contradict the rules described above, at some moment of time he will have at least $$$n$$$ coins.",
+  "input_spec": "Each test consists of multiple test cases. The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 1000$$$) — the number of test cases. The description of the test cases follows. The single line of each test case contains three integers $$$k, x$$$ and $$$a$$$ ($$$2 \\leq k \\leq 30$$$, $$$1 \\leq x \\leq 100$$$, $$$1 \\leq a \\leq 10^9$$$) — the number of times the bet is increased in case of a win, the maximum number of consecutive losses, and the initial number of coins Sasha has.",
+  "output_spec": "For each test case, output \" YES \" (without quotes) if Sasha can achieve it and \" NO \" (without quotes) otherwise. You can output \" YES \" and \" NO \" in any case (for example, the strings \" yEs \", \" yes \" and \" Yes \" will be recognized as a positive answer).",
+  "examples": [
+    {
+      "input": "92 1 72 1 12 3 153 3 64 4 55 4 74 88 100000000025 69 23113 97 18806",
+      "output": "YES\nNO\nYES\nNO\nNO\nYES\nNO\nNO\nNO"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy minimum-bet sequence with loss budget",
+      "description": "Determine the minimum bet at each step so that a win always recovers all prior losses plus nets at least +1. Compute the total coins needed to survive x consecutive losses and still place the (x+1)-th bet. If the initial coins suffice, output YES.",
+      "skill_tags": ["greedy", "math"],
+      "observations": [
+        {
+          "title": "A guaranteed strategy must produce a net gain of at least +1 on the first win",
+          "description": "To guarantee reaching any target n, it suffices to guarantee a net gain of at least +1 coin in every round of play (a round being a sequence of losses followed by the eventual forced win). If the strategy guarantees +1 per round, it can be repeated indefinitely to reach any target. Conversely, if no strategy guarantees a net gain, the casino can keep Sasha's balance non-increasing.",
+          "hints": {
+            "nudge": "What is the simplest repeatable unit of progress Sasha needs? Think about what happens between consecutive wins.",
+            "question": "If Sasha plays a sequence of bets ending in a win and nets +1 coin from that sequence, can he repeat that pattern to grow without bound? Why is +1 the key threshold?",
+            "formal": "Define a 'round' as a maximal run of losses followed by one win. If Sasha can guarantee net gain >= 1 per round regardless of the casino's choices, he gains at least 1 coin per round and can reach any target n by repeating the strategy. The casino can force at most x losses per round, so the strategy must handle the worst case of exactly x losses before the win."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "The worst case is exactly x consecutive losses before a win",
+          "description": "The casino's power is to choose when Sasha loses, subject to the constraint of at most x consecutive losses. The worst case for Sasha is losing the maximum x times in a row before being forced to let him win. Any viable strategy must handle this scenario, and if it does, all scenarios with fewer losses are automatically handled since Sasha would win earlier with less total loss.",
+          "hints": {
+            "nudge": "What is the most damage the casino can inflict before Sasha is guaranteed a win?",
+            "question": "If the casino wants to maximize Sasha's losses, how many consecutive losses will it force? After those losses, what must happen?",
+            "formal": "The casino maximizes damage by dealing x consecutive losses. After x losses in a row, the (x+1)-th bet must be a win. So Sasha must plan bets b_0, b_1, ..., b_x such that even after losing b_0 through b_{x-1}, winning b_x still produces a net gain."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Each bet must be large enough that winning it covers all prior losses",
+          "description": "Suppose Sasha has lost a cumulative total of S coins so far in the current round. His next bet y must satisfy y * (k - 1) > S, i.e., the profit from winning must strictly exceed the accumulated losses. This gives the minimum bet at each step: y = floor(S / (k - 1)) + 1. Starting from S = 0, the first bet is 1.",
+          "hints": {
+            "nudge": "After losing some total amount S, how large must the next bet be so that winning it puts Sasha ahead?",
+            "question": "If Sasha has lost S coins total and now bets y, winning gives him y * (k - 1) profit. For a net gain, what inequality must hold? What is the smallest integer y satisfying it?",
+            "formal": "After cumulative loss S, the next bet y must satisfy y * (k - 1) > S, ensuring net gain y * (k - 1) - S >= 1. The minimum such integer is y = floor(S / (k - 1)) + 1. Starting with S_0 = 0 and b_0 = 1, we get S_{i+1} = S_i + b_i and b_{i+1} = floor(S_{i+1} / (k - 1)) + 1."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Simulate x+1 bets and check if the total fits within a coins",
+          "description": "Compute the bet sequence b_0, b_1, ..., b_x iteratively. The total coins needed is b_0 + b_1 + ... + b_x (Sasha must be able to afford all x losses plus the final winning bet). If this total is at most a, output YES; otherwise output NO. The loop runs x+1 iterations, and since x <= 100, this is efficient.",
+          "hints": {
+            "nudge": "You have a formula for each bet. How many bets do you need to compute, and what do you compare against?",
+            "question": "If Sasha needs to survive x losses and place one more winning bet, what is the total number of coins he must have at the start? How does that compare to a?",
+            "formal": "Set S = 0, total = 0. For i = 0 to x: compute b_i = floor(S / (k - 1)) + 1, set total += b_i, S += b_i. Output YES if total <= a, else NO. Time complexity is O(x) per test case."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Handle the edge case k = 2 and large x",
+          "description": "When k = 2, the win multiplier is minimal: winning bet y nets only y coins. This means each subsequent bet roughly doubles, so the total needed grows exponentially as 2^(x+1) - 1. For large x (up to 100), the total can exceed 10^30, far beyond a's maximum of 10^9. Use a 64-bit integer or break early if the running total exceeds a to avoid overflow.",
+          "hints": {
+            "nudge": "What happens to the bet sizes when k = 2? How fast do they grow?",
+            "question": "With k = 2, each bet must cover all prior losses plus 1. If the first bet is 1, the second is 2, the third is 4... do you recognize this pattern? How large can the sum get?",
+            "formal": "When k = 2, b_i = S_i + 1 and S_{i+1} = 2 * S_i + 1, giving b_i = 2^i and total = 2^(x+1) - 1. For x = 100 this is astronomically large. During simulation, if total > a at any point, break early and output NO to avoid integer overflow."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

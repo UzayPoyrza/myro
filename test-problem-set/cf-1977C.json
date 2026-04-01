@@ -1,0 +1,85 @@
+{
+  "contest_id": 1977,
+  "index": "C",
+  "title": "Nikita and LCM",
+  "difficulty": 1900,
+  "tags": [
+    "brute force",
+    "data structures",
+    "dp",
+    "greedy",
+    "math",
+    "number theory",
+    "sortings"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Nikita is a student passionate about number theory and algorithms. He faces an interesting problem related to an array of numbers. Suppose Nikita has an array of integers a of length n. He will call a subsequence of the array special if its least common multiple (LCM) is not contained in a. The LCM of an empty subsequence is equal to 0. Nikita wonders: what is the length of the longest special subsequence of a? Help him answer this question! A sequence b is a subsequence of a if b can be obtained from a by the deletion of several (possibly, zero or all) elements, without changing the order of the remaining elements.",
+  "input_spec": "Each test contains multiple test cases. The first line of input contains a single integer t (1 <= t <= 2000) -- the number of test cases. The first line of each test case contains a single integer n (1 <= n <= 2000) -- the length of the array a. The second line of each test case contains n integers a_1, a_2, ..., a_n (1 <= a_i <= 10^9) -- the elements of the array a. It is guaranteed that the sum of n over all test cases does not exceed 2000.",
+  "output_spec": "For each test case, output a single integer -- the length of the longest special subsequence of a.",
+  "examples": [
+    {
+      "input": "6\n5\n1 2 4 8 16\n6\n3 2 10 20 60 1\n7\n2 3 4 6 12 100003 120003\n6\n9 2 42 7 3 6\n7\n7 1 6 8 4 99 57\n1\n79 10203",
+      "output": "0\n4\n4\n5\n8\n0"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Check full array, then iterate divisors of max",
+      "description": "Compute the LCM of the full array. If it exceeds max(a), the answer is n. Otherwise every element divides max(a), so enumerate divisors of max(a) that are absent from the array and greedily find the largest subset whose LCM equals that divisor.",
+      "skill_tags": ["number-theory", "greedy", "math"],
+      "observations": [
+        {
+          "title": "If the full-array LCM exceeds max(a), the entire array is the answer",
+          "description": "Compute LCM(a_1, ..., a_n). Since every element a_i <= max(a), if the LCM is strictly greater than max(a) then it cannot appear in the array, so the whole array is a special subsequence of length n. This handles many cases immediately and should be checked first.",
+          "hints": {
+            "nudge": "What happens when you take the LCM of the entire array? When is it guaranteed not to be in the array?",
+            "question": "The LCM of any subset is at least as large as the maximum element in that subset. Under what condition does the LCM of all n elements exceed every element in the array?",
+            "formal": "Compute L = lcm(a_1, ..., a_n), stopping early if L > max(a). If L > max(a) then L is not in a (since all elements are at most max(a)), so the answer is n."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "If the full-array LCM equals max(a), every element divides the maximum",
+          "description": "When LCM(a_1, ..., a_n) = max(a), it means max(a) is already a common multiple of every element. Equivalently, a_i divides max(a) for every i. This structural constraint drastically limits the search space: any subsequence's LCM must also be a divisor of max(a).",
+          "hints": {
+            "nudge": "If the LCM of all elements equals the largest element, what relationship must each element have with that maximum?",
+            "question": "When lcm(a_1, ..., a_n) = max(a), can any element a_i fail to divide max(a)? What does this imply about the LCM of any subsequence?",
+            "formal": "LCM(a_1, ..., a_n) = max(a) implies a_i | max(a) for all i. For any subsequence S, lcm(S) | max(a). So the LCM of any subsequence is a divisor of max(a). We need to find a divisor d of max(a) such that d is not in the array a."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Candidate LCM values are divisors of max(a) that are absent from the array",
+          "description": "Since any subsequence LCM must divide max(a), we only need to consider divisors of max(a) as potential target LCM values. A divisor d can serve as a special subsequence's LCM only if d does not appear in the array a. So enumerate all divisors of max(a) and filter out those present in the array.",
+          "hints": {
+            "nudge": "The subsequence LCM must divide max(a) and must not be in the array. What set of values should you check?",
+            "question": "How many divisors can max(a) have given max(a) <= 10^9? Is it feasible to enumerate them all?",
+            "formal": "Enumerate all divisors of M = max(a) in O(sqrt(M)) time. Store the array elements in a set. A divisor d is a candidate if d is not in the set. For each candidate d, determine how many array elements divide d."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "For each candidate divisor, greedily collect all elements that divide it",
+          "description": "For a candidate divisor d (absent from a), any element a_i that divides d can be included in a subsequence targeting LCM = d. Greedily take all such elements. If their LCM actually equals d, then this gives a valid special subsequence. Track the maximum count across all candidates.",
+          "hints": {
+            "nudge": "Given a target LCM value d, which elements from the array can participate in a subsequence with that LCM?",
+            "question": "If you include every a_i that divides d, will the LCM of those elements necessarily equal d? What condition must you verify?",
+            "formal": "For each candidate d not in a: collect all a_i with a_i | d. Compute their LCM. If lcm equals d, the count of these elements is a valid answer. If lcm < d, this set cannot achieve LCM = d so skip it. Maximize over all valid candidates."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Deduplicate elements to reduce work from O(n * d(M)) to O(d(M)^2)",
+          "description": "Many array elements may share the same value. Since divisibility only depends on the value (not position), count distinct values and their frequencies. When checking a candidate divisor d, iterate over distinct values that divide d and sum their frequencies. Computing the LCM also only involves distinct values. Since all distinct values are themselves divisors of max(a), both the candidate list and the element list are subsets of the divisor set, making the inner loop at most d(M) per candidate.",
+          "hints": {
+            "nudge": "If the array has many duplicate values, can you avoid redundant work by grouping identical elements?",
+            "question": "All array elements are divisors of max(a). How many distinct values can there be at most? How does this affect the total number of (candidate, element) pairs you check?",
+            "formal": "Store a map from distinct value to its count. There are at most d(M) distinct values (all divisors of M). For each of the at most d(M) candidate divisors d, iterate over at most d(M) distinct values to check divisibility. Total: O(d(M)^2 * log(M)) with the log for LCM computation. Since d(M) <= ~1344 for M <= 10^9, this is well within time limits."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

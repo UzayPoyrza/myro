@@ -1,0 +1,84 @@
+{
+  "contest_id": 1437,
+  "index": "C",
+  "title": "Chef Monocarp",
+  "difficulty": 1800,
+  "tags": [
+    "dp",
+    "flows",
+    "graph matchings",
+    "greedy",
+    "math",
+    "sortings"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Chef Monocarp has just put $$$n$$$ dishes into an oven. He knows that the $$$i$$$-th dish has its optimal cooking time equal to $$$t_i$$$ minutes. At any positive integer minute $$$T$$$ Monocarp can put no more than one dish out of the oven. If the $$$i$$$-th dish is put out at some minute $$$T$$$, then its unpleasant value is $$$|T - t_i|$$$ — the absolute difference between $$$T$$$ and $$$t_i$$$. Once the dish is out of the oven, it can't go back in. Monocarp should put all the dishes out of the oven. What is the minimum total unpleasant value Monocarp can obtain?",
+  "input_spec": "The first line contains a single integer $$$q$$$ ($$$1 \\le q \\le 200$$$) — the number of testcases. Then $$$q$$$ testcases follow. The first line of the testcase contains a single integer $$$n$$$ ($$$1 \\le n \\le 200$$$) — the number of dishes in the oven. The second line of the testcase contains $$$n$$$ integers $$$t_1, t_2, \\dots, t_n$$$ ($$$1 \\le t_i \\le n$$$) — the optimal cooking time for each dish. The sum of $$$n$$$ over all $$$q$$$ testcases doesn't exceed $$$200$$$.",
+  "output_spec": "Print a single integer for each testcase — the minimum total unpleasant value Monocarp can obtain when he puts out all the dishes out of the oven. Remember that Monocarp can only put the dishes out at positive integer minutes and no more than one dish at any minute.",
+  "examples": [
+    {
+      "input": "6\n6\n4 2 4 4 5 2\n7\n7 7 7 7 7 7 7\n1\n1\n5\n5 1 2 4 3\n4\n1 4 4 4\n21\n21 8 1 4 1 5 21 1 8 21 11 21 11 3 12 8 19 15 9 11 13",
+      "output": "4\n12\n0\n0\n2\n21"
+    }
+  ],
+  "routes": [
+    {
+      "name": "DP over sorted dishes and time slots",
+      "description": "Sort the dishes by optimal time, then use dynamic programming over dishes and consecutive time slots to find the minimum-cost assignment.",
+      "skill_tags": ["dp", "sorting"],
+      "observations": [
+        {
+          "title": "Sorting preserves optimality of ordered assignments",
+          "description": "If we sort the dishes by their optimal times, there exists an optimal solution where the assignment of dishes to minutes preserves this sorted order. Any assignment with two dishes swapped out of order can be unswapped without increasing total cost, by the exchange argument on absolute values.",
+          "hints": {
+            "nudge": "Does the order in which you consider the dishes matter? Is there a natural ordering that simplifies the problem?",
+            "question": "Suppose dish A has optimal time 3 and dish B has optimal time 5. If A is assigned to a later minute than B, can you always swap them without increasing cost?",
+            "formal": "Sort dishes by t_i. In any optimal solution, if t_i <= t_j then dish i is removed no later than dish j. Proof: for a <= b and x <= y, |a-x| + |b-y| <= |a-y| + |b-x|. So sorting dishes and assigning them to an increasing sequence of minutes is always at least as good."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Dishes can be removed before or after their optimal time",
+          "description": "Unlike a one-directional delay, the cost |T - t_i| means removing a dish early is just as valid as removing it late. When many dishes cluster at the same optimal time, it is often better to spread them symmetrically around that time rather than pushing them all forward.",
+          "hints": {
+            "nudge": "Look at the case where all dishes have the same optimal time. Is it always best to remove them all after that time?",
+            "question": "If seven dishes all have optimal time 7, what total cost do you get by assigning them to 7,8,9,...,13 versus centering them around 7?",
+            "formal": "For k dishes at time t, assigning to t-floor((k-1)/2), ..., t, ..., t+floor(k/2) minimizes the total absolute deviation. This shows we must consider time slots both before and after the optimal times, not just after."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Bounding the range of useful time slots to [1, 2n]",
+          "description": "Since t_i <= n and there are n dishes, no dish ever needs to be removed later than minute 2n. This bounds the number of time slots the DP must consider, keeping the state space quadratic in n.",
+          "hints": {
+            "nudge": "How late could you ever need to remove a dish? Is there a reasonable upper bound on the time slots you need to consider?",
+            "question": "If the largest optimal time is at most n and there are n dishes each needing a distinct minute, what is the latest minute you might ever need?",
+            "formal": "The latest optimal time is at most n. Even if all n dishes share optimal time n, the optimal spread uses minutes roughly n/2 to 3n/2, well within [1, 2n]. So considering time slots 1 through 2n is sufficient."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "DP transition: assign dish to this slot or skip the slot",
+          "description": "Define dp[i][j] as the minimum cost to assign the first i sorted dishes using only time slots from {1, ..., j}. At each slot j, either skip it (dp[i][j] = dp[i][j-1]) or assign dish i to slot j (dp[i][j] = dp[i-1][j-1] + |t_i - j|).",
+          "hints": {
+            "nudge": "You have sorted dishes to assign to time slots. At each slot, you have a binary choice. What are the two options?",
+            "question": "If you are considering time slot j and still need to assign dish i, what are your two choices? How does each choice affect the DP state?",
+            "formal": "dp[i][j] = min(dp[i][j-1], dp[i-1][j-1] + |t_i - j|). The first term skips slot j (dish i will be assigned to a later slot). The second term assigns sorted dish i to slot j, paying |t_i - j|. The key insight: since both dishes and slots are ordered, we never need to revisit earlier slots."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Base case and answer extraction",
+          "description": "The base case is dp[0][j] = 0 for all j (zero dishes assigned costs nothing). Initialize dp[i][0] = infinity for i > 0. The final answer is dp[n][2n], representing all n dishes optimally assigned across slots 1 through 2n.",
+          "hints": {
+            "nudge": "What does it mean to have assigned zero dishes? Where in the DP table do you read the final answer?",
+            "question": "If dp[i][j] represents assigning i dishes within time slots 1..j, what is dp[0][j] for any j? And which cell gives the answer?",
+            "formal": "Base: dp[0][j] = 0 for all 0 <= j <= 2n; dp[i][0] = infinity for i >= 1. Answer: dp[n][2n]. Time complexity: O(n * 2n) = O(n^2). Space: O(n^2), reducible to O(n) with a rolling array since dp[i][j] depends only on row i and row i-1."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    }
+  ]
+}

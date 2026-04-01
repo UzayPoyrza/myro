@@ -1,0 +1,123 @@
+{
+  "contest_id": 489,
+  "index": "B",
+  "title": "BerSU Ball",
+  "difficulty": 1200,
+  "tags": [
+    "greedy",
+    "sortings",
+    "two pointers"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "The Berland State University is hosting a ballroom dance in celebration of its 100500-th anniversary! n boys and m girls are already busy rehearsing waltz, minuet, polonaise and quadrille moves. We know that several boy&girl pairs are going to be invited to the ball. However, the partners' dancing skill in each pair must differ by at most one. For each boy, we know his dancing skills. Similarly, for each girl we know her dancing skills. Write a code that can determine the largest possible number of pairs that can be formed from n boys and m girls.",
+  "input_spec": "The first line contains an integer n (1 <= n <= 100) -- the number of boys. The second line contains sequence a_1, a_2, ..., a_n (1 <= a_i <= 100), where a_i is the i-th boy's dancing skill. Similarly, the third line contains an integer m (1 <= m <= 100) -- the number of girls. The fourth line contains sequence b_1, b_2, ..., b_m (1 <= b_j <= 100), where b_j is the j-th girl's dancing skill.",
+  "output_spec": "Print a single number -- the required maximum possible number of pairs.",
+  "examples": [
+    {
+      "input": "4\n1 4 6 2\n5\n5 1 5 7 9",
+      "output": "3"
+    },
+    {
+      "input": "4\n1 2 3 4\n4\n10 11 12 13",
+      "output": "0"
+    },
+    {
+      "input": "5\n1 1 1 1 1\n3\n1 2 3",
+      "output": "2"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Sort + two pointers",
+      "description": "Sort both arrays, then walk through them with two pointers. Match the current boy and girl if their skills differ by at most 1; otherwise advance the pointer with the smaller value.",
+      "skill_tags": [
+        "greedy",
+        "sorting",
+        "two-pointers"
+      ],
+      "observations": [
+        {
+          "title": "Sorting enables greedy matching",
+          "description": "If both arrays are sorted, the weakest unmatched boy should be paired with the weakest compatible girl. Matching a weak boy to a stronger girl wastes potential pairings for stronger boys.",
+          "hints": {
+            "nudge": "Does the order in which you try to form pairs matter?",
+            "question": "If you sort both groups by skill, why is it safe to match the smallest available boy with the smallest compatible girl?",
+            "formal": "Sort boys and girls ascending. Matching the weakest boy to the weakest compatible girl never reduces the total count, because any girl that works for a weaker boy also works for a stronger boy but not vice versa."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Two pointer walk",
+          "description": "Use pointer i for boys and j for girls. Compare boys[i] and girls[j]: if |boys[i] - girls[j]| <= 1, match them and advance both. Otherwise advance whichever points to the smaller value.",
+          "hints": {
+            "nudge": "After sorting, how do you efficiently find compatible pairs without nested loops?",
+            "question": "With two sorted arrays, if boys[i] < girls[j] - 1, can any future girl (with even higher skill) pair with boys[i]?",
+            "formal": "i = 0, j = 0. While i < n and j < m: if |boys[i] - girls[j]| <= 1, increment count, i, and j. Else if boys[i] < girls[j], increment i. Else increment j."
+          },
+          "skill_tag": "two-pointers"
+        },
+        {
+          "title": "Advance the smaller side when no match",
+          "description": "When the difference exceeds 1, the side with the smaller value can never match the other side's current or future elements (since both arrays are sorted ascending). So discard it by advancing that pointer.",
+          "hints": {
+            "nudge": "When the current pair doesn't match, which pointer should you move forward?",
+            "question": "If boys[i] is much smaller than girls[j], could boys[i] match any girl at index j or later?",
+            "formal": "If boys[i] < girls[j] - 1, then boys[i] < girls[k] - 1 for all k >= j, so boy i is unmatchable -- advance i. Symmetric logic for girls[j] < boys[i] - 1."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Each person is used at most once",
+          "description": "Once a boy and girl are matched, both pointers advance past them. This ensures no person appears in two pairs, and the algorithm terminates when either group is exhausted.",
+          "hints": {
+            "nudge": "How do you ensure a matched girl isn't reused for another boy?",
+            "question": "After pairing boys[i] with girls[j], what happens to both pointers? Why does this prevent double-counting?",
+            "formal": "On a match, both i and j increment, removing both from future consideration. The loop ends when i == n or j == m. Total time: O(n log n + m log m) for sorting plus O(n + m) for the walk."
+          },
+          "skill_tag": "two-pointers"
+        }
+      ]
+    },
+    {
+      "name": "Sort + greedy scan",
+      "description": "Sort both arrays. For each boy in order, scan through girls to find the first unmatched girl whose skill differs by at most 1.",
+      "skill_tags": [
+        "greedy",
+        "sorting"
+      ],
+      "observations": [
+        {
+          "title": "Sorting makes compatible partners adjacent in value",
+          "description": "Sorting both arrays groups similar skill levels together. Processing boys from weakest to strongest means each boy tries to grab the weakest available compatible girl first.",
+          "hints": {
+            "nudge": "What happens if you process the boys in random order?",
+            "question": "Why does processing the weakest boy first and giving him the weakest compatible girl not hurt future matchings?",
+            "formal": "Sort boys and girls ascending. The weakest boy's compatible range is a subset of what stronger boys can match, so giving him priority over a low-skill girl does not reduce the overall count."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Mark matched girls as used",
+          "description": "When a boy matches a girl, mark that girl so she cannot be paired again. This ensures the output is a valid matching.",
+          "hints": {
+            "nudge": "How do you prevent the same girl from being paired with multiple boys?",
+            "question": "After boy i pairs with girl j, what should you do to girl j so the next boy doesn't also take her?",
+            "formal": "Use a boolean array used[m] or set the girl's skill to a sentinel (e.g., infinity). On finding the first unused girl j with |boys[i] - girls[j]| <= 1, mark used[j] = true and break."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Break on first compatible girl",
+          "description": "For each boy, iterate through girls and take the first unused compatible girl. Because both arrays are sorted, the first compatible girl is the optimal choice -- she has the lowest skill among compatible options.",
+          "hints": {
+            "nudge": "Should you keep searching after finding one compatible girl?",
+            "question": "Since girls are sorted, is the first compatible unused girl always the best choice for the current boy?",
+            "formal": "For each boy i: for each girl j: if not used[j] and |boys[i] - girls[j]| <= 1, set used[j] = true, increment count, break. First compatible is optimal because she is weakest, preserving stronger girls for stronger boys."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

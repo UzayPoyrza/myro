@@ -1,0 +1,39 @@
+[scenario]
+name = "Vanya and Triangles — correct O(n^3) brute force with cross product"
+problem = "cf-552D"
+route = 1
+trigger = "user idle for 30s"
+elapsed_secs = 300
+observations_found = 3
+
+[scenario.obs_states]
+0 = "found"
+1 = "found"
+2 = "found"
+
+[scenario.code]
+text = """
+n = int(input())
+points = []
+for _ in range(n):
+    x, y = map(int, input().split())
+    points.append((x, y))
+count = 0
+for i in range(n):
+    for j in range(i + 1, n):
+        for k in range(j + 1, n):
+            ax, ay = points[i]
+            bx, by = points[j]
+            cx, cy = points[k]
+            cross = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
+            if cross != 0:
+                count += 1
+print(count)
+"""
+
+[expect]
+state = "found"
+obs_id = "cf:552D:route:2:obs:3"
+min_confidence = 0.7
+must_be_socratic = false
+banned_patterns = []

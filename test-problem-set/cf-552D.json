@@ -1,0 +1,126 @@
+{
+  "contest_id": 552,
+  "index": "D",
+  "title": "Vanya and Triangles",
+  "difficulty": 1900,
+  "tags": [
+    "brute force",
+    "combinatorics",
+    "geometry",
+    "math",
+    "sortings"
+  ],
+  "time_limit": "4 seconds",
+  "memory_limit": "512 megabytes",
+  "description": "Vanya got bored and he painted n distinct points on the plane. After that he connected all the points pairwise and saw that as a result many triangles were formed with vertices in the painted points. He asks you to count the number of the formed triangles with the non-zero area.",
+  "input_spec": "The first line contains integer n (1 <= n <= 2000) -- the number of the points painted on the plane. Next n lines contain two integers each x_i, y_i (-100 <= x_i, y_i <= 100) -- the coordinates of the i-th point. It is guaranteed that no two given points coincide.",
+  "output_spec": "In the first line print an integer -- the number of triangles with the non-zero area among the painted points.",
+  "examples": [
+    {
+      "input": "4\n0 0\n1 1\n2 0\n2 2",
+      "output": "3"
+    },
+    {
+      "input": "3\n0 0\n1 1\n2 0",
+      "output": "1"
+    },
+    {
+      "input": "1\n1 1",
+      "output": "0"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Complementary counting via collinear groups",
+      "description": "Count all C(n,3) triples, then subtract the degenerate (collinear) triples. Group collinear points by representing each line canonically, and for each line with k points subtract C(k,3).",
+      "skill_tags": [
+        "math",
+        "math",
+        "math",
+        "sorting"
+      ],
+      "observations": [
+        {
+          "title": "Non-zero area means non-collinear",
+          "description": "A triangle has non-zero area if and only if its three vertices are not collinear. This means we can count all triples and subtract those that are collinear.",
+          "hints": {
+            "nudge": "When does a triangle formed by three points have zero area?",
+            "question": "If you could easily count the 'bad' triples (zero area), how would you get the 'good' ones?",
+            "formal": "answer = C(n, 3) - (number of collinear triples). A triple is collinear iff the cross product of any two edge vectors is zero."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Group points by the line they lie on",
+          "description": "To count collinear triples, determine which points share a common line. For each pair of points, compute a canonical representation of the line through them and use a map to group all pairs belonging to the same line.",
+          "hints": {
+            "nudge": "If you iterate over all pairs of points, can you identify which pairs define the same line?",
+            "question": "How would you represent a line through two points so that any two pairs on the same line produce the same key?",
+            "formal": "For each pair (i, j), compute the direction (dx, dy) normalized by gcd and sign, plus a canonical point on the line (or use the line equation ax + by + c = 0 normalized by gcd). Store in a hash map: line -> set of point indices."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Canonical line representation requires care",
+          "description": "Two pairs of points lie on the same line if they share the same slope and intercept. Represent the line by its direction vector (dx, dy) divided by gcd with a consistent sign convention, plus a scalar that pins the line's position. This avoids floating-point issues.",
+          "hints": {
+            "nudge": "Using floating-point slope and intercept can cause precision issues. How can you represent a line using only integers?",
+            "question": "If you have direction (dx, dy), how do you normalize it so that parallel pairs on the same line get the same key? What additional value distinguishes parallel lines?",
+            "formal": "Normalize (dx, dy) by dividing by gcd(|dx|, |dy|) and ensuring the leading nonzero component is positive. Then the line can be keyed by (dx/g, dy/g, cross) where cross = x1 * dy/g - y1 * dx/g, a value constant for all points on the line."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Subtract C(k, 3) for each line with k collinear points",
+          "description": "After grouping, each line that contains k points contributes C(k, 3) = k*(k-1)*(k-2)/6 degenerate triples. Sum these over all lines and subtract from C(n, 3) to get the answer.",
+          "hints": {
+            "nudge": "If a line passes through k points, how many zero-area triangles does that produce?",
+            "question": "How many ways can you choose 3 points from k collinear points? What is the combinatorial formula?",
+            "formal": "For each line L with |L| = k >= 3, subtract C(k, 3) = k*(k-1)*(k-2)/6. Total answer = n*(n-1)*(n-2)/6 - sum over all lines of C(|L|, 3). Overall O(n^2) time."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    },
+    {
+      "name": "Direct O(n^3) brute force with cross product",
+      "description": "Iterate over all triples of points and check whether each triple forms a non-degenerate triangle using the cross product test. Feasible within the 4-second time limit for n <= 2000.",
+      "skill_tags": [
+        "implementation",
+        "math"
+      ],
+      "observations": [
+        {
+          "title": "Cross product detects collinearity",
+          "description": "Three points A, B, C form a non-degenerate triangle if and only if the cross product (B - A) x (C - A) is nonzero. This single integer computation replaces any area or slope calculation.",
+          "hints": {
+            "nudge": "How can you check whether three points are collinear using a single arithmetic expression?",
+            "question": "For points A = (x1, y1), B = (x2, y2), C = (x3, y3), what does the sign of (x2 - x1)*(y3 - y1) - (y2 - y1)*(x3 - x1) tell you?",
+            "formal": "cross = (B.x - A.x) * (C.y - A.y) - (B.y - A.y) * (C.x - A.x). Triangle has nonzero area iff cross != 0. All values fit in 32-bit integers since coordinates are in [-100, 100]."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Triple enumeration with three nested loops",
+          "description": "Enumerate all C(n, 3) triples using three nested loops with i < j < k. For each triple, compute the cross product and increment the count if it is nonzero.",
+          "hints": {
+            "nudge": "What is the simplest way to visit every unordered triple of points exactly once?",
+            "question": "How many iterations do three nested loops with i < j < k produce for n = 2000? Is it feasible?",
+            "formal": "for i in 0..n: for j in i+1..n: for k in j+1..n: if cross(P[i], P[j], P[k]) != 0: count += 1. Total iterations = C(2000, 3) ~ 1.3 * 10^9."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Feasibility under the time limit",
+          "description": "C(2000, 3) is about 1.33 * 10^9 iterations. Each iteration does a few multiplications and a comparison. With a 4-second time limit, this passes in C++ but may be tight. Minimize overhead inside the inner loop -- precompute coordinate differences or use simple integer arithmetic.",
+          "hints": {
+            "nudge": "With n = 2000, how many triples are there? Does the generous time limit help?",
+            "question": "What is C(2000, 3)? At roughly 10^8-10^9 simple operations per second in C++, is 1.33 * 10^9 iterations feasible in 4 seconds?",
+            "formal": "C(2000, 3) = 1,331,334,000. At ~3-5 * 10^8 cross-product checks per second in optimized C++, this takes 2-4 seconds. The 4s limit makes it borderline. In Python this approach will TLE; use the O(n^2) complementary counting route instead."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

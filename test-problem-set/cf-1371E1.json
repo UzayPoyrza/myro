@@ -1,0 +1,85 @@
+{
+  "contest_id": 1371,
+  "index": "E1",
+  "title": "Asterism (Easy Version)",
+  "difficulty": 1900,
+  "tags": ["binary-search", "math", "number-theory", "sorting"],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "This is the easy version of the problem. The difference between versions is the constraints on $$$n$$$ and $$$a_i$$$. You can make hacks only if all versions of the problem are solved. First, Aoi came up with the following idea for the competitive programming problem: Yuzu is a girl who collecting candies. Originally, she has $$$x$$$ candies. There are also $$$n$$$ enemies numbered with integers from $$$1$$$ to $$$n$$$. Enemy $$$i$$$ has $$$a_i$$$ candies. Yuzu is going to determine a permutation $$$P$$$. A permutation is an array consisting of $$$n$$$ distinct integers from $$$1$$$ to $$$n$$$ in arbitrary order. For example, $$$\\{2,3,1,5,4\\}$$$ is a permutation, but $$$\\{1,2,2\\}$$$ is not a permutation ($$$2$$$ appears twice in the array) and $$$\\{1,3,4\\}$$$ is also not a permutation (because $$$n=3$$$ but there is the number $$$4$$$ in the array). After that, she will do $$$n$$$ duels with the enemies with the following rules: If Yuzu has equal or more number of candies than enemy $$$P_i$$$, she wins the duel and gets $$$1$$$ candy . Otherwise, she loses the duel and gets nothing. The candy which Yuzu gets will be used in the next duels. Yuzu wants to win all duels . How many valid permutations $$$P$$$ exist? This problem was easy and wasn't interesting for Akari, who is a friend of Aoi. And Akari made the following problem from the above idea: Let's define $$$f(x)$$$ as the number of valid permutations for the integer $$$x$$$. You are given $$$n$$$, $$$a$$$ and a prime number $$$p \\le n$$$. Let's call a positive integer $$$x$$$ good , if the value $$$f(x)$$$ is not divisible by $$$p$$$. Find all good integers $$$x$$$. Your task is to solve this problem made by Akari.",
+  "input_spec": "The first line contains two integers $$$n$$$, $$$p$$$ $$$(2 \\le p \\le n \\le 2000)$$$. It is guaranteed, that the number $$$p$$$ is prime (it has exactly two divisors $$$1$$$ and $$$p$$$). The second line contains $$$n$$$ integers $$$a_1, a_2, \\ldots, a_n$$$ $$$(1 \\le a_i \\le 2000)$$$.",
+  "output_spec": "In the first line, print the number of good integers $$$x$$$. In the second line, output all good integers $$$x$$$ in the ascending order . It is guaranteed that the number of good integers $$$x$$$ does not exceed $$$10^5$$$.",
+  "examples": [
+    {
+      "input": "3 2\n3 4 5",
+      "output": "1\n3"
+    },
+    {
+      "input": "4 3\n2 3 5 6",
+      "output": "2\n3 4"
+    },
+    {
+      "input": "4 3\n9 1 1 1",
+      "output": "0"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy counting with prime filter",
+      "description": "Sort the enemies, derive a product formula for f(x) based on the number of beatable-but-unmatched enemies at each step, then find all x where no factor in the product is divisible by p.",
+      "skill_tags": ["sorting", "math", "number-theory"],
+      "observations": [
+        {
+          "title": "Greedy ordering yields a product formula for f(x)",
+          "description": "Sort the enemy values. At step i (0-indexed), Yuzu has x+i candies. The number of enemies she could fight at this step (those with a_j <= x+i that she hasn't already fought) is cnt(x+i) - i, where cnt(v) is the number of enemies with a_j <= v. The total count of valid permutations is f(x) = product over i=0..n-1 of (cnt(x+i) - i).",
+          "hints": {
+            "nudge": "Think about how many choices Yuzu has at each step if she plays optimally. Does sorting the enemies help?",
+            "question": "After sorting, at round i Yuzu has x+i candies. How many enemies can she still choose from -- how many have a_j <= x+i, and how many has she already used?",
+            "formal": "Sort a. Let cnt(v) = |{j : a_j <= v}|. At step i, the number of valid opponents is cnt(x+i) - i. Then f(x) = product_{i=0}^{n-1} (cnt(x+i) - i)."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "f(x) > 0 requires every factor to be positive",
+          "description": "For f(x) to be nonzero, every factor cnt(x+i) - i must be >= 1. This means cnt(x+i) >= i+1 for all i. The tightest constraint comes from the step where the margin is smallest, which determines the minimum x for which f(x) > 0.",
+          "hints": {
+            "nudge": "For the product to be nonzero, what must be true about each factor?",
+            "question": "Which step i gives the tightest requirement on x? Think about when cnt(x+i) - i is smallest.",
+            "formal": "We need cnt(x+i) >= i+1 for all i in 0..n-1. After sorting a, the minimum valid x is the smallest value such that x+i >= a[i] (0-indexed sorted) for all i, i.e., x >= max(a[i] - i) over all i."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "p divides f(x) iff some factor is divisible by p",
+          "description": "Since p is prime, p | f(x) if and only if at least one factor (cnt(x+i) - i) is divisible by p. So x is good precisely when (cnt(x+i) - i) mod p != 0 for every i from 0 to n-1.",
+          "hints": {
+            "nudge": "p is prime and f(x) is a product. What does a prime dividing a product tell you?",
+            "question": "If p divides a product of integers and p is prime, which individual factors must p divide?",
+            "formal": "By Euclid's lemma, p | (a * b) implies p | a or p | b. So p | f(x) iff p | (cnt(x+i) - i) for some i. Good x means no factor is divisible by p."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Good x has a finite upper bound",
+          "description": "Once x >= max(a), every enemy is beatable from the first step, so cnt(x+i) = n for all i, and f(x) = n * (n-1) * ... * 1 = n!. Since p <= n, p divides n!, so no x >= max(a) is good. This gives a tight upper bound on the search range.",
+          "hints": {
+            "nudge": "What happens to f(x) when x is very large? Is it still possible for f(x) to not be divisible by p?",
+            "question": "If x >= max(a_i), every enemy is beatable at every step. What is f(x) then, and is p a factor of that?",
+            "formal": "For x >= max(a), cnt(x+i) = n for all i, so f(x) = n!. Since 2 <= p <= n, p | n!. Thus no x >= max(a) is good. Search only x in [x_min, max(a) - 1]."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Check each candidate x in O(n) using prefix counts",
+          "description": "Precompute cnt(v) for all v by sorting a and using a prefix count array. For each candidate x in the bounded range, iterate over all n steps and verify that (cnt(x+i) - i) mod p != 0. The total work is O(n * range) which is feasible for n, a_i <= 2000.",
+          "hints": {
+            "nudge": "How can you quickly look up how many enemies have a_j <= v for any v?",
+            "question": "If you precompute a frequency/prefix-sum array over enemy values, can you answer cnt(v) in O(1)?",
+            "formal": "Build cnt[v] = number of a_i <= v (prefix sum over value frequencies, up to max 2000). For each x from x_min to max(a)-1, check all n factors in O(n). Total O(n * max_a), well within limits."
+          },
+          "skill_tag": "sorting"
+        }
+      ]
+    }
+  ]
+}

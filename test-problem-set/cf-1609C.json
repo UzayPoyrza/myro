@@ -1,0 +1,84 @@
+{
+  "contest_id": 1609,
+  "index": "C",
+  "title": "Complex Market Analysis",
+  "difficulty": 1400,
+  "tags": [
+    "binary search",
+    "dp",
+    "implementation",
+    "number theory",
+    "schedules",
+    "two pointers"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "While performing complex market analysis William encountered the following problem: For a given array $$$a$$$ of size $$$n$$$ and a natural number $$$e$$$, calculate the number of pairs of natural numbers $$$(i, k)$$$ which satisfy the following conditions: $$$1 \\le i, k$$$ $$$i + e \\cdot k \\le n$$$. Product $$$a_i \\cdot a_{i + e} \\cdot a_{i + 2 \\cdot e} \\cdot \\ldots \\cdot a_{i + k \\cdot e} $$$ is a prime number. A prime number (or a prime) is a natural number greater than 1 that is not a product of two smaller natural numbers.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 10\\,000$$$). Description of the test cases follows. The first line of each test case contains two integers $$$n$$$ and $$$e$$$ $$$(1 \\le e \\le n \\le 2 \\cdot 10^5)$$$, the number of items in the array and number $$$e$$$, respectively. The second line contains $$$n$$$ integers $$$a_1, a_2, \\dots, a_n$$$ $$$(1 \\le a_i \\le 10^6)$$$, the contents of the array. It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case output the answer in the following format: Output one line containing the number of pairs of numbers $$$(i, k)$$$ which satisfy the conditions.",
+  "examples": [
+    {
+      "input": "6\n7 3\n10 2 1 3 1 19 3\n3 2\n1 13 1\n9 3\n2 4 2 1 1 1 1 4 2\n3 1\n1 1 1\n4 1\n1 2 1 1\n2 2\n1 2",
+      "output": "2\n0\n4\n0\n5\n0"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Decompose into independent chains and count around primes",
+      "description": "Split the array into e independent subsequences by index mod e. In each chain, find prime elements and count contiguous 1s on each side to tally valid products.",
+      "skill_tags": ["number-theory", "math", "implementation"],
+      "observations": [
+        {
+          "title": "A product of positive integers is prime iff exactly one factor is prime and all others are 1",
+          "description": "Since all a_i >= 1, the product a_i * a_{i+e} * ... * a_{i+k*e} is prime only if exactly one element in the subsequence is a prime number and every other element equals 1. Any factor > 1 that is not the sole prime would make the product composite.",
+          "hints": {
+            "nudge": "What must be true about the individual factors for their product to be prime?",
+            "question": "If p is prime and you multiply it by any integer greater than 1, is the result still prime? What does that force every non-prime factor to be?",
+            "formal": "A product of positive integers equals a prime p iff exactly one factor equals p and all others equal 1. Any factor >= 2 that is not the single prime contributor creates a factorization into two smaller numbers, making the product composite."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "The array splits into e independent chains by index mod e",
+          "description": "The indices i, i+e, i+2e, ... form arithmetic progressions with common difference e. There are exactly e such chains, determined by the starting residue r = i mod e (for r = 0, 1, ..., e-1). Each chain can be analyzed independently since no product spans across chains.",
+          "hints": {
+            "nudge": "Look at which indices actually appear together in a product. Do products from different starting residues ever share elements?",
+            "question": "If you group indices by their value mod e, how many independent groups are there? Can a product mix elements from different groups?",
+            "formal": "For each residue r in {0, 1, ..., e-1}, the chain is a[r+1], a[r+1+e], a[r+1+2e], ... (using 1-indexed). These e chains partition the entire array and no valid product crosses chain boundaries."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "For each prime in a chain, count consecutive 1s on both sides",
+          "description": "Fix a prime element at position j in a chain. A valid product must include position j and extend some distance left and right, with every other element being 1. Let L be the number of consecutive 1s immediately to the left of j, and R the number of consecutive 1s immediately to the right. Valid subarrays containing j are parameterized by choosing how far left (0..L) and how far right (0..R) to extend, requiring total length >= 2.",
+          "hints": {
+            "nudge": "Once you know where the prime is, the problem reduces to counting how far you can extend in each direction. What blocks an extension?",
+            "question": "If position j holds a prime and positions j-1, j-2 hold 1s but j-3 holds 5, how many valid products include position j? Think about left and right extensions independently.",
+            "formal": "Let L = max consecutive 1s immediately left of j in the chain, R = max consecutive 1s immediately right. The number of valid (i, k) pairs with the prime at position j is (L + 1) * (R + 1) - 1, since we choose left extension in [0, L] and right extension in [0, R] but exclude the empty extension (l=0, r=0) where k would be 0."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Use a primality test for values up to 10^6",
+          "description": "Each array element can be up to 10^6. To check if a value is prime, trial division up to sqrt(a_i) suffices and runs in O(sqrt(a_i)) = O(1000) per element. Alternatively, precompute a sieve of Eratosthenes up to 10^6 for O(1) lookups.",
+          "hints": {
+            "nudge": "You need to know which elements are prime. How do you efficiently check primality for numbers up to a million?",
+            "question": "What is faster for many queries: checking each number individually, or precomputing all primes up to 10^6 at once?",
+            "formal": "Precompute a boolean sieve is_prime[0..10^6] using the Sieve of Eratosthenes in O(N log log N) time and O(N) space where N = 10^6. Each lookup is then O(1). Trial division also works given the constraints."
+          },
+          "skill_tag": "number-theory"
+        },
+        {
+          "title": "Linear scan per chain to compute the answer",
+          "description": "Walk through each chain and maintain a running count of consecutive 1s. When you encounter a prime, use the left-1s count, then scan or use the pre-counted right-1s count to compute that prime's contribution. Sum across all primes in all chains. Total work is O(n) across all chains.",
+          "hints": {
+            "nudge": "Can you process each chain in a single pass, or do you need to look ahead for the right side?",
+            "question": "If you track how many consecutive 1s precede the current element, what do you still need for the right side? Could a two-pass approach or pre-computation help?",
+            "formal": "For each chain, compute an array of consecutive-1s-to-the-right using a backward pass (or maintain a counter). Then in a forward pass, maintain consecutive-1s-to-the-left. At each prime position, add (L+1)*(R+1) - 1 to the answer. Total time is O(n) since all chains together cover every element exactly once."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

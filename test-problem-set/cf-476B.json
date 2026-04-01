@@ -1,0 +1,145 @@
+{
+  "contest_id": 476,
+  "index": "B",
+  "title": "Dreamoon and WiFi",
+  "difficulty": 1300,
+  "tags": [
+    "combinatorics",
+    "math",
+    "probabilities",
+    "brute force",
+    "bitmasks"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Dreamoon is standing at the position 0 on a number line. Drazil is sending a list of commands through Wi-Fi to Dreamoon's smartphone and Dreamoon follows them. Each command is one of the following two types: Go 1 unit towards the positive direction, denoted as '+' Go 1 unit towards the negative direction, denoted as '-' But the Wi-Fi condition is so poor that Dreamoon's smartphone reports some of the commands can't be recognized and Dreamoon knows that some of them might even be wrong though successfully recognized. Dreamoon decides to follow every recognized command and toss a fair coin to decide those unrecognized ones (that means, he moves to the 1 unit to the negative or positive direction with the same probability 0.5 ). You are given an original list of commands sent by Drazil and list received by Dreamoon. What is the probability that Dreamoon ends in the position originally supposed to be final by Drazil's commands?",
+  "input_spec": "The first line contains a string s1 — the commands Drazil sends to Dreamoon, this string consists of only the characters in the set { '+', '-' }. The second line contains a string s2 — the commands Dreamoon's smartphone recognizes, this string consists of only the characters in the set { '+', '-', '?' }. '?' denotes an unrecognized command. Lengths of two strings are equal and do not exceed 10.",
+  "output_spec": "Output a single real number corresponding to the probability. The answer will be considered correct if its relative or absolute error doesn't exceed 10^-9.",
+  "examples": [
+    {
+      "input": "++-+-\n+-+-+",
+      "output": "1.000000000000"
+    },
+    {
+      "input": "+-+-\n+-??",
+      "output": "0.500000000000"
+    },
+    {
+      "input": "+++\n??-",
+      "output": "0.000000000000"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Combinatorial counting",
+      "description": "Compute the target position from s1, the fixed displacement from known characters in s2, and count how many ways to assign the '?' characters to reach the target using the binomial coefficient.",
+      "skill_tags": [
+        "math",
+        "math",
+        "math"
+      ],
+      "observations": [
+        {
+          "title": "The target position is determined entirely by s1",
+          "description": "The original string s1 consists only of '+' and '-'. Each '+' contributes +1 and each '-' contributes -1. The target final position is simply count('+') - count('-') in s1. This is a fixed, known value.",
+          "hints": {
+            "nudge": "What is the final position after following all commands in s1?",
+            "question": "If s1 has p plus signs and m minus signs, what position does Dreamoon end up at? Does the order of commands matter?",
+            "formal": "target = (number of '+' in s1) - (number of '-' in s1). The order of moves is irrelevant since each contributes +1 or -1 independently to the final position."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Known characters in s2 provide a fixed displacement",
+          "description": "The '+' and '-' characters in s2 are fixed commands that Dreamoon follows deterministically. Their net effect is a known displacement. Only the '?' characters introduce randomness.",
+          "hints": {
+            "nudge": "Which parts of s2 are certain and which are random?",
+            "question": "If you separate s2 into its known commands (+/-) and unknown ones (?), what does the known part tell you? What remains to be determined?",
+            "formal": "Let fixed = (number of '+' in s2) - (number of '-' in s2) and q = number of '?' in s2. The final position from s2 is fixed + (number of ?'s chosen as +1) - (number of ?'s chosen as -1)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Each '?' independently contributes +1 or -1",
+          "description": "Each '?' is resolved by a fair coin flip: +1 with probability 0.5 and -1 with probability 0.5. If there are q question marks, there are 2^q equally likely outcomes. The total contribution of the q question marks is determined by how many become +1 versus -1.",
+          "hints": {
+            "nudge": "How many total outcomes are there for q coin flips?",
+            "question": "If k of the q question marks become '+' and the rest become '-', what is the net contribution? How many ways can you choose which k become '+'?",
+            "formal": "If k of the q '?'s become +1, their net contribution is k - (q - k) = 2k - q. Each specific assignment has probability (1/2)^q. The number of assignments with exactly k plus signs is C(q, k)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Solve for the required number of plus signs among the '?'s",
+          "description": "We need fixed + (2k - q) = target, where k is the number of '?'s that become '+'. Solving gives k = (target - fixed + q) / 2. If this is not a non-negative integer at most q, the probability is 0.",
+          "hints": {
+            "nudge": "You know the gap between the fixed displacement and the target. How many '?'s need to be '+' to close that gap?",
+            "question": "If the gap is target - fixed, and each '?' that becomes '+' instead of '-' changes the position by 2, what equation relates k and the gap?",
+            "formal": "k = (target - fixed + q) / 2. Check: if (target - fixed + q) is odd, or k < 0, or k > q, the probability is 0."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The probability is C(q, k) / 2^q",
+          "description": "There are C(q, k) favorable outcomes out of 2^q total equally likely outcomes. The probability is C(q, k) / 2^q. Since q is at most 10, all values are small enough to compute exactly.",
+          "hints": {
+            "nudge": "You know how many '?'s must be '+' and how many total outcomes there are. What fraction succeeds?",
+            "question": "How many ways can you choose k items from q? What is the total number of equally likely outcomes? What is the ratio?",
+            "formal": "Answer = C(q, k) / 2^q, where C(q, k) = q! / (k! * (q-k)!). With q <= 10, this can be computed directly using factorials or Pascal's triangle."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    },
+    {
+      "name": "Brute force enumeration",
+      "description": "Since the string length is at most 10, enumerate all 2^q possible assignments of '?' characters and count how many lead to the target position.",
+      "skill_tags": [
+        "implementation",
+        "dp"
+      ],
+      "observations": [
+        {
+          "title": "Compute the target position from s1",
+          "description": "The target is the final position after following s1. Since each '+' is +1 and each '-' is -1, the target is count('+') - count('-') in s1.",
+          "hints": {
+            "nudge": "What final position does the original command string produce?",
+            "question": "If you sum +1 for each '+' and -1 for each '-' in s1, what do you get?",
+            "formal": "target = sum over s1: (+1 if char is '+', -1 if char is '-'). Order does not matter."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "At most 10 '?' characters means at most 1024 cases",
+          "description": "The string length is at most 10, so there are at most 10 question marks and at most 2^10 = 1024 total outcomes. This is small enough to enumerate every possibility.",
+          "hints": {
+            "nudge": "How large can the search space be? Is it feasible to check every case?",
+            "question": "If there are q question marks, how many total assignments exist? With q <= 10, is this tractable?",
+            "formal": "2^10 = 1024. Even with overhead per case, this is well within time limits. A bitmask from 0 to 2^q - 1 can represent all assignments."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Use a bitmask to assign each '?' to +1 or -1",
+          "description": "Represent each assignment as a q-bit integer. Bit j being 1 means the j-th '?' becomes '+', and 0 means it becomes '-'. Iterate through all integers from 0 to 2^q - 1.",
+          "hints": {
+            "nudge": "How can you systematically generate all combinations of +1 and -1 for the '?'s?",
+            "question": "If you number the '?'s from 0 to q-1, can you use the bits of an integer to decide each one?",
+            "formal": "For mask in 0..2^q: for each '?' at position j, if bit j of mask is set, treat it as '+1', else '-1'. Compute the resulting final position and check if it equals the target."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Count favorable outcomes and divide by total",
+          "description": "For each assignment, compute the final position of s2 with the '?'s resolved. Count how many match the target. The probability is count / 2^q.",
+          "hints": {
+            "nudge": "Once you can check each assignment, how do you get the probability?",
+            "question": "If you find that F out of 2^q assignments reach the target, what is the probability?",
+            "formal": "favorable = number of masks where final_position(s2 with mask) == target. Answer = favorable / 2^q. Output with sufficient decimal precision (12+ digits)."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

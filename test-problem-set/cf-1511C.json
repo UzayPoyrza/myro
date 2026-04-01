@@ -1,0 +1,64 @@
+{
+  "contest_id": 1511,
+  "index": "C",
+  "title": "Yet Another Card Deck",
+  "difficulty": 1100,
+  "tags": ["brute force", "data structures", "implementation", "trees"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You have a card deck of $$$n$$$ cards, numbered from top to bottom, i. e. the top card has index $$$1$$$ and bottom card — index $$$n$$$. Each card has its color: the $$$i$$$-th card has color $$$a_i$$$. You should process $$$q$$$ queries. The $$$j$$$-th query is described by integer $$$t_j$$$. For each query you should: find the highest card in the deck with color $$$t_j$$$, i. e. the card with minimum index; print the position of the card you found; take the card and place it on top of the deck.",
+  "input_spec": "The first line contains two integers $$$n$$$ and $$$q$$$ ($$$2 \\le n \\le 3 \\cdot 10^5$$$; $$$1 \\le q \\le 3 \\cdot 10^5$$$) — the number of cards in the deck and the number of queries. The second line contains $$$n$$$ integers $$$a_1, a_2, \\dots, a_n$$$ ($$$1 \\le a_i \\le 50$$$) — the colors of cards. The third line contains $$$q$$$ integers $$$t_1, t_2, \\dots, t_q$$$ ($$$1 \\le t_j \\le 50$$$) — the query colors. It's guaranteed that queries ask only colors that are present in the deck .",
+  "output_spec": "Print $$$q$$$ integers — the answers for each query.",
+  "examples": [
+    {"input": "7 5\n2 1 1 4 3 3 1\n3 2 1 1 4", "output": "5 2 3 1 5"}
+  ],
+  "routes": [
+    {
+      "name": "Track first occurrence per color",
+      "description": "Since there are at most 50 distinct colors, maintain only the position of the first card of each color and update these positions on each query instead of simulating the full deck.",
+      "skill_tags": ["implementation", "data-structures"],
+      "observations": [
+        {
+          "title": "Only the first occurrence of each color matters",
+          "description": "When a query asks for color t, you need the card with the minimum index having that color. Cards of the same color deeper in the deck are irrelevant until the topmost one is moved. So you only need to know where the first card of each color sits.",
+          "hints": {
+            "nudge": "Do you really need to track every card's position, or just certain ones?",
+            "question": "If a color appears at positions 3, 7, and 12, which position matters for a query about that color?",
+            "formal": "For each color c, store pos[c] = the position of the topmost card with color c. Only these 50 values (at most) are needed to answer queries."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "The small color range (1..50) makes per-color tracking cheap",
+          "description": "The constraint a_i <= 50 means there are at most 50 distinct colors. This makes it feasible to store and update positions for every color in O(50) per query, giving O(50*q) total which is fast enough.",
+          "hints": {
+            "nudge": "Look at the constraint on color values. What does it tell you about how many distinct colors exist?",
+            "question": "If there are at most 50 colors, how expensive is it to update all of their positions after one card moves to the top?",
+            "formal": "With at most 50 colors, iterating over all colors per query costs O(50) per query, so O(50 * 3*10^5) = 1.5*10^7 total operations — well within the time limit."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Moving a card to the top shifts other cards down",
+          "description": "When the card at position p moves to position 1, every card that was above it (at positions 1 through p-1) shifts down by one. Cards below position p are unaffected. This means for every color c with pos[c] < pos[queried_color], you increment pos[c] by 1.",
+          "hints": {
+            "nudge": "When you pull a card out of the middle and put it on top, what happens to the cards that were above it?",
+            "question": "If the queried card was at position p, which other cards change position, and by how much?",
+            "formal": "For each color c: if pos[c] < p, set pos[c] += 1 (it shifts down one slot). Then set pos[queried_color] = 1 (it moves to the top)."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Initialize positions by scanning the deck once",
+          "description": "Build the initial pos[] map by scanning the deck from left to right and recording the first occurrence of each color. Subsequent occurrences of the same color can be ignored since only the topmost one is ever queried.",
+          "hints": {
+            "nudge": "How do you determine the initial position of the first card of each color?",
+            "question": "If you scan left to right and encounter a color you have already seen, should you update its stored position?",
+            "formal": "For i = 1..n: if color a_i has not been recorded yet, set pos[a_i] = i. Skip colors already recorded since their first occurrence has a smaller index."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

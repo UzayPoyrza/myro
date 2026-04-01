@@ -1,0 +1,71 @@
+{
+  "contest_id": 1843,
+  "index": "D",
+  "title": "Apple Tree",
+  "difficulty": 1200,
+  "tags": ["dfs", "trees", "math"],
+  "time_limit": "4 seconds",
+  "memory_limit": "512 megabytes",
+  "description": "Timofey has an apple tree growing in his garden; it is a rooted tree of $$$n$$$ vertices with the root in vertex $$$1$$$ (the vertices are numbered from $$$1$$$ to $$$n$$$). A tree is a connected graph without loops and multiple edges. This tree is very unusual — it grows with its root upwards. However, it's quite normal for programmer's trees. The apple tree is quite young, so only two apples will grow on it. Apples will grow in certain vertices (these vertices may be the same). After the apples grow, Timofey starts shaking the apple tree until the apples fall. Each time Timofey shakes the apple tree, the following happens to each of the apples: Let the apple now be at vertex $$$u$$$. If a vertex $$$u$$$ has a child, the apple moves to it (if there are several such vertices, the apple can move to any of them). Otherwise, the apple falls from the tree. It can be shown that after a finite time, both apples will fall from the tree. Timofey has $$$q$$$ assumptions in which vertices apples can grow. He assumes that apples can grow in vertices $$$x$$$ and $$$y$$$, and wants to know the number of pairs of vertices ($$$a$$$, $$$b$$$) from which apples can fall from the tree, where $$$a$$$ — the vertex from which an apple from vertex $$$x$$$ will fall, $$$b$$$ — the vertex from which an apple from vertex $$$y$$$ will fall. Help him do this.",
+  "input_spec": "The first line contains integer $$$t$$$ ($$$1 \\leq t \\leq 10^4$$$) — the number of test cases. The first line of each test case contains integer $$$n$$$ ($$$2 \\leq n \\leq 2 \\cdot 10^5$$$) — the number of vertices in the tree. Then there are $$$n - 1$$$ lines describing the tree. In line $$$i$$$ there are two integers $$$u_i$$$ and $$$v_i$$$ ($$$1 \\leq u_i, v_i \\leq n$$$, $$$u_i \\ne v_i$$$) — edge in tree. The next line contains a single integer $$$q$$$ ($$$1 \\leq q \\leq 2 \\cdot 10^5$$$) — the number of Timofey's assumptions. Each of the next $$$q$$$ lines contains two integers $$$x_i$$$ and $$$y_i$$$ ($$$1 \\leq x_i, y_i \\leq n$$$) — the supposed vertices on which the apples will grow for the assumption $$$i$$$. It is guaranteed that the sum of $$$n$$$ does not exceed $$$2 \\cdot 10^5$$$. Similarly, It is guaranteed that the sum of $$$q$$$ does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each Timofey's assumption output the number of ordered pairs of vertices from which apples can fall from the tree if the assumption is true on a separate line.",
+  "examples": [
+    {
+      "input": "251 23 45 33 243 45 14 41 331 21 331 12 33 1",
+      "output": "2\n2\n1\n4\n4\n1\n2"
+    },
+    {
+      "input": "255 11 22 34 325 55 153 25 32 14 234 32 14 2",
+      "output": "1\n2\n1\n4\n2"
+    }
+  ],
+  "routes": [
+    {
+      "name": "DFS leaf counting",
+      "description": "Precompute the number of leaves in each vertex's subtree via a single DFS, then answer each query in O(1) by multiplying the leaf counts of the two query vertices.",
+      "skill_tags": ["dfs", "trees", "math"],
+      "observations": [
+        {
+          "title": "Apples can only fall from leaves",
+          "description": "An apple at vertex u moves to a child at each shake. It only stops (falls) when it reaches a vertex with no children, i.e., a leaf. Therefore the set of vertices from which an apple starting at x can fall is exactly the set of leaves in the subtree rooted at x.",
+          "hints": {
+            "nudge": "Where does an apple end up? It keeps moving downward. When does it stop?",
+            "question": "If an apple is at a non-leaf vertex, it must move to some child. What are the only vertices where the apple can actually fall from the tree?",
+            "formal": "An apple falls when it reaches a vertex with no children. Since the apple always moves downward (from parent to child), it must eventually reach a leaf of the subtree rooted at its starting vertex. The set of possible landing vertices for an apple starting at x is exactly {leaf l : l is in the subtree of x}."
+          },
+          "skill_tag": "trees"
+        },
+        {
+          "title": "The answer for a query is the product of leaf counts",
+          "description": "Since the two apples move independently, every combination of a leaf reachable from x and a leaf reachable from y is a valid outcome. The count of ordered pairs (a, b) is therefore leaves(x) * leaves(y), where leaves(v) is the number of leaves in the subtree of v.",
+          "hints": {
+            "nudge": "The two apples move completely independently of each other. How does that affect the count of outcome pairs?",
+            "question": "If apple 1 can land at any of A leaves and apple 2 can land at any of B leaves, how many ordered pairs (a, b) are possible?",
+            "formal": "The apples are independent, so the set of ordered outcome pairs is the Cartesian product of the two leaf sets. The count is |leaves(x)| * |leaves(y)|. Note this counts ordered pairs, so (a, b) and (b, a) are distinct when a != b."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Compute leaf counts via DFS on the rooted tree",
+          "description": "Root the tree at vertex 1. For each vertex v, define leaves(v) as the number of leaves in v's subtree. A leaf has leaves(v) = 1. For an internal node, leaves(v) is the sum of leaves(c) over all children c. A single DFS computes this for all vertices in O(n).",
+          "hints": {
+            "nudge": "You need leaves(v) for every vertex. Can you compute this with a single traversal?",
+            "question": "If you know the leaf count for every child of v, how do you get the leaf count for v itself? What is the base case?",
+            "formal": "Run DFS from root (vertex 1). For a leaf node (no children), set leaves(v) = 1. For an internal node, set leaves(v) = sum of leaves(c) for each child c. This bottom-up computation visits each node once, running in O(n) time."
+          },
+          "skill_tag": "dfs"
+        },
+        {
+          "title": "Answer queries in O(1) after preprocessing",
+          "description": "After a single O(n) DFS precomputes leaves(v) for all vertices, each query (x, y) is answered by outputting leaves(x) * leaves(y). With q queries, the total time per test case is O(n + q). Since the product of two leaf counts can exceed 32-bit range (up to ~(n/2)^2 ~ 10^10), use 64-bit integers.",
+          "hints": {
+            "nudge": "Once you have the leaf counts precomputed, how fast can you answer each query?",
+            "question": "What is the maximum possible value of leaves(x) * leaves(y)? Does it fit in a 32-bit integer?",
+            "formal": "Each query is answered in O(1) as leaves(x) * leaves(y). The maximum leaf count for any vertex is at most n/2 (when n = 2*10^5, that is 10^5), so the product can be up to ~10^10, which exceeds 2^32. Use 64-bit integers (long long in C++ or standard int in Python)."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

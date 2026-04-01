@@ -1,0 +1,28 @@
+[scenario]
+name = "Theatre Square — correct formula, edge case worry"
+problem = "cf-1A"
+route = 0
+trigger = "user requested coach"
+elapsed_secs = 300
+observations_found = 2
+
+[scenario.obs_states]
+0 = "found"
+1 = "found"
+
+[scenario.code]
+text = """
+n, m, a = map(int, input().split())
+rows = (n + a - 1) // a
+cols = (m + a - 1) // a
+print(rows * cols)
+"""
+
+[[scenario.recent_messages]]
+role = "user"
+content = "I think this is right but I'm worried about edge cases with large numbers"
+
+[expect]
+banned_states = ["moving_away"]
+must_be_socratic = true
+banned_patterns = []

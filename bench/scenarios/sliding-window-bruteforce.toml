@@ -1,0 +1,23 @@
+[scenario]
+name = "Sliding Window — max() per slice O(nk)"
+problem = "cf-1195C"
+route = 0
+trigger = "user idle for 45s"
+elapsed_secs = 120
+observations_found = 0
+
+[scenario.code]
+text = """
+n, k = map(int, input().split())
+a = list(map(int, input().split()))
+result = []
+for i in range(n - k + 1):
+    result.append(max(a[i:i+k]))
+print(*result)
+"""
+
+[expect]
+state = "moving_away"
+min_confidence = 0.4
+must_be_socratic = true
+banned_patterns = ["deque", "collections.deque", "from collections"]

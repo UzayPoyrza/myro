@@ -1,0 +1,64 @@
+{
+  "contest_id": 1292,
+  "index": "B",
+  "title": "Counting Rooms",
+  "difficulty": 1300,
+  "tags": ["dfs", "bfs", "graphs"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given a map of a building with n rows and m columns. Each cell is either floor ('.') or wall ('#'). A room is a maximal connected component of floor cells (connected horizontally/vertically). Count the number of rooms.",
+  "input_spec": "The first line contains two integers n and m (1 <= n, m <= 1000). Then n lines follow, each containing m characters ('.' or '#').",
+  "output_spec": "Print the number of rooms.",
+  "examples": [
+    {"input": "3 5\n#.#.#\n.....#\n#.#.#", "output": "3"}
+  ],
+  "routes": [
+    {
+      "name": "Flood fill (DFS/BFS)",
+      "description": "Iterate over all cells. When you find an unvisited floor cell, run a flood fill (DFS or BFS) to mark the entire room, and increment the counter.",
+      "skill_tags": ["dfs", "bfs", "flood fill"],
+      "observations": [
+        {
+          "title": "Rooms = connected components",
+          "description": "Each room is a connected component of '.' cells. Counting rooms is counting connected components on a grid.",
+          "hints": {
+            "nudge": "What graph concept does 'group of connected floor cells' correspond to?",
+            "question": "If you think of each '.' cell as a node and adjacency as edges, what are you counting?",
+            "formal": "Rooms are connected components. Count them by iterating cells and running DFS/BFS from each unvisited '.' cell."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Mark visited to avoid re-counting",
+          "description": "Use a visited array or modify the grid in-place (mark '.' as '#' after visiting) to avoid counting the same room twice.",
+          "hints": {
+            "nudge": "How do you ensure you don't count the same room more than once?",
+            "question": "After you flood fill a room, what should you do to those cells so you don't revisit them?",
+            "formal": "Maintain a visited[n][m] array, or mutate the grid: set visited cells to '#'. This ensures each cell is processed once."
+          },
+          "skill_tag": "dfs"
+        },
+        {
+          "title": "4-directional neighbors",
+          "description": "Floor cells are connected horizontally and vertically (not diagonally). Use dx/dy arrays: [(0,1),(0,-1),(1,0),(-1,0)].",
+          "hints": {
+            "nudge": "How many neighbors does each cell have?",
+            "question": "Are diagonal cells considered connected? What directions should you check?",
+            "formal": "Use 4 directions: up, down, left, right. dx = [0,0,1,-1], dy = [1,-1,0,0]. Check bounds before accessing neighbors."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "Use iterative DFS to avoid stack overflow",
+          "description": "For grids up to 1000x1000, recursive DFS may cause stack overflow. Use an explicit stack or BFS with a queue.",
+          "hints": {
+            "nudge": "Think about the grid size. Could recursion be a problem?",
+            "question": "If the grid is 1000x1000 and one room fills the whole grid, how deep could your recursion go?",
+            "formal": "Max recursion depth could be 10^6, causing stack overflow. Use iterative DFS (explicit stack) or BFS (queue) instead of recursive DFS."
+          },
+          "skill_tag": "dfs"
+        }
+      ]
+    }
+  ]
+}

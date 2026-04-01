@@ -1,0 +1,122 @@
+{
+  "contest_id": 1851,
+  "index": "G",
+  "title": "Vlad and the Mountains",
+  "difficulty": 2000,
+  "tags": ["graphs", "data-structures", "sorting", "binary-search"],
+  "time_limit": "5 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Vlad decided to go on a trip to the mountains. He plans to move between $$$n$$$ mountains, some of which are connected by roads. The $$$i$$$-th mountain has a height of $$$h_i$$$. If there is a road between mountains $$$i$$$ and $$$j$$$, Vlad can move from mountain $$$i$$$ to mountain $$$j$$$ by spending $$$h_j - h_i$$$ units of energy. If his energy drops below zero during the transition, he will not be able to move from mountain $$$i$$$ to mountain $$$j$$$. Note that $$$h_j - h_i$$$ can be negative and then the energy will be restored. Vlad wants to consider different route options, so he asks you to answer the following queries: is it possible to construct some route starting at mountain $$$a$$$ and ending at mountain $$$b$$$, given that he initially has $$$e$$$ units of energy?",
+  "input_spec": "The first line of the input contains an integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — the number of test cases. The descriptions of the test cases follow. The first line of each test case contains two numbers $$$n$$$ and $$$m$$$ ($$$2 \\le n \\le 2 \\cdot 10^5$$$, $$$1 \\le m \\le \\min(\\frac{n\\cdot(n - 1)}{2}, 2 \\cdot 10^5)$$$) — the number of mountains and the number of roads between them, respectively. The second line contains $$$n$$$ integers $$$h_1, h_2, h_3, \\dots, h_n$$$ ($$$1 \\le h_i \\le 10^9$$$) — the heights of the mountains. The next $$$m$$$ lines contain two integers $$$u$$$ and $$$v$$$ ($$$1 \\le u, v \\le n$$$, $$$u \\ne v$$$) — the numbers of the mountains connected by a road. It is guaranteed that no road appears twice. The next line contains an integer $$$q$$$ ($$$1 \\le q \\le 2 \\cdot 10^5$$$) — the number of queries. The following $$$q$$$ lines contain three numbers $$$a$$$, $$$b$$$, and $$$e$$$ ($$$1 \\le a, b \\le n$$$, $$$0 \\le e \\le 10^9$$$) — the initial and final mountains of the route, and the amount of energy, respectively. It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$. The same guarantee applies to $$$m$$$ and $$$q$$$.",
+  "output_spec": "For each query, output \" YES \" if Vlad can construct a route from mountain $$$a$$$ to mountain $$$b$$$, and \" NO \" otherwise. You can output the answer in any case (for example, the strings \" yEs \", \" yes \", \" Yes \", and \" YES \" will be recognized as a positive answer).",
+  "examples": [
+    {
+      "input": "27 71 5 3 4 2 4 11 44 33 63 22 55 65 751 1 36 2 04 7 01 7 41 7 26 54 7 6 2 5 11 35 31 52 46 251 5 11 3 11 2 10006 2 66 2 5",
+      "output": "YES\nNO\nYES\nYES\nNO\n\nYES\nNO\nNO\nYES\nNO"
+    },
+    {
+      "input": "23 21 3 91 22 351 1 13 2 21 1 23 3 01 2 13 31 4 11 22 31 353 3 91 3 61 1 23 3 63 3 4",
+      "output": "YES\nYES\nYES\nYES\nNO\n\nYES\nYES\nYES\nYES\nYES"
+    },
+    {
+      "input": "16 107 9 2 10 8 64 26 14 53 56 41 32 66 51 23 654 4 83 3 15 5 92 1 76 6 10",
+      "output": "YES\nYES\nYES\nYES\nYES"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Offline DSU with sorted edges and queries",
+      "description": "Reformulate the energy constraint as a height ceiling, sort edges and queries by this ceiling, and use a Disjoint Set Union structure to answer connectivity queries incrementally.",
+      "skill_tags": ["graphs", "data-structures", "sorting"],
+      "observations": [
+        {
+          "title": "Energy tracking reduces to a height ceiling",
+          "description": "Starting at mountain a with energy e, your energy at any intermediate mountain v along the path is (h_a + e) - h_v (since energy changes cancel telescopically along a path, and the net cost of reaching v from a is h_v - h_a). For this to stay non-negative at every step along the path, every intermediate mountain v (including b) must satisfy h_v <= h_a + e. So the query becomes: are a and b connected using only mountains with height at most h_a + e?",
+          "hints": {
+            "nudge": "Track your energy as you walk along any path from a. How does your energy at each mountain relate to that mountain's height?",
+            "question": "If you start at mountain a with energy e, what is your energy when you arrive at mountain v? The energy changes along a path telescope -- what is the net change? What constraint does non-negative energy impose on intermediate heights?",
+            "formal": "Energy at mountain v along any path from a equals (h_a + e) - h_v, because intermediate gains and losses cancel. The constraint energy >= 0 at every step is equivalent to requiring h_v <= h_a + e for every mountain v on the path, including endpoints."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "An edge is usable only if both endpoints are below the ceiling",
+          "description": "An edge (u, v) can be used in a query with height ceiling C = h_a + e only if both h_u <= C and h_v <= C. Since both endpoints must be reachable, the edge is usable precisely when max(h_u, h_v) <= C. This lets you assign each edge a threshold: the maximum height of its two endpoints.",
+          "hints": {
+            "nudge": "For a given energy budget, which edges of the graph are actually available to traverse?",
+            "question": "If you can only visit mountains with height at most C, when can you traverse an edge (u, v)? What single value per edge captures this?",
+            "formal": "Edge (u, v) is usable iff max(h_u, h_v) <= C where C = h_a + e. Define threshold(u, v) = max(h_u, h_v). An edge is active for a query iff its threshold does not exceed the query's ceiling."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Sort edges and queries by threshold for offline processing",
+          "description": "Sort all edges by their threshold max(h_u, h_v) and all queries by their ceiling h_a + e. Process them together in increasing order: before answering a query with ceiling C, insert all edges whose threshold is at most C. This way each edge is inserted exactly once and queries see exactly the edges they are allowed to use.",
+          "hints": {
+            "nudge": "If you process queries in order of their energy budget, how does the set of usable edges change?",
+            "question": "A query with a larger ceiling can use all edges a smaller-ceiling query can, plus possibly more. What classic offline technique exploits this monotonicity?",
+            "formal": "Sort edges by max(h_u, h_v) ascending. Sort queries by (h_a + e) ascending (keep original indices for output). Sweep through both sorted lists with two pointers: for each query, advance the edge pointer and insert all edges with threshold <= current ceiling before answering."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Use Disjoint Set Union for incremental connectivity",
+          "description": "As you sweep through queries in increasing ceiling order, you only ever add edges (never remove them). A DSU (Union-Find) structure supports this perfectly: unite the two endpoints when adding an edge, and answer a connectivity query by checking if a and b share the same representative. With path compression and union by rank, each operation is nearly O(1).",
+          "hints": {
+            "nudge": "You need a data structure that supports adding edges and querying whether two nodes are connected. What structure handles this efficiently when edges are only added, never removed?",
+            "question": "Which classic data structure answers 'are u and v connected?' and supports 'merge the components of u and v' in nearly constant time?",
+            "formal": "Maintain a DSU over n vertices. When processing edge (u, v), call unite(u, v). For query (a, b, e), answer YES iff find(a) == find(b). With union by rank and path compression, amortized cost per operation is O(alpha(n)), effectively constant."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Both endpoints must be below the ceiling too",
+          "description": "A subtle but important detail: the query asks if you can go from a to b with energy e. Even before considering paths, you must be able to stand at mountain a (trivially true since you start there) and reach mountain b, which requires h_b <= h_a + e. If h_a or h_b exceeds the ceiling, the answer is immediately NO. Equivalently, since h_a <= h_a + e is always true, you only need to check h_b <= h_a + e (or equivalently max(h_a, h_b) <= h_a + e).",
+          "hints": {
+            "nudge": "Before checking path connectivity, is there a simpler condition that must hold for the answer to be YES?",
+            "question": "What if mountain b is higher than the ceiling h_a + e? Can you ever reach it regardless of the graph structure?",
+            "formal": "Check h_b <= h_a + e before querying DSU. If this fails, answer NO immediately. This is automatically handled if you also require that both query endpoints have height at most C, since a vertex only 'exists' in the DSU subgraph if its height is at most C."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    },
+    {
+      "name": "Online per-query BFS/DFS with height filtering",
+      "description": "For each query, restrict the graph to mountains with height at most h_a + e and check connectivity between a and b using BFS or DFS. Simple but too slow for the given constraints without further optimization.",
+      "skill_tags": ["graphs", "bfs"],
+      "observations": [
+        {
+          "title": "Energy tracking reduces to a height ceiling",
+          "description": "Starting at mountain a with energy e, the energy at any mountain v on the path equals (h_a + e) - h_v. For energy to stay non-negative, every mountain on the path must have height at most h_a + e. The query becomes: are a and b connected in the subgraph induced by mountains with height at most h_a + e?",
+          "hints": {
+            "nudge": "Track your energy as you walk along any path from a. How does your energy at each mountain relate to that mountain's height?",
+            "question": "If you start with energy e at height h_a, what is your energy at mountain v? What ceiling does this impose?",
+            "formal": "Energy at v = (h_a + e) - h_v. Non-negative energy requires h_v <= h_a + e for all v on the path. The problem reduces to connectivity in the subgraph of mountains with height at most h_a + e."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "BFS/DFS from a restricted to valid mountains",
+          "description": "For each query, run a BFS or DFS starting from a, only visiting mountains v with h_v <= h_a + e. If b is reached, answer YES. This is correct but has O(q * (n + m)) worst-case complexity, which is too slow for the given constraints (n, m, q up to 2 * 10^5).",
+          "hints": {
+            "nudge": "What is the simplest way to check if a and b are connected in a subgraph?",
+            "question": "If you BFS from a while skipping mountains above the height ceiling, what is the time complexity per query? Is it fast enough?",
+            "formal": "BFS from a: enqueue a, for each dequeued vertex u explore neighbors v with h_v <= h_a + e. If b is visited, output YES. Per-query cost is O(n + m), total O(q(n + m)) which is ~10^10 -- too slow. This motivates the offline DSU approach."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "Optimization requires offline or persistent techniques",
+          "description": "The naive per-query approach is too slow. To pass within the time limit, you need either the offline DSU approach (Route 1) which processes all queries in O((n + m + q) * alpha(n)) total time, or an online approach using a persistent DSU or Kruskal's reconstruction tree, which are more complex to implement.",
+          "hints": {
+            "nudge": "The per-query BFS repeats a lot of work across queries. How can you share computation between queries with similar energy budgets?",
+            "question": "If you sort queries by energy, can you reuse the graph structure built for one query when answering the next? What happens to the set of usable edges as the energy ceiling increases?",
+            "formal": "As the ceiling increases, edges are only added, never removed. This monotonicity enables offline sweep with DSU in O((m + q) log(m + q) + (m + q) alpha(n)) total time. Alternatively, build a Kruskal reconstruction tree for O(log n) per online query."
+          },
+          "skill_tag": "data-structures"
+        }
+      ]
+    }
+  ]
+}

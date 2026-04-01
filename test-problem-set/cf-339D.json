@@ -1,0 +1,73 @@
+{
+  "contest_id": 339,
+  "index": "D",
+  "title": "Xenia and Bit Operations",
+  "difficulty": 2200,
+  "tags": [
+    "segment tree",
+    "data structures"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You have an array of 2^n integers. Build a segment tree where odd levels compute OR and even levels compute XOR. Process q point updates and after each update print the root value.",
+  "input_spec": "The first line contains two integers n and q (1 <= n <= 17, 1 <= q <= 10^5). The second line contains 2^n integers. Each of the next q lines contains two integers p and b, meaning set a[p] = b.",
+  "output_spec": "After each update, print the root value of the segment tree.",
+  "examples": [
+    {
+      "input": "2 4\n1 6 3 5\n1 4\n3 4\n1 2\n2 1",
+      "output": "1\n3\n3\n1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Segment tree with alternating operations",
+      "description": "Build a segment tree where the merge operation alternates between OR and XOR based on the level.",
+      "skill_tags": [
+        "segment-tree",
+        "data-structures"
+      ],
+      "observations": [
+        {
+          "title": "Level determines the operation",
+          "description": "At the leaf level (level 0), values are stored directly. Level 1 merges pairs with OR, level 2 with XOR, and so on alternating.",
+          "hints": {
+            "nudge": "The problem says odd levels use OR and even levels use XOR. How does this map to your tree structure?",
+            "question": "If leaves are at level 0, what operation combines two leaves? What combines two of those results?",
+            "formal": "At each internal node, check its depth from the leaves. If depth is odd: OR children. If depth is even: XOR children. (Or vice versa depending on 0-indexing.)"
+          },
+          "skill_tag": "segment-tree"
+        },
+        {
+          "title": "Standard segment tree structure",
+          "description": "Use a 1-indexed array of size 4 * 2^n. Build bottom-up, update by changing leaf then propagating up to root.",
+          "hints": {
+            "nudge": "How is a segment tree typically stored in an array?",
+            "question": "If a node is at index i, where are its children? How do you propagate a leaf change to the root?",
+            "formal": "tree[1] = root. Children of tree[i] are tree[2i] and tree[2i+1]. Update: set leaf, then walk up parent = i/2, recomputing merge(left, right)."
+          },
+          "skill_tag": "segment-tree"
+        },
+        {
+          "title": "Propagate with correct operation per level",
+          "description": "When propagating up after an update, each node must use the correct operation (OR or XOR) for its level.",
+          "hints": {
+            "nudge": "When you propagate up, does every node use the same merge operation?",
+            "question": "After updating a leaf, you walk to the root updating each node. How does each node know which operation to use?",
+            "formal": "Store the depth of each node (or compute from position). When recomputing node i: if depth is odd, tree[i] = tree[2i] | tree[2i+1]; if even, tree[i] = tree[2i] ^ tree[2i+1]."
+          },
+          "skill_tag": "segment-tree"
+        },
+        {
+          "title": "O(n) per update, O(q * n) total",
+          "description": "Each update modifies one leaf and propagates up O(n) levels to the root. With q updates, total is O(q * n).",
+          "hints": {
+            "nudge": "How many nodes change when you update one leaf?",
+            "question": "A leaf update propagates to the root. How many nodes are on that path?",
+            "formal": "Path length from leaf to root is n (since array has 2^n elements). Total complexity: O(2^n) build + O(q * n) updates. With n <= 17, this is fast enough."
+          },
+          "skill_tag": "segment-tree"
+        }
+      ]
+    }
+  ]
+}

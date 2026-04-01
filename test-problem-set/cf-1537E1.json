@@ -1,0 +1,71 @@
+{
+  "contest_id": 1537,
+  "index": "E1",
+  "title": "Erase and Extend (Easy Version)",
+  "difficulty": 1600,
+  "tags": ["greedy", "strings", "implementation"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "This is the easy version of the problem. The only difference is the constraints on $$$n$$$ and $$$k$$$. You can make hacks only if all versions of the problem are solved. You have a string $$$s$$$, and you can do two types of operations on it: Delete the last character of the string. Duplicate the string: $$$s:=s+s$$$, where $$$+$$$ denotes concatenation. You can use each operation any number of times (possibly none). Your task is to find the lexicographically smallest string of length exactly $$$k$$$ that can be obtained by doing these operations on string $$$s$$$. A string $$$a$$$ is lexicographically smaller than a string $$$b$$$ if and only if one of the following holds: $$$a$$$ is a prefix of $$$b$$$, but $$$a\\ne b$$$; In the first position where $$$a$$$ and $$$b$$$ differ, the string $$$a$$$ has a letter that appears earlier in the alphabet than the corresponding letter in $$$b$$$.",
+  "input_spec": "The first line contains two integers $$$n$$$, $$$k$$$ ($$$1 \\leq n, k \\leq 5000$$$) — the length of the original string $$$s$$$ and the length of the desired string. The second line contains the string $$$s$$$, consisting of $$$n$$$ lowercase English letters.",
+  "output_spec": "Print the lexicographically smallest string of length $$$k$$$ that can be obtained by doing the operations on string $$$s$$$.",
+  "examples": [
+    {
+      "input": "8 16\ndbcadabc",
+      "output": "dbcadabcdbcadabc"
+    },
+    {
+      "input": "4 5\nabcd",
+      "output": "aaaaa"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy prefix selection",
+      "description": "Observe that any reachable string is a cyclic repetition of some prefix of s. Greedily find the best prefix by scanning left to right and stopping when extending the prefix would make the cyclic string worse.",
+      "skill_tags": ["greedy", "strings"],
+      "observations": [
+        {
+          "title": "Every reachable string is a prefix of s repeated cyclically",
+          "description": "The two operations (delete last character, duplicate) mean we can first trim s to any prefix s[0..m], then duplicate it as many times as needed, then trim to exactly k characters. The result is always s[0..m] repeated cyclically to length k. So the problem reduces to choosing the best prefix length m.",
+          "hints": {
+            "nudge": "Think about what kinds of strings are actually reachable. What does the string look like after a sequence of deletions and duplications?",
+            "question": "If you first delete down to a prefix of length m and then duplicate repeatedly, what pattern does the resulting string follow?",
+            "formal": "Any sequence of operations produces a string that equals the first k characters of s[0..m] repeated infinitely: result[i] = s[i mod m]. The problem becomes: choose m in [1..n] to minimize this cyclic string lexicographically."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Comparing cyclic repetitions reduces to comparing at the wrap-around point",
+          "description": "When comparing the cyclic repetition of prefix s[0..m] versus s[0..m+1], the two strings agree on positions 0 through m-1. They first differ at position m, where the shorter prefix wraps back to s[0] while the longer prefix uses s[m]. So the shorter prefix is better if and only if s[0] < s[m], and worse if s[0] > s[m].",
+          "hints": {
+            "nudge": "When you extend a prefix by one character, where in the repeated output does the first difference appear?",
+            "question": "Compare the cyclic string from prefix of length m with that of length m+1. At position m, one uses s[0] (wrap-around) and the other uses s[m]. Which is better?",
+            "formal": "For positions 0..m-1, both cyclic strings are identical. At position m: prefix-m gives s[m mod m] = s[0], prefix-(m+1) gives s[m]. So prefix m is lexicographically smaller iff s[0] < s[m], and they tie at this position iff s[m] = s[0]."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Greedy scan: extend while s[i] <= s[i mod current_best], stop on s[i] > s[i mod current_best]",
+          "description": "Scan positions i = 1, 2, ..., n-1, maintaining the current best prefix length. Compare s[i] with s[i mod best]: if s[i] is smaller, the longer prefix is better so update best to i+1. If s[i] is larger, no prefix of length > i can beat the current best, so stop. If equal, continue scanning since the tie hasn't been broken yet.",
+          "hints": {
+            "nudge": "Can you process the string left to right, deciding at each character whether including it helps or hurts?",
+            "question": "At position i, the current best prefix of length m would place s[i mod m] at position i. If s[i] < s[i mod m], should you extend to include position i? What if s[i] > s[i mod m]?",
+            "formal": "Let best = 1. For i from 1 to n-1: if s[i] < s[i mod best], set best = i+1. If s[i] > s[i mod best], break. If s[i] == s[i mod best], continue. After the loop, output s[0], s[1 mod best], s[2 mod best], ..., s[(k-1) mod best]."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Early termination makes the O(n*k) approach feasible",
+          "description": "Although a naive approach of generating and comparing all n candidate strings of length k would be O(n*k), the greedy scan processes each position at most once and terminates early when s[i] > s[i mod best]. For the easy version (n, k <= 5000), even the naive O(n*k) comparison suffices, but the greedy scan typically runs in close to O(n).",
+          "hints": {
+            "nudge": "Do you need to compare full strings of length k for every candidate prefix, or can you decide earlier?",
+            "question": "In the greedy scan, once you see s[i] > s[i mod best], can any longer prefix starting with s[0..i] ever beat the current best?",
+            "formal": "If s[i] > s[i mod best], then for any prefix of length >= i+1, position i in the cyclic output is s[i], which is worse than s[i mod best] from the current best prefix. So all longer prefixes are dominated and we stop. This gives O(n) for the scan plus O(k) for output."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

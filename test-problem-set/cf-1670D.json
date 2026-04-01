@@ -1,0 +1,141 @@
+{
+  "contest_id": 1670,
+  "index": "D",
+  "title": "Very Suspicious",
+  "difficulty": 1700,
+  "tags": [
+    "binary search",
+    "brute force",
+    "geometry",
+    "greedy",
+    "implementation",
+    "math"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Sehr Sus is an infinite hexagonal grid as pictured below, controlled by MennaFadali, ZerooCool and Hosssam. They love equilateral triangles and want to create $$$n$$$ equilateral triangles on the grid by adding some straight lines. The triangles must all be empty from the inside (in other words, no straight line or hexagon edge should pass through any of the triangles). You are allowed to add straight lines parallel to the edges of the hexagons. Given $$$n$$$, what is the minimum number of lines you need to add to create at least $$$n$$$ equilateral triangles as described? Adding two red lines results in two new yellow equilateral triangles.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 10^5$$$) — the number of test cases. Then $$$t$$$ test cases follow. Each test case contains a single integer $$$n$$$ ($$$1 \\le n \\le 10^{9}$$$) — the required number of equilateral triangles.",
+  "output_spec": "For each test case, print the minimum number of lines needed to have $$$n$$$ or more equilateral triangles.",
+  "examples": [
+    {
+      "input": "41234567",
+      "output": "2\n2\n3\n83"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Counting formula + binary search",
+      "description": "Derive a closed-form formula for the maximum number of equilateral triangles producible by k lines, then binary search on k to find the minimum satisfying the target.",
+      "skill_tags": ["math", "binary-search", "greedy"],
+      "observations": [
+        {
+          "title": "Lines come in exactly three directions",
+          "description": "On a hexagonal grid, any added line must be parallel to one of the three edge directions of the hexagons (0, 60, and 120 degrees). So every line belongs to one of three families. Two lines from the same family are parallel and never form a triangle.",
+          "hints": {
+            "nudge": "Look at the hexagonal grid. How many distinct directions can the edges of a hexagon point in?",
+            "question": "If you draw a straight line parallel to a hexagon edge, how many fundamentally different orientations are there? What happens when two lines share the same orientation?",
+            "formal": "A regular hexagon has edges in three directions (separated by 60 degrees). Every added line is parallel to one of these three directions. Parallel lines never intersect, so they cannot form triangle vertices together."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Each pair of non-parallel lines creates exactly two triangles",
+          "description": "When two lines from different direction families cross, they form a 60-degree angle and create exactly two small equilateral triangles (one pointing up, one pointing down) at their intersection. No pair of lines from the same family can contribute any triangles since they are parallel.",
+          "hints": {
+            "nudge": "Consider just two non-parallel lines crossing on the grid. The hexagonal geometry constrains the angle between them. How many small triangles appear at the crossing?",
+            "question": "If two lines meet at 60 degrees on a hex grid, how many empty equilateral triangles do they bound at the intersection point? Why can't parallel lines create any?",
+            "formal": "Two non-parallel lines on the hex grid intersect at a 60-degree angle, producing exactly 2 equilateral triangles. The total triangle count equals 2 times the number of non-parallel pairs."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Triangle count formula from direction distribution",
+          "description": "If we place k_1, k_2, k_3 lines in the three directions (k_1 + k_2 + k_3 = k total lines), the number of non-parallel pairs is k_1*k_2 + k_2*k_3 + k_1*k_3. So the total number of triangles is f(k_1, k_2, k_3) = 2 * (k_1*k_2 + k_2*k_3 + k_1*k_3).",
+          "hints": {
+            "nudge": "Each pair of lines from different families contributes 2 triangles. How do you count all such cross-family pairs?",
+            "question": "With k_1, k_2, k_3 lines in the three families, how many pairs come from different families? Can you express this using a product formula?",
+            "formal": "Non-parallel pairs = k_1*k_2 + k_2*k_3 + k_1*k_3 (each pair from different families). Triangles = 2*(k_1*k_2 + k_2*k_3 + k_1*k_3). Equivalently, total pairs C(k,2) minus parallel pairs C(k_1,2)+C(k_2,2)+C(k_3,2), then multiply by 2."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Distribute lines as evenly as possible among the three directions",
+          "description": "For a fixed total k lines, the product sum k_1*k_2 + k_2*k_3 + k_1*k_3 is maximized when the three values are as equal as possible. With k = 3q + r, use r groups of (q+1) and (3-r) groups of q. This is a standard AM-GM / convexity argument: transferring a line from a larger group to a smaller one increases the product sum.",
+          "hints": {
+            "nudge": "You want to maximize the sum of pairwise products of three non-negative integers with a fixed total. Where is the maximum?",
+            "question": "If one direction has many more lines than another, what happens to k_1*k_2 + k_2*k_3 + k_1*k_3 when you move a line from the larger group to the smaller one?",
+            "formal": "By the inequality of arithmetic and quadratic means, k_1*k_2 + k_2*k_3 + k_1*k_3 is maximized when |k_i - k_j| <= 1 for all i,j. Write k = 3q+r (0 <= r < 3). Optimal: r values equal q+1, the rest equal q. Max triangles f(k) = 2*(3q^2 + 2qr) when r=0,1,2 (simplified from the product sum)."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Binary search on k for the answer",
+          "description": "Since f(k) is monotonically increasing in k, binary search for the smallest k such that f(k) >= n. The upper bound for k is around 3*sqrt(n/3) + a small constant since f(k) grows as roughly k^2/3. With n up to 10^9, the answer k is at most around 55000, so the binary search completes in about 16 iterations.",
+          "hints": {
+            "nudge": "You have a formula f(k) that increases with k, and you want the smallest k with f(k) >= n. What classic technique finds this efficiently?",
+            "question": "f(k) is non-decreasing. What search strategy finds the exact threshold in O(log(max_k)) time? What is a safe upper bound for max_k?",
+            "formal": "Binary search on k in [0, 2*10^5]. For each candidate k, compute the optimal distribution (q = k/3, r = k%3) and evaluate f(k) = 2*(q*(q-1)/2*3 + q*r*(... )). More directly: a = k/3, b = k - 3*a; f = 2*(C(a,1)^2*3 + ...). Compare f(k) with n. Alternatively, precompute f(k) for all k up to ~55000 and answer each query with a binary search or direct lookup."
+          },
+          "skill_tag": "binary-search"
+        }
+      ]
+    },
+    {
+      "name": "Precompute triangle counts and lookup",
+      "description": "Precompute the maximum triangle count for every line count up to a safe upper bound, then for each query, scan or binary search the precomputed array.",
+      "skill_tags": ["math", "greedy", "implementation"],
+      "observations": [
+        {
+          "title": "Lines come in exactly three directions",
+          "description": "On a hexagonal grid, any added line must be parallel to one of the three edge directions of the hexagons (0, 60, and 120 degrees). So every line belongs to one of three families. Two lines from the same family are parallel and never form a triangle.",
+          "hints": {
+            "nudge": "Look at the hexagonal grid. How many distinct directions can the edges of a hexagon point in?",
+            "question": "If you draw a straight line parallel to a hexagon edge, how many fundamentally different orientations are there? What happens when two lines share the same orientation?",
+            "formal": "A regular hexagon has edges in three directions (separated by 60 degrees). Every added line is parallel to one of these three directions. Parallel lines never intersect, so they cannot form triangle vertices together."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Each pair of non-parallel lines creates exactly two triangles",
+          "description": "When two lines from different direction families cross, they form a 60-degree angle and create exactly two small equilateral triangles (one pointing up, one pointing down) at their intersection. No pair of lines from the same family can contribute any triangles since they are parallel.",
+          "hints": {
+            "nudge": "Consider just two non-parallel lines crossing on the grid. The hexagonal geometry constrains the angle between them. How many small triangles appear at the crossing?",
+            "question": "If two lines meet at 60 degrees on a hex grid, how many empty equilateral triangles do they bound at the intersection point? Why can't parallel lines create any?",
+            "formal": "Two non-parallel lines on the hex grid intersect at a 60-degree angle, producing exactly 2 equilateral triangles. The total triangle count equals 2 times the number of non-parallel pairs."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Triangle count formula from direction distribution",
+          "description": "If we place k_1, k_2, k_3 lines in the three directions (k_1 + k_2 + k_3 = k total lines), the number of non-parallel pairs is k_1*k_2 + k_2*k_3 + k_1*k_3. So the total number of triangles is f(k_1, k_2, k_3) = 2 * (k_1*k_2 + k_2*k_3 + k_1*k_3).",
+          "hints": {
+            "nudge": "Each pair of lines from different families contributes 2 triangles. How do you count all such cross-family pairs?",
+            "question": "With k_1, k_2, k_3 lines in the three families, how many pairs come from different families? Can you express this using a product formula?",
+            "formal": "Non-parallel pairs = k_1*k_2 + k_2*k_3 + k_1*k_3 (each pair from different families). Triangles = 2*(k_1*k_2 + k_2*k_3 + k_1*k_3). Equivalently, total pairs C(k,2) minus parallel pairs C(k_1,2)+C(k_2,2)+C(k_3,2), then multiply by 2."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Even distribution maximizes triangles for fixed k",
+          "description": "For a fixed total k lines, the product sum k_1*k_2 + k_2*k_3 + k_1*k_3 is maximized when the three values are as equal as possible. With k = 3q + r, use r groups of (q+1) and (3-r) groups of q.",
+          "hints": {
+            "nudge": "You want to maximize the sum of pairwise products of three non-negative integers with a fixed total. Where is the maximum?",
+            "question": "If one direction has many more lines than another, what happens to k_1*k_2 + k_2*k_3 + k_1*k_3 when you move a line from the larger group to the smaller one?",
+            "formal": "By the inequality of arithmetic and quadratic means, k_1*k_2 + k_2*k_3 + k_1*k_3 is maximized when |k_i - k_j| <= 1 for all i,j. Write k = 3q+r. Optimal: r values equal q+1, the rest equal q."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Precompute f(k) for all k up to a safe bound",
+          "description": "Since f(k) grows quadratically (roughly 2k^2/3), the maximum k needed for n = 10^9 is about 55000. Precompute an array tri[k] = f(k) for k = 0, 1, ..., 55000 before processing any test cases. Then each of the up to 10^5 queries is answered by a single binary search on the precomputed array in O(log(55000)) time.",
+          "hints": {
+            "nudge": "There can be up to 10^5 queries. Computing the formula from scratch each time is fine, but can you avoid repeated work by precomputing?",
+            "question": "What is the maximum value of k you will ever need? Can you build a table of triangle counts for all k up to that bound? How would you then answer each query?",
+            "formal": "Precompute tri[k] for k = 0..55000 using the closed form. For each query n, binary search for the smallest k with tri[k] >= n. Total time: O(55000 + t * log(55000)), well within the 1-second limit."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

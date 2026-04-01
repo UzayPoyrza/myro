@@ -1,0 +1,30 @@
+[scenario]
+name = "Obtain the String — nested loop restarts scan from index 0"
+problem = "cf-1015B"
+route = 0
+trigger = "user idle for 45s"
+elapsed_secs = 150
+observations_found = 0
+
+[scenario.code]
+text = """
+s = input()
+t = input()
+deletions = 0
+for c in t:
+    found = False
+    for i in range(len(s)):
+        if s[i] == c:
+            found = True
+            break
+    if not found:
+        print(-1)
+        exit()
+print(0)
+"""
+
+[expect]
+state = "approaching"
+min_confidence = 0.3
+must_be_socratic = true
+banned_patterns = ["advance both"]

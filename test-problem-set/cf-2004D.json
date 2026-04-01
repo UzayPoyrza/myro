@@ -1,0 +1,132 @@
+{
+  "contest_id": 2004,
+  "index": "D",
+  "title": "Colored Portals",
+  "difficulty": 1600,
+  "tags": [
+    "binary search",
+    "brute force",
+    "data structures",
+    "graphs",
+    "greedy",
+    "implementation",
+    "shortest paths"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "There are $$$n$$$ cities located on a straight line. The cities are numbered from $$$1$$$ to $$$n$$$. Portals are used to move between cities. There are $$$4$$$ colors of portals: blue, green, red, and yellow. Each city has portals of two different colors. You can move from city $$$i$$$ to city $$$j$$$ if they have portals of the same color (for example, you can move between a \"blue-red\" city and a \"blue-green\" city). This movement costs $$$|i-j|$$$ coins. Your task is to answer $$$q$$$ independent queries: calculate the minimum cost to move from city $$$x$$$ to city $$$y$$$.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — the number of test cases. The first line of each test case contains two integers $$$n$$$ and $$$q$$$ ($$$1 \\le n, q \\le 2 \\cdot 10^5$$$) — the number of cities and the number of queries, respectively. The second line contains $$$n$$$ strings of the following types: BG , BR , BY , GR , GY , or RY ; the $$$i$$$-th of them describes the portals located in the $$$i$$$-th city; the symbol B indicates that there is a blue portal in the city, G — green, R — red, and Y — yellow. The $$$j$$$-th of the next $$$q$$$ lines contains two integers $$$x_j$$$ and $$$y_j$$$ ($$$1 \\le x_j, y_j \\le n$$$) — the description of the $$$j$$$-th query. Additional constraints on the input: the sum of $$$n$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$; the sum of $$$q$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each query, print a single integer — the minimum cost to move from city $$$x$$$ to city $$$y$$$ (or $$$-1$$$ if it is impossible).",
+  "examples": [
+    {
+      "input": "24 5BR BR GY GR1 23 14 41 44 22 1BG RY1 2",
+      "output": "1\n4\n0\n3\n2\n-1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Complement analysis + nearest valid neighbor",
+      "description": "Observe that with 6 portal types, each type has exactly one complement that shares no color. If x and y share a color, the answer is direct. Otherwise, route through the nearest intermediate city that is compatible with both, using precomputed nearest-neighbor arrays per type.",
+      "skill_tags": ["greedy", "binary-search", "implementation"],
+      "observations": [
+        {
+          "title": "Two cities connect directly iff their portal types are not complementary",
+          "description": "There are C(4,2) = 6 portal types. Two types share a color unless together they cover all 4 colors, forming a complement pair. The three complement pairs are BG-RY, BR-GY, and BY-GR. Any two non-complementary types share at least one color and can connect directly at cost |x-y|.",
+          "hints": {
+            "nudge": "List all 6 portal types. For each pair of types, check whether they share at least one color. How many pairs do not share any color?",
+            "question": "Each type uses 2 of 4 colors. When do two types fail to share a color? What must be true about the union of their color sets?",
+            "formal": "Two types are complementary iff their color sets are disjoint, meaning together they cover all 4 colors. With 4 colors split into two pairs: BG-RY, BR-GY, BY-GR. Exactly 3 complement pairs. All other pairs share at least one color."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "At most one intermediate city is needed",
+          "description": "If x and y are complementary, one hop through an intermediate city z suffices. City z must share a color with both x and y, meaning z is neither the same type as x nor y's complement (which is x's own type). The cost is |x-z| + |z-y|. No path ever needs more than one intermediate because any z compatible with both endpoints exists.",
+          "hints": {
+            "nudge": "If x and y cannot connect directly, can you always find a city z that connects to both? How many hops does that take?",
+            "question": "For an intermediate city z to work, it must share a color with x and share a color with y. Since x and y are complements, what types must z avoid?",
+            "formal": "z must not be complementary to x and must not be complementary to y. Since complement(x) = type(y) and complement(y) = type(x), z just needs to be a type other than type(x) and type(y). There are 4 such types out of 6."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "The optimal intermediate lies as close to the [x,y] segment as possible",
+          "description": "The cost through z is |x-z| + |z-y|. On a line, if z lies between x and y this equals |x-y|, the minimum possible. If z lies outside the segment, the cost is |x-y| + 2*d where d is the distance from z to the nearer endpoint. So we want the valid z closest to or inside the interval [x,y].",
+          "hints": {
+            "nudge": "Think geometrically: cities are on a number line. Where should z be to minimize |x-z| + |z-y|?",
+            "question": "What is |x-z| + |z-y| when z is between x and y? What is it when z is to the left of both or to the right of both?",
+            "formal": "If min(x,y) <= z <= max(x,y): cost = |x-y|. Otherwise cost = |x-y| + 2*dist(z, [x,y]). So minimize dist(z, [x,y]) over all valid z, i.e., find the valid z nearest to the interval."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "For each type, precompute nearest left/right neighbors via sorted lists",
+          "description": "Maintain a sorted list of positions for each of the 6 portal types. For a query, identify which types are valid intermediates (4 out of 6), then for each valid type, binary search for the position closest to x and closest to y. The best over all candidates gives the answer.",
+          "hints": {
+            "nudge": "You need to quickly find the nearest city of a given type to a given position. What data structure supports this?",
+            "question": "If you have a sorted array of all positions with a certain portal type, how do you find the entry closest to a target value?",
+            "formal": "For each of the 6 types, store positions in a sorted array. For a query (x,y) with valid types T, for each t in T, binary search in the sorted array for t to find the nearest position to x and to y. Compute |x-z| + |z-y| for each candidate z and take the minimum."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "Checking O(1) types per query keeps total work efficient",
+          "description": "Each query checks at most 4 valid types, and for each type performs two binary searches (near x and near y), each returning at most 2 candidates (left and right neighbors). This gives O(1) binary searches per query, for O(q log n) total across all queries. Combined with O(n) preprocessing, the solution fits comfortably in the time limit.",
+          "hints": {
+            "nudge": "How many types do you actually need to search for each query? Is it a constant?",
+            "question": "For each valid type you do O(log n) work via binary search. How many valid types are there, and what is the total complexity over all queries?",
+            "formal": "4 valid types * 2 endpoints * 2 neighbors = at most 16 candidate intermediates per query, each found in O(log n). Total: O(n + q log n). This is efficient for n, q <= 2*10^5."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    },
+    {
+      "name": "Sweep with per-type tracking arrays",
+      "description": "Instead of binary search, precompute for each city the nearest city of each type to its left and right using a single left-to-right and right-to-left sweep. Answer queries by checking the precomputed nearest valid neighbors.",
+      "skill_tags": ["greedy", "implementation"],
+      "observations": [
+        {
+          "title": "Two cities connect directly iff their portal types are not complementary",
+          "description": "There are 6 portal types, forming 3 complement pairs (BG-RY, BR-GY, BY-GR) where the two types share no color. All other pairs share at least one color. If x and y are not complements, the answer is |x-y|.",
+          "hints": {
+            "nudge": "List all 6 portal types. For each pair of types, check whether they share at least one color. How many pairs do not share any color?",
+            "question": "Each type uses 2 of 4 colors. When do two types fail to share a color? What must be true about the union of their color sets?",
+            "formal": "Complement pairs are BG-RY, BR-GY, BY-GR. If type(x) and type(y) are not a complement pair, answer = |x-y|."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "For complementary endpoints, route through a valid intermediate",
+          "description": "When x and y are complementary, find an intermediate z that is not of type(x) or type(y). The cost is |x-z| + |z-y|, minimized when z is closest to the segment [x,y]. There are 4 valid types out of 6 to consider.",
+          "hints": {
+            "nudge": "If x and y cannot connect directly, what types of cities can serve as a relay that connects to both?",
+            "question": "An intermediate z must not be complementary to x and must not be complementary to y. How many of the 6 types satisfy this?",
+            "formal": "z must avoid type(x) and type(y). The remaining 4 types each share a color with both x and y. For each, find the nearest z to the interval [x,y]."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Precompute nearest left and right neighbor per type via linear sweeps",
+          "description": "Sweep left-to-right, maintaining the last-seen position for each of the 6 types. Store lf[i][t] = last position of type t at or before i. Then sweep right-to-left to get rg[i][t] = next position of type t at or after i. Two O(n) passes replace all binary searches.",
+          "hints": {
+            "nudge": "Instead of sorting positions per type and binary searching, can you precompute the answer for every position in one pass?",
+            "question": "If you sweep left to right and track the most recent position of each type, what does that give you for each city i?",
+            "formal": "Left sweep: lf[i][t] = i if type(i) == t, else lf[i-1][t]. Right sweep: rg[i][t] = i if type(i) == t, else rg[i+1][t]. Each gives O(6n) storage and O(n) time per sweep."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Answer each query by checking precomputed neighbors",
+          "description": "For a query (x,y) where x and y are complementary, assume x < y. For each of the 4 valid types t, consider lf[x][t] and rg[x][t] as candidates (nearest type-t city to x from each side), and similarly lf[y][t] and rg[y][t]. Compute |x-z| + |z-y| for each candidate z and take the overall minimum. Each query does O(1) work.",
+          "hints": {
+            "nudge": "You have the nearest neighbor of each type precomputed to the left and right. How many candidates do you check per query?",
+            "question": "For each of the 4 valid types, you have at most 2 candidates from x's side and 2 from y's side. What is the total number of candidates?",
+            "formal": "For each valid type t (4 types), check up to 4 positions: lf[x][t], rg[x][t], lf[y][t], rg[y][t]. Compute cost = |x-z| + |z-y| for each valid z. Take the global minimum. O(1) per query, O(n + q) total."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "contest_id": 4,
+  "index": "A",
+  "title": "Watermelon",
+  "difficulty": 800,
+  "tags": ["math", "brute force"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Pete and Billy have a watermelon of w kilos. They want to divide it into two parts, each part weighing an even number of kilos. Determine if this is possible.",
+  "input_spec": "The first line contains a single integer w (1 <= w <= 100) -- the weight of the watermelon.",
+  "output_spec": "Print \"YES\" if it is possible to divide the watermelon as described, and \"NO\" otherwise.",
+  "examples": [
+    {"input": "8", "output": "YES"},
+    {"input": "3", "output": "NO"},
+    {"input": "2", "output": "NO"}
+  ],
+  "routes": [
+    {
+      "name": "Parity analysis",
+      "description": "Determine divisibility by analyzing even/odd properties of the weight.",
+      "skill_tags": ["math", "parity"],
+      "observations": [
+        {
+          "title": "Both parts must be even",
+          "description": "If we split w into a and b where a + b = w, both a and b must be even positive integers.",
+          "hints": {
+            "nudge": "What does it mean for a number to be 'even'?",
+            "question": "If both parts must be even, what can you say about their sum?",
+            "formal": "The sum of two even numbers is always even. So w must be even."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "w = 2 is the edge case",
+          "description": "w = 2 splits into 0 + 2, but 0 kilos is not a valid part (each part must weigh a positive even number).",
+          "hints": {
+            "nudge": "Are there any small values of w you should check carefully?",
+            "question": "If w = 2, what are the only two ways to split it? Are both parts positive?",
+            "formal": "w = 2 can only split as 0 + 2. Since 0 is not positive, w = 2 should output NO. The answer is YES iff w is even AND w > 2."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Simple condition: w even and w > 2",
+          "description": "The complete solution is just checking w % 2 == 0 and w > 2.",
+          "hints": {
+            "nudge": "Can you express the solution as a single boolean condition?",
+            "question": "Combine the parity check with the edge case -- what's the simplest condition?",
+            "formal": "Print YES if w % 2 == 0 and w > 2, else NO."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

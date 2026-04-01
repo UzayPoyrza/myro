@@ -1,0 +1,75 @@
+{
+  "contest_id": 337,
+  "index": "C",
+  "title": "Quiz",
+  "difficulty": 1600,
+  "tags": ["greedy", "math", "binary search"],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Manao is taking part in a quiz. The quiz consists of n consecutive questions. A correct answer gives one point to the player. The game also has a counter of consecutive correct answers. When the player answers a question correctly, the number on this counter increases by 1. If the player answers a question incorrectly, the counter is reset, that is, the number on it reduces to 0. If after an answer the counter reaches the number k, then it is reset, and the player's score is doubled. Note that in this case, first 1 point is added to the player's score, and then the total score is doubled. At the beginning of the game, both the player's score and the counter of consecutive correct answers are set to zero. Manao remembers that he has answered exactly m questions correctly. But he does not remember the order in which the questions came. He's trying to figure out what his minimum score may be. Help him and compute the remainder of the corresponding number after division by 1000000009 (10^9 + 9).",
+  "input_spec": "The single line contains three space-separated integers n, m and k (2 <= k <= n <= 10^9; 0 <= m <= n).",
+  "output_spec": "Print a single integer — the remainder from division of Manao's minimum possible score in the quiz by 1000000009 (10^9 + 9).",
+  "examples": [
+    {"input": "5 3 2", "output": "3"},
+    {"input": "5 4 2", "output": "6"}
+  ],
+  "routes": [
+    {
+      "name": "Greedy doubling placement + closed-form formula",
+      "description": "Determine the minimum unavoidable number of doublings X, then compute the score using a geometric series formula and modular exponentiation.",
+      "skill_tags": ["greedy", "math"],
+      "observations": [
+        {
+          "title": "Doublings are cheapest when they happen first",
+          "description": "If Manao must double his score X times, the minimum total score is achieved by placing all X doublings at the very beginning of the game. A doubling multiplies the entire current score by 2, so doublings that happen later amplify more points. By front-loading doublings, the points added after the last doubling are never multiplied, minimizing the total.",
+          "hints": {
+            "nudge": "If you must double your score multiple times, does it matter when those doublings occur?",
+            "question": "Consider two scenarios: doubling after accumulating 10 points vs doubling after accumulating just k points. Which gives a smaller final score?",
+            "formal": "For any arrangement with X doublings, we can move all doublings to the front without increasing the score. Each doubling block gives exactly k correct answers. After the final doubling, the remaining m - X*k correct answers each contribute 1 point without amplification. This yields the minimum."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Interleaving wrong answers prevents extra doublings",
+          "description": "After the X mandatory doubling blocks, Manao still has n - X*k questions and m - X*k correct answers remaining. To avoid any further doubling, he must never reach k consecutive correct answers. He can do this by inserting a wrong answer after every k-1 correct answers. This limits the maximum correct answers that can be placed without triggering a doubling to (k-1) * (number_of_wrong_answers + 1) plus any leftover from the final incomplete group.",
+          "hints": {
+            "nudge": "After the doublings, you have some correct and incorrect answers left. How do you arrange them so you never get k in a row?",
+            "question": "If you have W wrong answers to spread among correct ones, and each wrong answer resets the consecutive counter, what is the maximum number of correct answers you can place without ever reaching k consecutive?",
+            "formal": "With W = (n - X*k) - (m - X*k) = n - m wrong answers and R = n - X*k remaining questions: place at most k-1 correct before each wrong answer, plus up to k-1 at the end. Max correct without doubling = (W + 1) * (k - 1) if that exceeds R, or min(R, (k-1)*(W+1)) more precisely. But the simpler view: X doublings are avoidable if and only if m - X*k correct answers can be placed without k consecutive."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "The minimum number of doublings X has a closed-form",
+          "description": "X doublings use X*k of the m correct answers and X*k of the n questions. The remaining n - X*k questions contain n - m wrong answers and m - X*k correct answers. To avoid further doublings, we need m - X*k correct answers to fit without k consecutive, which requires enough wrong answers as separators. The wrong count is (n - X*k) - (m - X*k) = n - m. The maximum correct placeable without doubling is (n - m) * (k - 1) + min(k - 1, (n - X*k) mod k ... ). Simplifying: X = max(0, m - (n - m) * (k - 1) - ((n mod k == 0) ? 0 : min(k-1, n mod k))). Equivalently, using floor division: let q = floor(n / k), r = n mod k. The max correct answers placeable with zero doublings across n questions is q * (k-1) + r. So X = max(0, m - q*(k-1) - r) which simplifies to max(0, m - n + floor(n/k)).",
+          "hints": {
+            "nudge": "How many correct answers can be placed in n questions without ever hitting k consecutive? Count the wrong answers needed as separators.",
+            "question": "In n questions, if you place a wrong answer after every k-1 correct answers, how many correct answers fit in total? And how does this determine X?",
+            "formal": "In n questions, the maximum correct answers without any doubling = n - floor(n/k). This is because you need at least 1 wrong answer for every k-1 correct to break the streak, consuming floor(n/k) slots for wrong answers out of n total. So X = max(0, m - (n - floor(n/k)))."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Score formula as a geometric series",
+          "description": "With X doublings at the front, the score builds as: start with k points, double to 2k, add k more to get 2k + k, double to 2(2k+k), and so on X times, then add the remaining m - X*k points. Unrolling this gives score = k * (2^1 + 2^2 + ... + 2^X) + (m - X*k) = k * (2^(X+1) - 2) + (m - X*k). This is the value to compute modulo 10^9 + 9.",
+          "hints": {
+            "nudge": "Write out the score for X = 1, 2, 3 doublings. Do you see a pattern involving powers of 2?",
+            "question": "After the first doubling block you have 2k points. After the second you have 2(2k + k) = 2k*2 + 2k points. Can you express the general formula as a sum of a geometric series?",
+            "formal": "After X doublings: score = k * sum_{i=1}^{X} 2^i + (m - X*k) = k * (2^{X+1} - 2) + (m - X*k). This follows from unrolling the recurrence S_i = 2*(S_{i-1} + k) with S_0 = 0, giving S_X = k*(2^{X+1} - 2), then adding the m - X*k un-doubled correct answers."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Modular exponentiation to compute the answer",
+          "description": "Since X can be up to roughly n/k which is up to 10^9/2 = 5*10^8, computing 2^(X+1) mod (10^9 + 9) requires fast exponentiation by squaring. The final answer is (k * (pow(2, X+1, MOD) - 2) + (m - X*k)) mod MOD, taking care to handle the modular arithmetic correctly (adding MOD before taking mod to avoid negative values).",
+          "hints": {
+            "nudge": "X can be very large. How do you compute 2^X modulo a prime efficiently?",
+            "question": "What algorithm computes a^b mod p in O(log b) time? How do you handle the subtraction in (2^(X+1) - 2) mod p to avoid negative intermediate values?",
+            "formal": "Use binary exponentiation: pow(2, X+1, MOD) in O(log X). Then answer = (k % MOD * ((pow2 - 2 + MOD) % MOD) % MOD + (m - X*k) % MOD) % MOD. The +MOD before the inner mod handles the case where pow2 - 2 could be negative in modular arithmetic. Overall complexity is O(log n)."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

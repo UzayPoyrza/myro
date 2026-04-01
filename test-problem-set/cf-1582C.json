@@ -1,0 +1,83 @@
+{
+  "contest_id": 1582,
+  "index": "C",
+  "title": "Grandma Capa Knits a Scarf",
+  "difficulty": 1200,
+  "tags": [
+    "brute force",
+    "data structures",
+    "greedy",
+    "strings",
+    "two pointers"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Grandma Capa has decided to knit a scarf and asked Grandpa Sher to make a pattern for it, a pattern is a string consisting of lowercase English letters. Grandpa Sher wrote a string $$$s$$$ of length $$$n$$$. Grandma Capa wants to knit a beautiful scarf, and in her opinion, a beautiful scarf can only be knit from a string that is a palindrome. She wants to change the pattern written by Grandpa Sher, but to avoid offending him, she will choose one lowercase English letter and erase some (at her choice, possibly none or all) occurrences of that letter in string $$$s$$$. She also wants to minimize the number of erased symbols from the pattern. Please help her and find the minimum number of symbols she can erase to make string $$$s$$$ a palindrome, or tell her that it's impossible. Notice that she can only erase symbols equal to the one letter she chose. A string is a palindrome if it is the same from the left to the right and from the right to the left. For example, the strings 'kek' , 'abacaba' , 'r' and 'papicipap' are palindromes, while the strings 'abb' and 'iq' are not.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 100$$$) — the number of test cases. The next $$$2 \\cdot t$$$ lines contain the description of test cases. The description of each test case consists of two lines. The first line of each test case contains a single integer $$$n$$$ ($$$1 \\le n \\le 10^5$$$) — the length of the string. The second line of each test case contains the string $$$s$$$ consisting of $$$n$$$ lowercase English letters. It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case print the minimum number of erased symbols required to make the string a palindrome, if it is possible, and $$$-1$$$, if it is impossible.",
+  "examples": [
+    {
+      "input": "5\n8\nabcaacab\n6\nxyzxyz\n4\nabba\n8\nrprarlap\n10\nkhyyhhyhky",
+      "output": "2\n-1\n0\n3\n2"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Try each letter with two pointers",
+      "description": "Iterate over all 26 possible letter choices. For each choice, use two pointers from the ends of the string inward, skipping (erasing) occurrences of the chosen letter when a mismatch occurs. Track the minimum erasure count across all 26 attempts.",
+      "skill_tags": ["two-pointers", "greedy", "strings"],
+      "observations": [
+        {
+          "title": "Only 26 possible letter choices to try",
+          "description": "The problem says you pick exactly one lowercase letter whose occurrences you may erase. Since there are only 26 lowercase letters, you can try each one independently and take the best result. This transforms a seemingly hard choice into brute force over a tiny domain.",
+          "hints": {
+            "nudge": "How many distinct letters could you possibly choose? Is that number small enough to try all of them?",
+            "question": "If you fix the chosen letter to 'a', then separately try 'b', 'c', and so on, how many separate sub-problems do you solve?",
+            "formal": "For each letter c in 'a'..'z', solve the sub-problem: what is the minimum number of occurrences of c to erase so that the remaining string is a palindrome? Return the minimum answer over all 26 letters, or -1 if none works."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Two pointers check palindrome with erasures",
+          "description": "For a fixed chosen letter c, place pointer l at the start and r at the end. If s[l] == s[r], both characters match and you move inward. If they differ, you can only resolve the mismatch by erasing the chosen letter c -- so one of the two characters must be c. If s[l] == c, erase it (advance l, increment count). If s[r] == c, erase it (advance r, increment count). If neither is c, this letter choice fails.",
+          "hints": {
+            "nudge": "Palindromes are checked by comparing characters from both ends inward. What happens at a mismatch if you can only remove one specific letter?",
+            "question": "When s[l] != s[r] and you have chosen letter c, under what conditions can you make progress? Which pointer do you advance?",
+            "formal": "While l <= r: if s[l] == s[r], do l++, r--. Else if s[l] == c, do l++, count++. Else if s[r] == c, do r--, count++. Else this letter c cannot produce a palindrome -- break and mark as failed."
+          },
+          "skill_tag": "two-pointers"
+        },
+        {
+          "title": "The greedy pointer advance is optimal for a fixed letter",
+          "description": "When a mismatch occurs and the chosen letter appears on one side, you must erase it -- there is no benefit to keeping it since it is blocking the palindrome property. If the chosen letter appears on both sides of a mismatch, erasing either one works, but since both sides have the same letter c and c != c is impossible, this case actually means s[l] == s[r] == c which is already a match. So each mismatch has exactly one forced move.",
+          "hints": {
+            "nudge": "At a mismatch where one side has the chosen letter, could you ever do better by not erasing it?",
+            "question": "If s[l] != s[r] and s[l] == c, is there ever a reason to advance r instead of l? What would happen?",
+            "formal": "At a mismatch, exactly one of s[l] or s[r] equals c (if both did, they would equal each other and it would not be a mismatch). Erasing that character is the only valid move. Therefore the greedy two-pointer process finds the unique minimum for each letter choice."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Take the minimum over all 26 results",
+          "description": "Each letter choice either succeeds with some erasure count or fails entirely. The answer is the minimum count among all successful choices. If no letter choice succeeds, output -1. Note that if the string is already a palindrome, every letter choice succeeds with count 0.",
+          "hints": {
+            "nudge": "You have 26 candidate answers. How do you combine them into a final answer?",
+            "question": "What should you output if exactly one letter gives count 5 and all others fail? What if all 26 fail?",
+            "formal": "Let ans = infinity. For each c in 'a'..'z': run the two-pointer check. If it succeeds with count k, set ans = min(ans, k). After all 26, output ans if ans < infinity, else output -1."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Total complexity is O(26 * n) per test case",
+          "description": "Each of the 26 letter choices runs a single two-pointer pass in O(n). With the sum of n across test cases bounded by 2*10^5, the total work is 26 * 2*10^5 = about 5*10^6 operations, comfortably within the 1-second time limit.",
+          "hints": {
+            "nudge": "How much work does each two-pointer pass do? Multiply by the number of letters you try.",
+            "question": "Each pointer only moves forward through the string. What is the time for one pass? For all 26 passes?",
+            "formal": "Each two-pointer pass is O(n) since l and r each move at most n times total. Running 26 passes gives O(26n) per test case. With sum of n <= 2*10^5, total operations are at most 26 * 2*10^5 = 5.2*10^6."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "contest_id": 520,
+  "index": "B",
+  "title": "Two Buttons",
+  "difficulty": 1400,
+  "tags": [
+    "greedy",
+    "math",
+    "graphs",
+    "shortest paths"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Vasya has found a strange device. On the front panel of a device there are: a red button, a blue button and a display showing some positive integer. After clicking the red button, device multiplies the displayed number by two. After clicking the blue button, device subtracts one from the number on the display. If at some point the number stops being positive, the device breaks down. The display can show arbitrarily large numbers. Initially, the display shows number n. Bob wants to get number m on the display. What minimum number of clicks he has to make in order to achieve this result?",
+  "input_spec": "The first and the only line of the input contains two distinct integers n and m (1 <= n, m <= 10^4), separated by a space.",
+  "output_spec": "Print a single number -- the minimum number of times one needs to push the button required to get the number m out of number n.",
+  "examples": [
+    {
+      "input": "4 6",
+      "output": "2"
+    },
+    {
+      "input": "10 1",
+      "output": "9"
+    }
+  ],
+  "routes": [
+    {
+      "name": "BFS on state space",
+      "description": "Model each number as a node in a graph, with edges for the two operations. BFS from n finds the shortest path to m.",
+      "skill_tags": [
+        "graphs",
+        "shortest-paths",
+        "bfs"
+      ],
+      "observations": [
+        {
+          "title": "The problem is shortest path in an implicit graph",
+          "description": "Each number reachable from n is a node. From any node x there are edges to 2x (red button) and x-1 (blue button, only if x > 1). The minimum number of button presses to reach m from n is the shortest path length in this unweighted graph.",
+          "hints": {
+            "nudge": "What if you think of each number as a state and each button press as a transition?",
+            "question": "If you model numbers as graph nodes and button presses as edges, what standard algorithm finds the minimum number of edges from n to m?",
+            "formal": "Build an implicit graph: node x has edges to 2x and x-1 (for x > 1). BFS from n gives shortest distance to every reachable node. The answer is dist[m]."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Bound the search space",
+          "description": "Numbers can grow unboundedly via doubling, but it is never useful to exceed 2m. If your current value is already above m, doubling only moves you further away, so you would only subtract from that point. This caps the graph at roughly 2m nodes, making BFS feasible.",
+          "hints": {
+            "nudge": "Can the optimal path ever visit a number much larger than m? What is the largest number you would ever need?",
+            "question": "If you are at some value x > m, is it ever useful to double? What does that tell you about the upper bound of the search?",
+            "formal": "If x > m, doubling gives 2x > 2m, and every subsequent step to reach m costs more than subtracting from x directly. So no optimal path visits a value above 2m. Limit BFS to [1, 2m]."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "Standard BFS implementation",
+          "description": "Use a queue seeded with n at distance 0. For each dequeued value x, enqueue 2x and x-1 (if within bounds and unvisited). When m is dequeued, output its distance.",
+          "hints": {
+            "nudge": "How do you implement BFS? What data structures do you need?",
+            "question": "What should the queue be initialized with, and how do you avoid revisiting states?",
+            "formal": "dist = array of size 2m+1 initialized to -1. dist[n] = 0. Queue = [n]. While queue non-empty: pop x, for each neighbor y in {2x, x-1}: if 1 <= y <= 2m and dist[y] == -1: dist[y] = dist[x] + 1, push y. Return dist[m]."
+          },
+          "skill_tag": "shortest-paths"
+        }
+      ]
+    },
+    {
+      "name": "Greedy working backward from m",
+      "description": "Reverse the problem: start from m and reach n using inverse operations (add 1, divide by 2 if even). A greedy strategy of always dividing when possible yields the optimal answer.",
+      "skill_tags": [
+        "greedy",
+        "math"
+      ],
+      "observations": [
+        {
+          "title": "Reverse the operations",
+          "description": "Instead of going forward from n to m, work backward from m to n. The inverse of 'multiply by 2' is 'divide by 2' (applicable only when even). The inverse of 'subtract 1' is 'add 1'. Finding the shortest forward path is equivalent to finding the shortest backward path.",
+          "hints": {
+            "nudge": "What if you start from the target m and try to reach n? What would the reverse operations be?",
+            "question": "The forward operations are x -> 2x and x -> x-1. What are their inverses? When is each inverse applicable?",
+            "formal": "Working backward from m: if m is even, the inverse of doubling is m -> m/2. The inverse of subtracting 1 is m -> m+1. A path from n to m forward corresponds to a path from m to n backward of the same length."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "If n >= m, the answer is simply n - m",
+          "description": "When n is already at least as large as m, doubling can never help because it moves you further from m. The only useful operation is subtracting 1, exactly n - m times.",
+          "hints": {
+            "nudge": "What if n is already bigger than m? Is doubling ever useful in that case?",
+            "question": "If n >= m, how many subtract-1 operations do you need? Can any sequence involving a multiply-by-2 do better?",
+            "formal": "If n >= m, the answer is n - m. Any doubling would give a value >= 2n > m, and returning to m would cost at least 2n - m > n - m total steps."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Always divide when m is even (greedy choice)",
+          "description": "When working backward with m > n: if m is even, divide by 2 (one step). If m is odd, add 1 first to make it even, then divide (two steps). Dividing is always at least as good as repeatedly adding 1, because one division halves the distance while adding 1 only decrements.",
+          "hints": {
+            "nudge": "When m > n and m is even, which reverse operation shrinks m faster?",
+            "question": "Working backward: if m is even, you can either add 1 or divide by 2. Which brings you closer to n more efficiently? What if m is odd?",
+            "formal": "If m is even and m > n: set m = m/2, steps += 1. If m is odd and m > n: set m = (m+1)/2, steps += 2. This is optimal because two consecutive add-1s followed by a divide can always be replaced by a divide followed by one add-1, saving a step."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Terminate when m <= n",
+          "description": "Keep applying the greedy backward strategy until m drops to n or below. Once m <= n, no more halving helps -- just add n - m to the step count for the remaining subtract-1 operations in the forward direction.",
+          "hints": {
+            "nudge": "When should you stop halving and just use the simple operations?",
+            "question": "After repeated halving, m will eventually become <= n. How many more steps do you need at that point?",
+            "formal": "While m > n: if m is odd, m += 1, steps += 1. Then m /= 2, steps += 1. After the loop, steps += (n - m). Total steps is the answer. Runs in O(log m) time."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

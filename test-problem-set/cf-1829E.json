@@ -1,0 +1,124 @@
+{
+  "contest_id": 1829,
+  "index": "E",
+  "title": "The Lakes",
+  "difficulty": 1100,
+  "tags": ["dfs and similar", "dsu", "graphs", "implementation"],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given an $$$n \\times m$$$ grid $$$a$$$ of non-negative integers. The value $$$a_{i,j}$$$ represents the depth of water at the $$$i$$$-th row and $$$j$$$-th column. A lake is a set of cells such that: each cell in the set has $$$a_{i,j}  \\gt  0$$$, and there exists a path between any pair of cells in the lake by going up, down, left, or right a number of times and without stepping on a cell with $$$a_{i,j} = 0$$$. The volume of a lake is the sum of depths of all the cells in the lake. Find the largest volume of a lake in the grid.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1 \\leq t \\leq 10^4$$$) — the number of test cases. The first line of each test case contains two integers $$$n, m$$$ ($$$1 \\leq n, m \\leq 1000$$$) — the number of rows and columns of the grid, respectively. Then $$$n$$$ lines follow each with $$$m$$$ integers $$$a_{i,j}$$$ ($$$0 \\leq a_{i,j} \\leq 1000$$$) — the depth of the water at each cell. It is guaranteed that the sum of $$$n \\cdot m$$$ over all test cases does not exceed $$$10^6$$$.",
+  "output_spec": "For each test case, output a single integer — the largest volume of a lake in the grid.",
+  "examples": [
+    {
+      "input": "53 31 2 03 4 00 0 51 103 30 1 11 0 11 1 15 51 1 1 1 11 0 0 0 11 0 5 0 11 0 0 0 11 1 1 1 15 51 1 1 1 11 0 0 0 11 1 4 0 11 0 0 0 11 1 1 1 1",
+      "output": "10\n0\n7\n16\n21"
+    }
+  ],
+  "routes": [
+    {
+      "name": "DFS flood fill over connected components",
+      "description": "Iterate over all cells; for each unvisited positive cell, launch a DFS that accumulates the sum of all reachable positive cells. Track the maximum sum across all components.",
+      "skill_tags": ["dfs", "graphs", "implementation"],
+      "observations": [
+        {
+          "title": "Lakes are connected components of positive cells",
+          "description": "The problem defines a lake as a maximal set of positive-valued cells connected via 4-directional adjacency. This is exactly the definition of a connected component in a grid graph where positive cells are nodes and edges connect 4-directional neighbors.",
+          "hints": {
+            "nudge": "What well-known graph concept does the definition of a lake correspond to?",
+            "question": "If you think of each positive cell as a node and draw edges between adjacent positive cells, what structure does a lake form?",
+            "formal": "A lake is a connected component in the implicit grid graph where vertices are cells with a[i][j] > 0 and edges connect 4-directionally adjacent positive cells."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Flood fill to find each component and its volume",
+          "description": "Starting from any unvisited positive cell, a DFS (or BFS) explores the entire connected component. As you visit each cell, add its value to a running sum. That sum is the volume of the lake.",
+          "hints": {
+            "nudge": "How would you explore all cells belonging to one lake and compute their total depth?",
+            "question": "If you start at one positive cell and recursively visit all adjacent positive cells, what information can you accumulate along the way?",
+            "formal": "DFS from cell (i,j): mark visited, initialize sum = a[i][j], then for each 4-directional neighbor (ni,nj) that is in bounds, positive, and unvisited, add the result of DFS(ni,nj) to sum. Return sum."
+          },
+          "skill_tag": "dfs"
+        },
+        {
+          "title": "Use a visited array to avoid revisiting cells",
+          "description": "A boolean visited grid prevents processing the same cell in multiple DFS calls. Each cell is visited at most once across all DFS launches, giving O(n*m) total work.",
+          "hints": {
+            "nudge": "How do you ensure each cell is processed exactly once across all your DFS calls?",
+            "question": "What data structure prevents you from re-entering a cell that was already counted in a previous lake?",
+            "formal": "Maintain a 2D boolean array vis[n][m]. Before launching DFS from (i,j), check !vis[i][j] && a[i][j] > 0. Inside DFS, set vis[i][j] = true before recursing on neighbors."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Iterate all cells and track the global maximum",
+          "description": "Scan every cell in the grid. When you find an unvisited positive cell, run a flood fill to get that lake's volume. Update the answer with the maximum volume seen so far.",
+          "hints": {
+            "nudge": "You can compute one lake's volume with DFS. How do you find the largest across all lakes?",
+            "question": "If you loop over every cell and launch DFS whenever you hit an unvisited positive cell, how do you combine the results?",
+            "formal": "ans = 0. For i in 0..n, j in 0..m: if !vis[i][j] and a[i][j] > 0, set ans = max(ans, dfs(i, j)). Output ans."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Handle the all-zero grid edge case",
+          "description": "If every cell in the grid is zero, there are no lakes and the answer is 0. The algorithm handles this naturally since no DFS is ever launched, and the answer stays at its initial value of 0.",
+          "hints": {
+            "nudge": "What should the output be if the grid has no positive cells at all?",
+            "question": "If no DFS is ever triggered, what value does your answer variable hold?",
+            "formal": "Initialize ans = 0 before the scan loop. If no positive cell exists, no DFS runs, and 0 is output, which is the correct answer for an empty lake set."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    },
+    {
+      "name": "BFS flood fill over connected components",
+      "description": "Same connected-component approach but using BFS with a queue, which avoids potential stack overflow on large grids and is straightforward to implement iteratively.",
+      "skill_tags": ["bfs", "graphs", "implementation"],
+      "observations": [
+        {
+          "title": "Lakes are connected components of positive cells",
+          "description": "A lake is a maximal connected set of cells with positive values under 4-directional adjacency. Finding all lakes reduces to finding all connected components in the grid graph.",
+          "hints": {
+            "nudge": "What well-known graph concept does the definition of a lake correspond to?",
+            "question": "If you model each positive cell as a vertex with edges to adjacent positive cells, what does a lake become?",
+            "formal": "A lake is a connected component in the implicit grid graph where vertices are cells with a[i][j] > 0 and edges link 4-directionally adjacent positive cells."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "BFS to traverse a component and sum depths",
+          "description": "Use a queue-based BFS starting from an unvisited positive cell. Enqueue the start, mark it visited, and accumulate a[i][j] into a running sum. For each dequeued cell, enqueue unvisited positive neighbors. The final sum is the lake's volume.",
+          "hints": {
+            "nudge": "How would you explore an entire lake iteratively without recursion?",
+            "question": "If you push the starting cell onto a queue and process neighbors level by level, how do you compute the lake's total depth?",
+            "formal": "BFS(si, sj): queue = [(si,sj)], vis[si][sj] = true, sum = 0. While queue not empty: (i,j) = dequeue, sum += a[i][j]. For each neighbor (ni,nj) in bounds with a[ni][nj] > 0 and !vis[ni][nj]: vis[ni][nj] = true, enqueue. Return sum."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "BFS avoids stack overflow on large grids",
+          "description": "With grids up to 1000x1000, a recursive DFS could hit stack depth limits (up to 10^6 frames). BFS uses heap-allocated queue memory, making it safe for large inputs without increasing the system stack size.",
+          "hints": {
+            "nudge": "On a 1000x1000 grid, how deep could a recursive DFS go?",
+            "question": "What happens if a connected component has a million cells and you use recursion? How does BFS avoid this issue?",
+            "formal": "Worst-case DFS recursion depth is n*m = 10^6, which exceeds typical stack limits (~1-8MB). BFS stores cells in a heap-allocated queue, bounded by the same 10^6 but safely in heap memory."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Scan all cells and track maximum volume",
+          "description": "Loop over every cell. For each unvisited positive cell, run BFS to compute that lake's volume and update the global maximum.",
+          "hints": {
+            "nudge": "How do you combine the results of multiple BFS calls to find the answer?",
+            "question": "After computing one lake's volume via BFS, how do you ensure you find the largest?",
+            "formal": "ans = 0. For all (i,j): if !vis[i][j] and a[i][j] > 0, ans = max(ans, BFS(i,j)). Output ans. Total work is O(n*m) since each cell is enqueued at most once."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

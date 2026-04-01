@@ -1,0 +1,124 @@
+{
+  "contest_id": 1626,
+  "index": "C",
+  "title": "Monsters And Spells",
+  "difficulty": 1700,
+  "tags": ["binary search", "data structures", "dp", "greedy", "implementation", "math", "two pointers"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Monocarp is playing a computer game once again. He is a wizard apprentice, who only knows a single spell. Luckily, this spell can damage the monsters. The level he's currently on contains $$$n$$$ monsters. The $$$i$$$-th of them appears $$$k_i$$$ seconds after the start of the level and has $$$h_i$$$ health points. As an additional constraint, $$$h_i \\le k_i$$$ for all $$$1 \\le i \\le n$$$. All $$$k_i$$$ are different. Monocarp can cast the spell at moments which are positive integer amounts of second after the start of the level: $$$1, 2, 3, \\dots$$$ The damage of the spell is calculated as follows. If he didn't cast the spell at the previous second, the damage is $$$1$$$. Otherwise, let the damage at the previous second be $$$x$$$. Then he can choose the damage to be either $$$x + 1$$$ or $$$1$$$. A spell uses mana: casting a spell with damage $$$x$$$ uses $$$x$$$ mana. Mana doesn't regenerate. To kill the $$$i$$$-th monster, Monocarp has to cast a spell with damage at least $$$h_i$$$ at the exact moment the monster appears, which is $$$k_i$$$. Note that Monocarp can cast the spell even when there is no monster at the current second. The mana amount required to cast the spells is the sum of mana usages for all cast spells. Calculate the least amount of mana required for Monocarp to kill all monsters. It can be shown that it's always possible to kill all monsters under the constraints of the problem.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — the number of testcases. The first line of the testcase contains a single integer $$$n$$$ ($$$1 \\le n \\le 100$$$) — the number of monsters in the level. The second line of the testcase contains $$$n$$$ integers $$$k_1  \\lt  k_2  \\lt  \\dots  \\lt  k_n$$$ ($$$1 \\le k_i \\le 10^9$$$) — the number of second from the start the $$$i$$$-th monster appears at. All $$$k_i$$$ are different, $$$k_i$$$ are provided in the increasing order. The third line of the testcase contains $$$n$$$ integers $$$h_1, h_2, \\dots, h_n$$$ ($$$1 \\le h_i \\le k_i \\le 10^9$$$) — the health of the $$$i$$$-th monster. The sum of $$$n$$$ over all testcases doesn't exceed $$$10^4$$$.",
+  "output_spec": "For each testcase, print a single integer — the least amount of mana required for Monocarp to kill all monsters.",
+  "examples": [
+    {
+      "input": "316424 52 235 7 92 1 2",
+      "output": "10\n6\n7"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Interval merging on required casting windows",
+      "description": "Each monster forces a minimum consecutive casting window. Translate each monster into the time interval where casting must begin and end, merge overlapping intervals, and compute the triangular-number mana cost for each merged group.",
+      "skill_tags": ["greedy", "sorting", "math"],
+      "observations": [
+        {
+          "title": "Consecutive casting produces triangular damage",
+          "description": "If Monocarp casts spells for L consecutive seconds (without resetting), the damage on those seconds is 1, 2, 3, ..., L and the total mana cost is L*(L+1)/2. To achieve damage h at the last second of a streak, the streak must be at least h seconds long. This means the cost of killing a single monster in isolation is 1+2+...+h_i = h_i*(h_i+1)/2.",
+          "hints": {
+            "nudge": "What is the damage sequence when casting consecutively? What does the total cost look like for a streak of length L?",
+            "question": "If Monocarp casts for exactly h_i consecutive seconds ending at time k_i, what is the total mana spent on that streak?",
+            "formal": "A consecutive streak of length L costs sum_{j=1}^{L} j = L(L+1)/2. To reach damage h_i at time k_i, the streak must start no later than time k_i - h_i + 1, giving a minimum streak length of h_i."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Each monster defines a required casting interval",
+          "description": "To kill monster i with health h_i at time k_i, Monocarp needs a consecutive streak of at least h_i casts ending at k_i. This means he must cast at every second in the window [k_i - h_i + 1, k_i]. Think of this as an interval on the time axis: the left boundary is k_i - h_i (the last second before casting must begin) and the right boundary is k_i.",
+          "hints": {
+            "nudge": "If you need damage h_i at exactly time k_i, when is the earliest second you could have started that streak?",
+            "question": "Monster i needs h_i consecutive casts ending at k_i. What is the earliest starting second of such a streak? Express it in terms of k_i and h_i.",
+            "formal": "Define interval I_i = (k_i - h_i, k_i], or equivalently the open-closed interval with left endpoint l_i = k_i - h_i and right endpoint r_i = k_i. Monocarp must cast at every integer second in [l_i + 1, r_i]."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Overlapping intervals must be served by a single streak",
+          "description": "If two monsters' required intervals overlap, they cannot be handled by separate casting streaks. Suppose monster A requires casting during [3, 6] and monster B during [5, 9]. Resetting the streak after second 6 would mean damage at second 7 is only 1, which might not satisfy monster B's requirement. The only option is one continuous streak covering the union of both intervals.",
+          "hints": {
+            "nudge": "What happens if two monsters' required casting windows share some seconds? Can you reset between them?",
+            "question": "If monster A requires consecutive casts during [3, 6] and monster B during [5, 9], why can't Monocarp handle them with two separate streaks?",
+            "formal": "If intervals I_i and I_j overlap (l_j < r_i for sorted intervals), then the merged interval is (min(l_i, l_j), max(r_i, r_j)]. You cannot reset damage mid-interval because doing so would reduce damage below what an intermediate monster requires."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Merge overlapping intervals and take each group's full span",
+          "description": "Sort all intervals (l_i, r_i) by l_i. Sweep through them, maintaining a current group's left and right endpoints. If the next interval's left endpoint is strictly less than the current right endpoint, the intervals overlap and must merge -- extend the right endpoint if needed. Otherwise, close the current group and start a new one. After merging, each group has endpoints (L, R) representing one unbroken casting streak.",
+          "hints": {
+            "nudge": "You have a set of intervals on the time axis. What is the standard technique for combining overlapping intervals?",
+            "question": "After computing (l_i, r_i) for each monster, how do you determine which monsters must share the same casting streak? What sorting and merging strategy applies?",
+            "formal": "Sort intervals by l_i. Initialize L = l_1, R = r_1. For each subsequent interval: if l_i < R, set R = max(R, r_i) (merge). Otherwise, finalize the group (L, R), then set L = l_i, R = r_i. Finalize the last group after the loop."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Each merged group costs a triangular number",
+          "description": "A merged group with endpoints (L, R) represents a continuous casting streak of length R - L. The damage sequence is 1, 2, ..., R - L and the mana cost is (R - L) * (R - L + 1) / 2. The total answer is the sum of these costs over all merged groups. Groups are independent because there is a gap between them where Monocarp does not cast, so the streak resets.",
+          "hints": {
+            "nudge": "Once you know the length of each unbroken casting streak, how do you compute its cost?",
+            "question": "For a merged interval spanning from time L+1 to time R (length R - L), what is the mana cost? Why are different groups independent?",
+            "formal": "Answer = sum over all merged groups of (R - L)(R - L + 1) / 2. Groups are independent because consecutive groups have a gap (next L >= current R), so damage resets to 1 for each new group."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    },
+    {
+      "name": "Greedy right-to-left grouping",
+      "description": "Process monsters from right to left (latest first). Each monster demands a minimum streak length. When a later monster's required start time falls within an earlier monster's interval, they must share one streak whose length is determined by the earliest start and latest end.",
+      "skill_tags": ["greedy", "math"],
+      "observations": [
+        {
+          "title": "Each monster needs a streak starting at k_i - h_i + 1",
+          "description": "To deal damage h_i at second k_i, Monocarp needs h_i consecutive casts ending at k_i. The streak must begin at second k_i - h_i + 1 at the latest. The constraint h_i <= k_i guarantees this start time is always positive.",
+          "hints": {
+            "nudge": "What is the minimum number of consecutive seconds Monocarp must cast to reach damage h_i? When does that streak need to start?",
+            "question": "If you need damage h_i at time k_i and damage increases by 1 each consecutive second, at what second must the streak begin?",
+            "formal": "The streak for monster i must cover seconds [k_i - h_i + 1, k_i]. The start time s_i = k_i - h_i + 1. Since h_i <= k_i, we have s_i >= 1."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "A monster can force the streak to extend backwards past earlier monsters",
+          "description": "If monster j at time k_j requires start time s_j = k_j - h_j + 1, and there exists an earlier monster i with k_i >= s_j, then monster i falls within the streak that monster j demands. Monster i is automatically killed by this streak (since the damage at time k_i within the streak is k_i - s_j + 1, which may or may not exceed h_i -- but the streak length is dictated by the most demanding monster).",
+          "hints": {
+            "nudge": "If monster j's streak reaches back to a time before monster i appears, does monster i get a free kill?",
+            "question": "Suppose monster j at time 9 needs damage 7, so the streak starts at time 3. Monster i appears at time 5 with health 2. Is monster i automatically killed by this streak, and does it change the streak boundaries?",
+            "formal": "Monster j's streak covers [s_j, k_j]. If k_i is in this range, monster i gets damage k_i - s_j + 1 at time k_i. If h_i > k_i - s_j + 1, then monster i's own requirement s_i = k_i - h_i + 1 < s_j, forcing the streak to extend further left."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Overlapping requirements chain together into groups",
+          "description": "When one monster's interval extends into another's, they become part of the same group. This can cascade: monster C pulls in monster B, whose extended start pulls in monster A. Each group is determined by the minimum start time and maximum end time across all its members. The key operation is: sort by start time, then sweep and merge intervals where the next interval's start is before the current group's end.",
+          "hints": {
+            "nudge": "Can a single monster's requirements cause a chain reaction that forces multiple other monsters into the same streak?",
+            "question": "If you process monsters and keep extending the streak boundaries whenever a new monster's interval overlaps, what determines when one group ends and a new group begins?",
+            "formal": "Compute (l_i, r_i) = (k_i - h_i, k_i) for each monster. Sort by l_i. Merge intervals: if l_i < current R, update R = max(R, r_i). Otherwise start a new group. Each group defines one minimal streak."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Cost of each group is a closed-form triangular sum",
+          "description": "Once you identify each independent group with merged endpoints (L, R), the streak length is R - L and the cost is the sum 1 + 2 + ... + (R - L) = (R - L)(R - L + 1) / 2. Sum the costs of all groups for the final answer. Since k_i can be up to 10^9, the cost can be very large -- use 64-bit integers.",
+          "hints": {
+            "nudge": "Given the start and end of each streak, what formula gives the mana cost? Are there any overflow concerns?",
+            "question": "A streak from time L+1 to time R has length R - L. The mana cost is the sum of 1 through R - L. What is the closed form, and why must you be careful with data types?",
+            "formal": "Answer = sum_{groups} (R - L)(R - L + 1) / 2. Since R - L can be up to 10^9, the product can reach ~10^18, requiring 64-bit integers (long long in C++, or Python's arbitrary precision)."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

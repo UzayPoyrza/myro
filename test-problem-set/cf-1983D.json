@@ -1,0 +1,139 @@
+{
+  "contest_id": 1983,
+  "index": "D",
+  "title": "Swap Dilemma",
+  "difficulty": 1700,
+  "tags": [
+    "constructive algorithms",
+    "data structures",
+    "divide and conquer",
+    "greedy",
+    "math",
+    "sortings"
+  ],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "Given two arrays of distinct positive integers $$$a$$$ and $$$b$$$ of length $$$n$$$, we would like to make both the arrays the same. Two arrays $$$x$$$ and $$$y$$$ of length $$$k$$$ are said to be the same when for all $$$1 \\le i \\le k$$$, $$$x_i = y_i$$$. Now in one move, you can choose some index $$$l$$$ and $$$r$$$ in $$$a$$$ ($$$l \\le r$$$) and swap $$$a_l$$$ and $$$a_r$$$, then choose some $$$p$$$ and $$$q$$$ ($$$p \\le q$$$) in $$$b$$$ such that $$$r-l=q-p$$$ and swap $$$b_p$$$ and $$$b_q$$$. Is it possible to make both arrays the same?",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 2 \\cdot 10^4$$$). The description of the test cases follows. The first line of each test case contains a single integer $$$n$$$ ($$$1 \\le n \\le 10^5$$$) — the length of the arrays $$$a$$$ and $$$b$$$. The second line of each test case contains $$$n$$$ distinct integers $$$a_1,a_2,a_3,\\ldots,a_n$$$ ($$$1 \\le a_i \\le 2 \\cdot 10^5$$$) — the integers in the array $$$a$$$. The third line of each test case contains $$$n$$$ distinct integers $$$b_1,b_2,b_3,\\ldots,b_n$$$ ($$$1 \\le b_i \\le 2 \\cdot 10^5$$$) — the integers in the array $$$b$$$. It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$10^5$$$.",
+  "output_spec": "For each testcase, print \"YES\" if the arrays $$$a$$$ and $$$b$$$ can be made the same. Otherwise, print \"NO\". You can output the answer in any case (upper or lower). For example, the strings \"yEs\", \"yes\", \"Yes\", and \"YES\" will be recognized as positive responses.",
+  "examples": [
+    {
+      "input": "641 2 3 41 2 3 451 3 4 2 57 1 2 5 441 2 3 44 3 2 131 2 31 3 251 5 7 1000 44 1 7 5 100031 4 21 3 2",
+      "output": "YES\nNO\nYES\nNO\nNO\nNO"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Multiset check + permutation parity",
+      "description": "Verify the arrays contain the same elements, then check whether the permutation mapping one to the other has even parity. Each move swaps one pair in each array simultaneously, so both permutation parities change together, and the arrays can only be equalized when parities match.",
+      "skill_tags": [
+        "math",
+        "sorting",
+        "constructive"
+      ],
+      "observations": [
+        {
+          "title": "The arrays must contain the same multiset of elements",
+          "description": "Since each move only swaps elements within the arrays (never adding, removing, or changing values), the multiset of values in a and the multiset of values in b are invariants. If sorted(a) != sorted(b), the answer is immediately NO. This is a necessary condition that eliminates many cases upfront.",
+          "hints": {
+            "nudge": "What quantities are preserved by every move? Think about what a swap changes and what it leaves unchanged.",
+            "question": "A swap in array a rearranges elements but never introduces new values or removes existing ones. What does this tell you about a necessary condition relating a and b?",
+            "formal": "Swaps are permutations of array elements. The multiset {a_1, ..., a_n} is invariant under swaps, as is {b_1, ..., b_n}. For a to ever equal b, we need {a_1, ..., a_n} = {b_1, ..., b_n} as multisets. Check by sorting both and comparing."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Each move performs exactly one transposition in each array",
+          "description": "A single move swaps one pair (a_l, a_r) in a and one pair (b_p, b_q) in b. When l < r this is a genuine transposition in a, and since r - l = q - p > 0, it is also a genuine transposition in b. When l = r the swap is a no-op in a, and the constraint forces p = q, making it a no-op in b too. So every move either applies one real transposition to both arrays or does nothing to both.",
+          "hints": {
+            "nudge": "Look at the constraint r - l = q - p carefully. What happens when you try to do a no-op swap (l = r) in one array?",
+            "question": "If you set l = r so that a's swap is trivial, what does the constraint r - l = q - p force for b's swap? Can you ever swap in only one array?",
+            "formal": "When l = r, we get r - l = 0, so q - p = 0, meaning p = q. Both swaps are no-ops. When l < r, both a and b undergo a genuine transposition. There is no way to apply a transposition to one array without also applying one to the other."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Both arrays' permutation parities change in lockstep",
+          "description": "Every transposition flips the parity (even/odd) of a permutation. Since each real move applies exactly one transposition to a and one to b, both parities flip simultaneously. After any number of moves, the parities of a and b have each been flipped the same number of times. This means the difference in parity between a and b is an invariant of the process.",
+          "hints": {
+            "nudge": "A transposition changes a permutation's parity. If both arrays always undergo a transposition together, what can you say about how their parities relate over time?",
+            "question": "If parity(a) and parity(b) both flip on every move, what is invariant? Think about parity(a) XOR parity(b).",
+            "formal": "Let P_a(t) and P_b(t) be the parities of a and b after t moves. Each move flips both: P_a(t+1) = 1 - P_a(t), P_b(t+1) = 1 - P_b(t). Therefore P_a(t) XOR P_b(t) = P_a(0) XOR P_b(0) for all t. The relative parity is invariant."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The answer is YES iff same multiset and same permutation parity",
+          "description": "For a and b to become equal, they must reach the identity permutation relative to some common target. The identity has even parity. Since both parities change together, they can both reach even parity only if they start with the same parity. Combined with the multiset check, this gives the complete characterization: answer is YES if and only if sorted(a) = sorted(b) and the permutation mapping a's sorted order to a has the same parity as the permutation mapping b's sorted order to b.",
+          "hints": {
+            "nudge": "You have an invariant (relative parity) and a necessary condition (same multiset). Are these sufficient? Think about whether you can always reach the target when both conditions hold.",
+            "question": "If the multisets match and the parities match, can you always make the arrays equal? Consider that any even permutation can be decomposed into pairs of transpositions.",
+            "formal": "Sufficiency: if parities match, the permutation sigma = b^{-1} . a (mapping a to b) is even, so it decomposes into an even number of transpositions. Apply them in pairs: each pair uses one transposition for a (to progress toward b) and the other for b (a no-op pair, or use the second transposition on b then fix it). More directly, since we can perform arbitrary transpositions in both arrays simultaneously, we have enough freedom to realize any even-parity rearrangement."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Compute permutation parity by counting inversions",
+          "description": "To determine the parity of a permutation, count its inversions: pairs (i, j) with i < j but the element at position i is greater than the element at position j. A permutation is even if and only if its inversion count is even. Sort both arrays to establish a common reference ordering, then count inversions in the index mapping for each array. If both inversion counts have the same parity, output YES.",
+          "hints": {
+            "nudge": "How do you compute a permutation's parity efficiently? Think about what quantity has the same parity as the minimum number of transpositions needed.",
+            "question": "The parity of a permutation equals the parity of its inversion count. How can you count inversions in O(n log n)?",
+            "formal": "Map each value to its rank in the sorted order. Now a and b are permutations of {0, ..., n-1}. Count inversions in each using merge sort or a BIT/Fenwick tree in O(n log n). If inv(a) mod 2 = inv(b) mod 2, output YES; otherwise NO."
+          },
+          "skill_tag": "sorting"
+        }
+      ]
+    },
+    {
+      "name": "Reduce to relative permutation parity via composition",
+      "description": "Instead of counting inversions in each array separately, compose the two permutations into a single relative permutation and check its parity directly by counting cycles.",
+      "skill_tags": [
+        "math",
+        "sorting",
+        "constructive"
+      ],
+      "observations": [
+        {
+          "title": "The arrays must contain the same multiset of elements",
+          "description": "Swaps only rearrange elements, so the multisets are invariants. If the sorted arrays differ, the answer is NO.",
+          "hints": {
+            "nudge": "What quantities are preserved by every move?",
+            "question": "Can a swap ever change which values appear in an array?",
+            "formal": "Sort both arrays and compare. If they differ, output NO immediately."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "Moves change both parities together, so relative parity is invariant",
+          "description": "Each real move applies one transposition to each array, flipping both parities. A no-op in one array forces a no-op in the other. So parity(a) XOR parity(b) never changes.",
+          "hints": {
+            "nudge": "What does the constraint r - l = q - p imply when l = r? What about when l < r?",
+            "question": "If both parities flip simultaneously, what combination of the two parities stays constant?",
+            "formal": "parity(a) XOR parity(b) is invariant. For a = b, both must reach the same permutation, so their parities must be equal at that point. This is possible iff they start equal."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Build the relative permutation sigma = b^{-1} composed with a",
+          "description": "Since both arrays contain the same elements, we can define a permutation sigma that maps each position in b to the corresponding position in a for the same value. Concretely, map each value to its position in b, then for each position i in a, sigma(i) = pos_in_b(a[i]). The arrays can be equalized iff sigma is an even permutation.",
+          "hints": {
+            "nudge": "Instead of looking at a and b separately, can you define a single permutation that captures how they differ?",
+            "question": "If you know where each value sits in a and where it sits in b, how would you define a permutation that rearranges a into b?",
+            "formal": "Let pos_b[v] = index of value v in b. Define sigma(i) = pos_b[a[i]]. Then a = b iff sigma is the identity. Each move applies one transposition to sigma (net effect of the two swaps). sigma can reach the identity iff it is an even permutation."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Check parity by decomposing sigma into cycles",
+          "description": "A permutation's parity equals the parity of n minus its number of cycles. Traverse sigma to find its cycles: start at an unvisited position, follow the permutation until you return, mark all visited. Count the total number of cycles c. The permutation is even iff (n - c) is even. This runs in O(n) time.",
+          "hints": {
+            "nudge": "There is a well-known relationship between cycles and parity. A cycle of length k can be decomposed into how many transpositions?",
+            "question": "A cycle of length k requires k - 1 transpositions. If there are c cycles, the total number of transpositions is n - c. What determines parity?",
+            "formal": "Traverse sigma to find all cycles. A cycle of length k contributes k - 1 transpositions. Total transpositions = sum(k_i - 1) = n - c where c is the cycle count. Parity is even iff (n - c) mod 2 = 0. Output YES if even, NO if odd."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

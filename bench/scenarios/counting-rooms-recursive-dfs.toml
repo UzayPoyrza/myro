@@ -1,0 +1,47 @@
+[scenario]
+name = "Counting Rooms — recursive DFS stack overflow"
+problem = "cf-1292B"
+route = 0
+trigger = "test failure on test 8"
+elapsed_secs = 420
+observations_found = 3
+
+[scenario.obs_states]
+0 = "found"
+1 = "found"
+2 = "found"
+
+[scenario.code]
+text = """
+import sys
+sys.setrecursionlimit(10**6)
+
+def dfs(grid, visited, i, j, n, m):
+    if i < 0 or i >= n or j < 0 or j >= m:
+        return
+    if visited[i][j] or grid[i][j] == '#':
+        return
+    visited[i][j] = True
+    dfs(grid, visited, i+1, j, n, m)
+    dfs(grid, visited, i-1, j, n, m)
+    dfs(grid, visited, i, j+1, n, m)
+    dfs(grid, visited, i, j-1, n, m)
+
+n, m = map(int, input().split())
+grid = [input() for _ in range(n)]
+visited = [[False]*m for _ in range(n)]
+count = 0
+for i in range(n):
+    for j in range(m):
+        if grid[i][j] == '.' and not visited[i][j]:
+            dfs(grid, visited, i, j, n, m)
+            count += 1
+print(count)
+"""
+
+[expect]
+state = "approaching"
+obs_id = "cf:1292B:route:1:obs:4"
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["stack = [", "queue", "deque", "collections.deque"]

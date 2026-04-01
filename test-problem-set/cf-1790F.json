@@ -1,0 +1,86 @@
+{
+  "contest_id": 1790,
+  "index": "F",
+  "title": "Timofey and Black-White Tree",
+  "difficulty": 2100,
+  "tags": [
+    "brute force",
+    "dfs and similar",
+    "divide and conquer",
+    "graphs",
+    "greedy",
+    "math",
+    "shortest paths",
+    "trees"
+  ],
+  "time_limit": "4 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Timofey came to a famous summer school and found a tree on $$$n$$$ vertices. A tree is a connected undirected graph without cycles. Every vertex of this tree, except $$$c_0$$$, is colored white . The vertex $$$c_0$$$ is colored black . Timofey wants to color all the vertices of this tree in black . To do this, he performs $$$n - 1$$$ operations. During the $$$i$$$-th operation, he selects the vertex $$$c_i$$$, which is currently white , and paints it black . Let's call the positivity of tree the minimum distance between all pairs of different black vertices in it. The distance between the vertices $$$v$$$ and $$$u$$$ is the number of edges on the path from $$$v$$$ to $$$u$$$. After each operation, Timofey wants to know the positivity of the current tree.",
+  "input_spec": "The first line contains the integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — the number of testcases. The first line of each testcase contains the integers $$$n, c_0$$$ ($$$2 \\le n \\le 2 \\cdot 10^5$$$, $$$1 \\le c_0 \\le n$$$) — the number of vertices in the tree and index of the initial black vertex. The second line of each testcase contains $$$n - 1$$$ unique integers $$$c_1, c_2, \\dots, c_{n-1}$$$ ($$$1 \\le c_i \\le n$$$, $$$c_i \\ne c_0$$$), where $$$c_i$$$ is the vertex which is colored black during the $$$i$$$-th operation. Each of the next $$$n - 1$$$ row of each testcase contains the integers $$$v_i, u_i$$$ ($$$1 \\le v_i, u_i \\le n$$$) — edges in the tree. It is guaranteed that the sum of $$$n$$$ for all testcases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each testcase, print $$$n - 1$$$ integer on a separate line. The integer with index $$$i$$$ must be equal to positivity of the tree obtained by the first $$$i$$$ operations.",
+  "examples": [
+    {
+      "input": "66 64 1 3 5 22 46 55 33 41 34 24 1 33 12 31 410 310 7 6 5 2 9 8 1 41 21 34 54 36 48 79 810 81 87 37 5 1 2 4 61 23 24 53 46 57 69 79 3 1 4 2 6 8 54 18 94 82 67 32 43 55 410 21 8 5 10 6 9 4 3 710 77 83 69 77 64 21 67 59 2",
+      "output": "3 2 1 1 1 \n3 1 1 \n3 2 2 2 2 2 1 1 1 \n4 2 2 1 1 1 \n5 1 1 1 1 1 1 1 \n4 3 2 2 1 1 1 1 1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Multi-source distance maintenance with DFS propagation",
+      "description": "Maintain an array dist[v] storing each vertex's distance to the nearest black vertex. When a new vertex is colored black, set its distance to 0 and propagate updated distances outward via DFS, pruning branches that cannot improve the current answer.",
+      "skill_tags": ["trees", "dfs", "greedy", "shortest-paths"],
+      "observations": [
+        {
+          "title": "Positivity is monotonically non-increasing",
+          "description": "Once k black vertices exist, adding a new black vertex can only decrease or maintain the positivity, never increase it. The new vertex either forms a closer pair with some existing black vertex or it does not affect the minimum. This means the running answer only needs to be updated downward, and we can use the current answer as a pruning bound.",
+          "hints": {
+            "nudge": "Think about what happens to the minimum pairwise distance among black vertices when you add one more black vertex to the set.",
+            "question": "Can adding a new black vertex ever increase the minimum distance among all pairs of black vertices? Why or why not?",
+            "formal": "Let S be the current set of black vertices with positivity p. Adding vertex v gives set S' = S ∪ {v}. Every pair in S still exists in S', so min over S' pairs <= min over S pairs. Thus positivity is non-increasing."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Track distance from every vertex to the nearest black vertex",
+          "description": "Maintain an array dist[v] where dist[v] is the distance from vertex v to the nearest black vertex. Initially dist[c_0] = 0 and all others are their tree distance to c_0. When a new vertex c_i is colored black, the answer (positivity) can be updated to min(current_answer, dist[c_i]), because dist[c_i] is exactly the distance from c_i to its nearest already-black vertex.",
+          "hints": {
+            "nudge": "Instead of tracking all pairwise distances between black vertices, can you track something simpler at each vertex that still lets you compute the answer?",
+            "question": "If you know the distance from the newly blackened vertex to its nearest existing black vertex, how does that relate to the positivity?",
+            "formal": "Maintain dist[v] = min over all black vertices b of tree_distance(v, b). When c_i is colored black, the new positivity = min(old_positivity, dist[c_i]), since dist[c_i] is the closest black vertex to c_i."
+          },
+          "skill_tag": "shortest-paths"
+        },
+        {
+          "title": "Coloring a vertex black requires propagating distance updates",
+          "description": "When vertex c_i is colored black, set dist[c_i] = 0. This may reduce the nearest-black distance for other vertices: any vertex v whose shortest path to a black vertex now goes through c_i should have its dist updated. This is analogous to adding a new source in a multi-source BFS, but on a tree the propagation follows the tree structure.",
+          "hints": {
+            "nudge": "After setting dist[c_i] = 0, which other vertices might need their distance values decreased?",
+            "question": "If vertex u is a neighbor of c_i and currently has dist[u] = 5, what should dist[u] become? What about u's neighbors in turn?",
+            "formal": "Set dist[c_i] = 0. For each neighbor u of c_i, if dist[u] > dist[c_i] + 1, set dist[u] = 1 and recurse into u's subtree. In general, propagate: if dist[u] > dist[v] + 1 for edge (v, u), update dist[u] = dist[v] + 1 and continue."
+          },
+          "skill_tag": "dfs"
+        },
+        {
+          "title": "Prune the DFS using the current answer as a distance bound",
+          "description": "During the DFS propagation from a newly-blackened vertex, if at any node v we have dist[v] >= current_answer, there is no point exploring further from v. Any vertex reachable through v would be at distance > current_answer from the nearest black vertex, meaning it cannot contribute to a new minimum pair. This pruning is critical for achieving good amortized performance.",
+          "hints": {
+            "nudge": "Do you need to propagate distance updates to vertices that are very far from all black vertices? Could the current answer help you skip work?",
+            "question": "If dist[v] is already >= the current positivity, can any vertex deeper in v's subtree possibly form a closer black pair than the current answer?",
+            "formal": "During DFS from the new black vertex, at node v: if dist[v] >= ANS, return immediately. Since dist only decreases along the propagation path, all descendants of v would have dist >= dist[v] >= ANS, so they cannot improve ANS."
+          },
+          "skill_tag": "dfs"
+        },
+        {
+          "title": "Cross-edges in DFS yield additional answer candidates",
+          "description": "When propagating via DFS on the tree, at each edge (v, u): if the DFS does NOT improve dist[u] (i.e., dist[u] <= dist[v] + 1), then u is already close to some other black vertex. The value dist[v] + 1 + dist[u] represents the distance between two black vertices whose shortest paths meet at edge (v, u). This gives an additional candidate for updating the answer, even though no distance propagation occurs through u.",
+          "hints": {
+            "nudge": "When you visit a neighbor u during DFS and find dist[u] is already small, does that tell you something useful about the existence of a nearby black vertex on u's side?",
+            "question": "If dist[v] = 3 and dist[u] = 2 for adjacent vertices v and u, what is the maximum possible distance between the black vertex nearest to v and the one nearest to u?",
+            "formal": "For edge (v, u): if dist[u] <= dist[v] + 1, the black vertex closest to v and the one closest to u are at distance <= dist[v] + 1 + dist[u]. Update ANS = min(ANS, dist[v] + 1 + dist[u]). This catches improvements even when no propagation into u occurs."
+          },
+          "skill_tag": "trees"
+        }
+      ]
+    }
+  ]
+}

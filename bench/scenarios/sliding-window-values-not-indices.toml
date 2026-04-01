@@ -1,0 +1,40 @@
+[scenario]
+name = "Sliding Window — deque stores values instead of indices"
+problem = "cf-1195C"
+route = 0
+trigger = "test failure on test 3"
+elapsed_secs = 300
+observations_found = 1
+
+[scenario.obs_states]
+1 = "found"
+
+[scenario.code]
+text = """
+from collections import deque
+n, k = map(int, input().split())
+a = list(map(int, input().split()))
+
+dq = deque()
+result = []
+for i in range(n):
+    while dq and dq[-1] < a[i]:  # BUG: comparing values, not using indices
+        dq.pop()
+    dq.append(a[i])              # BUG: storing values, can't check window bounds
+    if i >= k and dq[0] == a[i - k]:  # BUG: fragile equality check for removal
+        dq.popleft()
+    if i >= k - 1:
+        result.append(dq[0])
+print(*result)
+"""
+
+[[scenario.recent_messages]]
+role = "user"
+content = "I tried using a deque but it gives wrong answers when there are duplicate values"
+
+[expect]
+banned_states = ["found"]
+obs_id = "cf:1195C:route:1:obs:1"
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["dq.append(i)", "deque of indices"]

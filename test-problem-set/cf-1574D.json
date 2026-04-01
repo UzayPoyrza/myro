@@ -1,0 +1,145 @@
+{
+  "contest_id": 1574,
+  "index": "D",
+  "title": "The Strongest Build",
+  "difficulty": 2000,
+  "tags": [
+    "binary search",
+    "brute force",
+    "data structures",
+    "dfs and similar",
+    "graphs",
+    "greedy",
+    "hashing",
+    "implementation"
+  ],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Ivan is playing yet another roguelike computer game. He controls a single hero in the game. The hero has $$$n$$$ equipment slots. There is a list of $$$c_i$$$ items for the $$$i$$$-th slot, the $$$j$$$-th of them increases the hero strength by $$$a_{i,j}$$$. The items for each slot are pairwise distinct and are listed in the increasing order of their strength increase. So, $$$a_{i,1}  \\lt  a_{i,2}  \\lt  \\dots  \\lt  a_{i,c_i}$$$. For each slot Ivan chooses exactly one item. Let the chosen item for the $$$i$$$-th slot be the $$$b_i$$$-th item in the corresponding list. The sequence of choices $$$[b_1, b_2, \\dots, b_n]$$$ is called a build . The strength of a build is the sum of the strength increases of the items in it. Some builds are banned from the game. There is a list of $$$m$$$ pairwise distinct banned builds. It's guaranteed that there's at least one build that's not banned. What is the build with the maximum strength that is not banned from the game? If there are multiple builds with maximum strength, print any of them.",
+  "input_spec": "The first line contains a single integer $$$n$$$ ($$$1 \\le n \\le 10$$$) — the number of equipment slots. The $$$i$$$-th of the next $$$n$$$ lines contains the description of the items for the $$$i$$$-th slot. First, one integer $$$c_i$$$ ($$$1 \\le c_i \\le 2 \\cdot 10^5$$$) — the number of items for the $$$i$$$-th slot. Then $$$c_i$$$ integers $$$a_{i,1}, a_{i,2}, \\dots, a_{i,c_i}$$$ ($$$1 \\le a_{i,1}  \\lt  a_{i,2}  \\lt  \\dots  \\lt  a_{i,c_i} \\le 10^8$$$). The sum of $$$c_i$$$ doesn't exceed $$$2 \\cdot 10^5$$$. The next line contains a single integer $$$m$$$ ($$$0 \\le m \\le 10^5$$$) — the number of banned builds. Each of the next $$$m$$$ lines contains a description of a banned build — a sequence of $$$n$$$ integers $$$b_1, b_2, \\dots, b_n$$$ ($$$1 \\le b_i \\le c_i$$$). The builds are pairwise distinct, and there's at least one build that's not banned.",
+  "output_spec": "Print the build with the maximum strength that is not banned from the game. If there are multiple builds with maximum strength, print any of them.",
+  "examples": [
+    {
+      "input": "3\n3 1 2 3\n2 1 5\n3 2 4 6\n2\n3 2 3\n3 2 2",
+      "output": "2 2 3"
+    },
+    {
+      "input": "3\n3 1 2 3\n2 1 5\n3 2 4 6\n2\n3 2 3\n2 2 3",
+      "output": "1 2 3"
+    },
+    {
+      "input": "3\n3 1 2 3\n2 1 5\n3 2 4 6\n2\n3 2 3\n2 2 3",
+      "output": "3 2 2"
+    },
+    {
+      "input": "4\n1 10\n1 4\n1 7\n1 3\n0",
+      "output": "1 1 1 1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Max-heap BFS over build space",
+      "description": "Use a max-heap (priority queue) starting from the strongest build. Pop the top build; if it is not banned, output it. If it is banned, generate all neighbor builds by decreasing one slot's index by 1, and push unseen neighbors. Since at most m builds are banned, we pop at most m+1 times.",
+      "skill_tags": ["data-structures", "greedy", "hashing"],
+      "observations": [
+        {
+          "title": "The globally strongest build is all maximum items",
+          "description": "Since items within each slot are sorted in increasing order, the build that takes the last (largest) item from every slot has the highest possible total strength. This build is the natural starting point for any search.",
+          "hints": {
+            "nudge": "If each list is sorted in increasing order, which item from each slot should you pick to maximize the sum?",
+            "question": "Can any build have a strictly higher sum than the one that picks the maximum item from every slot? Why or why not?",
+            "formal": "Let the build [c_1, c_2, ..., c_n] select the last item from each slot. For any other build [b_1, ..., b_n], we have b_i <= c_i for all i, so a_{i,b_i} <= a_{i,c_i} for all i, meaning the sum cannot exceed the all-max build."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Only a few builds near the top can be the answer",
+          "description": "There are at most m = 10^5 banned builds. So the answer is among the top m+1 builds by strength. We do not need to enumerate all possible builds (which could be exponentially many). We just need a systematic way to visit builds in decreasing order of strength.",
+          "hints": {
+            "nudge": "How many builds do you need to examine before you are guaranteed to find one that is not banned?",
+            "question": "If you could enumerate builds from strongest to weakest, at most how many would you need to check before finding a non-banned one?",
+            "formal": "Since there are at most m banned builds, the (m+1)-th strongest build is guaranteed to be non-banned. Thus any procedure that inspects builds in non-increasing strength order terminates after at most m+1 steps."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Decreasing one slot index by one produces the natural neighbors",
+          "description": "From any build [b_1, ..., b_n], you can generate up to n neighboring builds by decreasing one index b_i by 1 (if b_i > 1). Each neighbor has a strictly smaller sum (by exactly a_{i,b_i} - a_{i,b_i - 1} > 0). These are the next-best builds that differ from the current one in exactly one slot.",
+          "hints": {
+            "nudge": "If a particular build is banned, what are the next-strongest builds that are 'close' to it?",
+            "question": "Starting from build [b_1, ..., b_n], if you want to find builds with slightly lower strength, what is the minimal change you can make?",
+            "formal": "For each slot i where b_i > 1, define neighbor_i = [b_1, ..., b_i - 1, ..., b_n]. The sum decreases by a_{i,b_i} - a_{i,b_i-1} > 0. These n neighbors are exactly the builds reachable by a single downgrade step."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "A max-heap processes builds in decreasing strength order",
+          "description": "Insert the all-max build into a max-heap keyed by total strength. Repeatedly extract the maximum: if it is not banned, return it. If it is banned, insert all its unvisited neighbors (downgrade one slot by 1). The heap ensures we always examine the strongest remaining candidate next.",
+          "hints": {
+            "nudge": "You need to process builds from strongest to weakest. What data structure maintains a dynamic collection and always gives you the maximum?",
+            "question": "If you use a max-heap, what do you insert initially? When you pop a banned build, what new builds do you push?",
+            "formal": "Initialize the heap with the build [c_1, ..., c_n]. Loop: pop (sum, build). If build is not banned, output it. Otherwise, for each slot i with b_i > 1, compute the neighbor by decrementing b_i, and if not already visited, push (new_sum, neighbor) onto the heap."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "A visited set prevents duplicate states",
+          "description": "Different builds can lead to the same neighbor. For example, starting from [3,3,3], both [2,3,3] and [3,2,3] can generate [2,2,3]. Without deduplication, the heap would grow uncontrollably. A hash set of visited index-tuples ensures each build is processed at most once.",
+          "hints": {
+            "nudge": "Can two different banned builds generate the same neighbor when each decreases a different slot?",
+            "question": "If you do not track which builds have already been added to the heap, what goes wrong? How can you fix it?",
+            "formal": "Maintain a set of visited builds (tuples of indices). Before pushing a neighbor onto the heap, check if it is in the visited set. If so, skip it. Since n <= 10 and we process at most m+1 builds, the set has at most O(n * m) entries, which fits comfortably in memory."
+          },
+          "skill_tag": "hashing"
+        }
+      ]
+    },
+    {
+      "name": "Neighbor-of-banned search",
+      "description": "The answer is either the all-max build (if not banned) or a build obtained from some banned build by decreasing exactly one slot index by 1. Iterate over all banned builds, try each single-slot downgrade, check if the result is non-banned, and track the maximum.",
+      "skill_tags": ["greedy", "hashing", "binary-search"],
+      "observations": [
+        {
+          "title": "If the all-max build is not banned, it is the answer",
+          "description": "Check whether [c_1, c_2, ..., c_n] appears in the banned list. If not, output it immediately. This is the trivial base case and handles many inputs, including the fourth example where m = 0.",
+          "hints": {
+            "nudge": "What is the very first build you should check?",
+            "question": "What is the strongest possible build, and how quickly can you verify whether it is banned?",
+            "formal": "The build [c_1, ..., c_n] achieves the maximum possible sum. Look it up in the banned set (O(n) with hashing or O(n log m) with binary search on sorted banned list). If absent, output it."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "The optimal non-banned build is adjacent to some banned build",
+          "description": "If the all-max build is banned, the answer must be reachable by a chain of single-slot downgrades from it. Crucially, somewhere along that chain there is a banned build whose single-slot downgrade produces the answer. So the answer is always a direct neighbor of some banned build (or the all-max build itself).",
+          "hints": {
+            "nudge": "If the best build is banned, think about what the next-best builds look like. Where must the answer sit relative to the set of banned builds?",
+            "question": "Consider the answer build A. Either A is the all-max build, or there exists a build B with one slot incremented that has a higher sum. What must be true about B?",
+            "formal": "For the answer build A, consider incrementing each slot to get a stronger build. Each such stronger build must be banned (otherwise A is not optimal). So A is a single-slot downgrade of at least one banned build. This means iterating over all banned builds and their neighbors suffices."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "For each banned build, try decreasing each slot by 1",
+          "description": "For each of the m banned builds and each of the n slots, decrease that slot's index by 1 (if possible). Compute the resulting sum and check if this new build is banned. Track the maximum non-banned build found. This produces at most n * m = 10 * 10^5 = 10^6 candidates.",
+          "hints": {
+            "nudge": "You have m banned builds and n slots. How many candidate builds do you need to check in total?",
+            "question": "For a single banned build [b_1, ..., b_n], how many neighbors can you generate by decreasing one slot by 1? What is the total number of candidates across all banned builds?",
+            "formal": "For each banned build (b_1, ..., b_n), for each i in 1..n where b_i > 1, form candidate (b_1, ..., b_i-1, ..., b_n) with sum = original_sum - a_{i,b_i} + a_{i,b_i-1}. Check membership in banned set. Keep the maximum non-banned candidate."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Store banned builds in a sorted list or hash set for fast lookup",
+          "description": "To quickly check whether a candidate build is banned, store the banned builds in a data structure supporting fast membership queries. Sorting the list of banned builds lexicographically allows binary search in O(n log m). Alternatively, a hash set of tuples gives O(n) expected lookup.",
+          "hints": {
+            "nudge": "You need to check 'is this build banned?' up to 10^6 times. A linear scan of the banned list each time is too slow.",
+            "question": "What are two standard data structures for fast membership testing? Which works well here given that each build is a tuple of up to 10 integers?",
+            "formal": "Option 1: Sort the m banned builds lexicographically. Use binary_search (C++) or bisect (Python) for O(n log m) per query. Option 2: Store banned builds as tuples in a hash set for O(n) expected per query. Total: O(n * m * log m) or O(n * m)."
+          },
+          "skill_tag": "binary-search"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "contest_id": 1015,
+  "index": "B",
+  "title": "Obtain the String",
+  "difficulty": 1200,
+  "tags": [
+    "greedy",
+    "strings"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given two strings s and t. In one move, you can select any character of s and delete it. Determine the minimum number of moves needed to make t a subsequence of s.",
+  "input_spec": "The first line contains string s (1 <= |s| <= 10^5). The second line contains string t (1 <= |t| <= 10^5).",
+  "output_spec": "Print the minimum number of deletions, or -1 if it's impossible.",
+  "examples": [
+    {
+      "input": "abcde\nace",
+      "output": "0"
+    },
+    {
+      "input": "aab\nab",
+      "output": "0"
+    },
+    {
+      "input": "xyz\na",
+      "output": "-1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy subsequence matching",
+      "description": "Use two pointers to greedily match characters of t in s.",
+      "skill_tags": [
+        "greedy",
+        "two-pointers"
+      ],
+      "observations": [
+        {
+          "title": "Subsequence check via two pointers",
+          "description": "Walk through s with pointer i and t with pointer j. When s[i] == t[j], advance both; otherwise advance only i.",
+          "hints": {
+            "nudge": "How do you check if one string is a subsequence of another?",
+            "question": "If you scan s from left to right, how do you greedily match characters of t?",
+            "formal": "Use two pointers: i for s, j for t. If s[i] == t[j], increment both. Otherwise increment only i. t is a subsequence if j reaches |t|."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Impossible case: character missing",
+          "description": "If t contains a character that doesn't appear in s at all, the answer is -1.",
+          "hints": {
+            "nudge": "When is it impossible to make t a subsequence of s, no matter what?",
+            "question": "What if t has a character 'z' but s doesn't contain 'z' at all?",
+            "formal": "Check: for every character in t, it must exist in s. If any character of t is absent from s, return -1."
+          },
+          "skill_tag": "strings"
+        },
+        {
+          "title": "Deletions = |s| - matched",
+          "description": "After matching, the minimum deletions = number of characters in s that weren't part of the subsequence match.",
+          "hints": {
+            "nudge": "After matching t as a subsequence, what does deleting the extra characters in s accomplish?",
+            "question": "If you matched all of t using some characters of s, how many characters of s are 'extra'?",
+            "formal": "If j reached |t| (full match), the answer is 0 (t is already a subsequence). The minimum deletions to make t a subsequence is always 0 if t is already a subsequence, or -1 if it's impossible."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

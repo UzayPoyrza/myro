@@ -1,0 +1,86 @@
+{
+  "contest_id": 2108,
+  "index": "C",
+  "title": "Neo's Escape",
+  "difficulty": 1500,
+  "tags": [
+    "binary search",
+    "brute force",
+    "data structures",
+    "dp",
+    "dsu",
+    "graphs",
+    "greedy",
+    "implementation"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Neo wants to escape from the Matrix. In front of him are $$$n$$$ buttons arranged in a row. Each button has a weight given by an integer: $$$a_1, a_2, \\ldots, a_n$$$. Neo is immobilized, but he can create and move clones. This means he can perform an unlimited number of actions of the following two types in any order: Create a clone in front of a specific button. Move an existing clone one position to the left or right. As soon as a clone is in front of another button that has not yet been pressed—regardless of whether he was created or moved — he immediately presses it. If the button has already been pressed, a clone does nothing — buttons can only be pressed once. For Neo to escape, he needs to press all the buttons in such an order that the sequence of their weights is non-increasing — that is, if $$$b_1, b_2, \\ldots, b_n$$$ are the weights of the buttons in the order they are pressed, then it must hold that $$$b_1 \\geq b_2 \\geq \\cdots \\geq b_n$$$. Your task is to determine the minimum number of clones that Neo needs to create in order to press all the buttons in a valid order.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 10^4$$$). The description of the test cases follows. The first line of each test case contains one integer $$$n$$$ ($$$1 \\leq n \\leq 2 \\cdot 10^5$$$) — the number of buttons. The second line of each test case contains $$$n$$$ integers $$$a_1, a_2, \\ldots, a_n$$$ ($$$1 \\leq a_i \\leq 10^9$$$) — the weights of the buttons. It is guaranteed that the sum of $$$n$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case, output one integer — the minimum number of clones that need to be created to press all the buttons in a valid order.",
+  "examples": [
+    {
+      "input": "454 3 2 1 531 1 167 8 1 5 9 2101 7 9 7 1 10 2 10 10 7",
+      "output": "2\n1\n2\n3"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Deduplicate then count peaks",
+      "description": "Consecutive equal-weight buttons are redundant since a single clone can press them all while maintaining non-increasing order. After collapsing consecutive duplicates, the answer is the number of local maxima (peaks) in the resulting sequence, because each peak is isolated by strictly smaller neighbors and requires its own clone.",
+      "skill_tags": ["greedy", "implementation"],
+      "observations": [
+        {
+          "title": "A clone traverses a contiguous segment of buttons",
+          "description": "Once a clone is created at some position, it can move left and right freely, pressing every unpressed button it visits. So each clone covers some contiguous subarray of buttons. The full array must be partitioned into contiguous segments, one per clone, such that the combined press order is non-increasing.",
+          "hints": {
+            "nudge": "Think about what positions a single clone can reach. Does it ever skip a button?",
+            "question": "A clone moves one step at a time, pressing every unpressed button it crosses. If a clone starts at position i, what set of positions can it end up pressing? Can there be gaps?",
+            "formal": "A clone at position i can move to i-1, i+1, etc., pressing each unpressed button upon arrival. The set of buttons pressed by one clone is a contiguous interval [l, r]. The problem reduces to partitioning the array into contiguous intervals, each handled by one clone, such that the concatenated press order is non-increasing."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Within a contiguous segment, a clone can produce any non-increasing press order as long as the segment is unimodal or monotone",
+          "description": "A clone covering a contiguous interval can choose its traversal direction. If it starts at the maximum within its segment and moves toward smaller values first (or sweeps in one direction), it can press that segment's buttons in non-increasing order. The key constraint is that a single clone can handle a segment only if it can sequence the presses in non-increasing weight order by starting at the highest point and expanding outward.",
+          "hints": {
+            "nudge": "If a clone is placed at the largest element in its segment, what happens as it moves left? What happens as it moves right?",
+            "question": "Suppose a segment has weights [3, 7, 2]. If the clone starts at 7, it presses 7 first, then can go left to press 3 or right to press 2. Can it produce 7, 3, 2? What about [3, 7, 5, 2]?",
+            "formal": "A clone placed at the maximum of its assigned segment presses that maximum first, then alternates or sweeps left and right. As long as values decrease (weakly) moving away from the maximum in both directions, the clone can produce a non-increasing press sequence. A segment with two distinct local maxima (after deduplication) cannot be handled by one clone."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Consecutive buttons with equal weight are irrelevant to the structure",
+          "description": "If two adjacent buttons have the same weight, collapsing them does not affect whether the press sequence can be non-increasing. A clone passing through consecutive equal-weight buttons presses them at the same weight level, which trivially maintains the non-increasing property. So you can compress all runs of equal values into a single representative.",
+          "hints": {
+            "nudge": "What happens when a clone moves between two adjacent buttons that have the same weight? Does the press sequence violate non-increasing order?",
+            "question": "Consider the array [5, 5, 5, 3]. Does it matter whether we treat this as four buttons or collapse it to [5, 3]? How many clones does each version need?",
+            "formal": "Replace the array with its run-length-encoded version: collapse every maximal run of identical values into a single element. The minimum number of clones for the original array equals that for the compressed array, because traversing a run of equal values always produces a non-increasing subsequence at that weight."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "After deduplication, each local maximum (peak) requires its own clone",
+          "description": "In the deduplicated array, a peak is an element strictly greater than both its neighbors. A peak cannot be reached by a clone that starts at or passes through a smaller neighbor, because that clone would press the smaller value first, and then pressing the peak would violate the non-increasing constraint. Therefore every peak must be the starting point of a separate clone.",
+          "hints": {
+            "nudge": "Consider an element that is strictly larger than both its neighbors. Can a clone coming from either neighbor press this element without breaking the non-increasing rule?",
+            "question": "If the deduplicated array is [..., 3, 8, 5, ...], the element 8 is a peak. Suppose a clone arrives from the 3 on its left. It pressed 3 before 8. Is the sequence ..., 3, 8 non-increasing? What does this force?",
+            "formal": "Let b be the deduplicated array with sentinel values b[0] = b[m+1] = -infinity. An element b[i] is a peak if b[i-1] < b[i] and b[i] > b[i+1]. Any clone arriving at b[i] from a neighbor must have previously pressed a strictly smaller value, violating non-increasing order. So a new clone must be created at each peak."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Peaks are sufficient: non-peak elements can always be reached from a larger neighbor",
+          "description": "Any element that is not a peak has at least one neighbor with weight greater than or equal to its own (in the deduplicated array, strictly greater since duplicates are collapsed). A clone starting from or passing through that larger neighbor can then move into this element while maintaining non-increasing order. Therefore, creating a clone at every peak and nowhere else is both necessary and sufficient.",
+          "hints": {
+            "nudge": "If an element is not a peak, what can you say about at least one of its neighbors?",
+            "question": "If b[i] is not a peak, then either b[i-1] > b[i] or b[i+1] > b[i] (or b[i] is less than or equal to a neighbor). Can the clone that covers that larger neighbor extend to also cover b[i]?",
+            "formal": "If b[i] is not a peak, then b[i] <= b[i-1] or b[i] <= b[i+1] (in the deduplicated array, one neighbor is strictly greater). The clone assigned to the segment containing that larger neighbor can extend its interval to include b[i], pressing it after the larger value, which preserves non-increasing order. By induction, every non-peak element is absorbed into a peak's segment. The answer is exactly the number of peaks."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

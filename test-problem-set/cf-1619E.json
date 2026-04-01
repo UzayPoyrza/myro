@@ -1,0 +1,85 @@
+{
+  "contest_id": 1619,
+  "index": "E",
+  "title": "MEX and Increments",
+  "difficulty": 1700,
+  "tags": [
+    "constructive algorithms",
+    "data structures",
+    "dp",
+    "greedy",
+    "implementation",
+    "math",
+    "sortings"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Dmitry has an array of $$$n$$$ non-negative integers $$$a_1, a_2, \\dots, a_n$$$. In one operation, Dmitry can choose any index $$$j$$$ ($$$1 \\le j \\le n$$$) and increase the value of the element $$$a_j$$$ by $$$1$$$. He can choose the same index $$$j$$$ multiple times. For each $$$i$$$ from $$$0$$$ to $$$n$$$, determine whether Dmitry can make the $$$\\mathrm{MEX}$$$ of the array equal to exactly $$$i$$$. If it is possible, then determine the minimum number of operations to do it. The $$$\\mathrm{MEX}$$$ of the array is equal to the minimum non-negative integer that is not in the array. For example, the $$$\\mathrm{MEX}$$$ of the array $$$[3, 1, 0]$$$ is equal to $$$2$$$, and the array $$$[3, 3, 1, 4]$$$ is equal to $$$0$$$.",
+  "input_spec": "The first line of input data contains a single integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — the number of test cases in the input. The descriptions of the test cases follow. The first line of the description of each test case contains a single integer $$$n$$$ ($$$1 \\le n \\le 2 \\cdot 10^5$$$) — the length of the array $$$a$$$. The second line of the description of each test case contains $$$n$$$ integers $$$a_1, a_2, \\dots, a_n$$$ ($$$0 \\le a_i \\le n$$$) — elements of the array $$$a$$$. It is guaranteed that the sum of the values $$$n$$$ over all test cases in the test does not exceed $$$2\\cdot10^5$$$.",
+  "output_spec": "For each test case, output $$$n + 1$$$ integer — $$$i$$$-th number is equal to the minimum number of operations for which you can make the array $$$\\mathrm{MEX}$$$ equal to $$$i$$$ ($$$0 \\le i \\le n$$$), or -1 if this cannot be done.",
+  "examples": [
+    {
+      "input": "5\n3\n0 1 3\n7\n0 1 2 3 4 3 2\n4\n3 0 0 0\n7\n4 6 2 3 5 0 5\n5\n4 0 1 0 4",
+      "output": "1 1 0 -1 \n1 1 2 2 1 0 2 6 \n3 0 1 4 3 \n1 0 -1 -1 -1 -1 -1 -1 \n2 1 0 2 -1 -1"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Greedy spare stack with incremental cost",
+      "description": "Count occurrences of each value. Process MEX targets 0, 1, ..., n in order. Maintain a stack of spare element values from duplicates. When a value is missing, pop the largest spare and pay the promotion cost. Track cumulative cost, adding the expense of eliminating copies of value i at each step.",
+      "skill_tags": ["greedy", "data-structures", "implementation"],
+      "observations": [
+        {
+          "title": "Two requirements for MEX = i",
+          "description": "To make MEX equal to i, two conditions must hold simultaneously: every value in {0, 1, ..., i-1} must appear at least once in the array, and the value i must not appear at all. Since we can only increment elements, we can never create a smaller value from a larger one, but we can always remove a value by incrementing it.",
+          "hints": {
+            "nudge": "What exactly must be true about the array for its MEX to equal i? Think about what must be present and what must be absent.",
+            "question": "MEX = i means i is missing but 0 through i-1 are all present. Given that you can only increment, how does this constrain which values you can create and which you can destroy?",
+            "formal": "MEX = i requires: (1) for every j in [0, i-1], at least one element equals j, and (2) no element equals i. Incrementing can promote a value v to any w > v (at cost w - v) but cannot decrease any value. So missing values below i must be filled by promoting smaller elements, and all copies of value i must be promoted to i+1 or beyond."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Fill gaps from duplicate elements below",
+          "description": "If some value j < i is absent from the array, we must promote an existing element to j. That element must currently have a value less than j (since we can only increment). To minimize cost, we want the element closest to j from below -- i.e., the largest available value that is still less than j.",
+          "hints": {
+            "nudge": "If value j is missing, you need to promote some element to become j. Which element is cheapest to promote?",
+            "question": "Promoting an element from value v to value j costs j - v. To minimize this, should you pick a spare with large or small value? Where do spare elements come from?",
+            "formal": "When cnt[j] = 0, we need a spare element with value v < j. The cost is j - v, minimized when v is as large as possible. Spare elements come from values that have count > 1: only one copy is needed to satisfy MEX, so extras are available for promotion."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "A stack tracks the best spare elements",
+          "description": "Maintain a stack of spare element values. As we sweep through values 0, 1, ..., i-1 and find that value v has count > 1, we push v onto the stack (cnt[v] - 1 times). When we encounter a missing value j, we pop from the stack -- the top always holds the largest spare value (since we push in increasing order of v), giving the minimum promotion cost.",
+          "hints": {
+            "nudge": "You need a data structure that gives you the largest spare value quickly. Think about the order in which spares become available as you process values left to right.",
+            "question": "If you process values 0, 1, 2, ... in order and push duplicate values onto a stack, what value will always be on top? Why does a stack naturally give the greedy optimum here?",
+            "formal": "Use a stack. For each value v processed in order: push v onto the stack (cnt[v] - 1) times for the duplicates. If cnt[v] = 0, pop the stack top t and add (v - t) to the running cost. Since values are processed in increasing order, the stack top is always the largest available spare, minimizing v - t."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Removing all copies of value i costs cnt[i]",
+          "description": "To make value i absent from the array, every element equal to i must be incremented at least once. There are cnt[i] such elements, each costing at least 1 operation. The cheapest removal is to increment each by exactly 1 (to i+1), costing a total of cnt[i] operations.",
+          "hints": {
+            "nudge": "You have ensured values 0 through i-1 are present. Now value i must not appear. What is the cheapest way to get rid of all copies of i?",
+            "question": "If cnt[i] elements have value i, what is the minimum total cost to ensure none of them remain at value i? Does it matter where you send them?",
+            "formal": "Each of the cnt[i] elements with value i must be incremented at least once. Incrementing by exactly 1 (to i+1) costs 1 per element, for a total additional cost of cnt[i]. These promoted elements might become useful later, but their removal cost is always cnt[i]."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Build answers incrementally from MEX = 0 to MEX = n",
+          "description": "The answer for MEX = i extends the work done for MEX = i-1. The running cost accumulates: first ensure values 0..i-1 are all present (filling gaps using the spare stack), then add cnt[i] to remove copies of value i. If at any point the stack is empty when a gap needs filling, MEX = i and all higher values are impossible.",
+          "hints": {
+            "nudge": "Do you need to recompute everything from scratch for each target MEX, or can you build on the previous answer?",
+            "question": "When going from MEX = i-1 to MEX = i, what new work is needed? What happens to the cumulative cost? Under what condition does it become impossible?",
+            "formal": "Maintain running_cost. For MEX = i: (1) if cnt[i-1] = 0 and the spare stack is empty, output -1 for i and all subsequent values. (2) If cnt[i-1] = 0, pop top t from stack, add (i-1-t) to running_cost. (3) Push value (i-1) onto the stack (cnt[i-1] - 1) times. (4) ans[i] = running_cost + cnt[i]. Process values 0..n in order."
+          },
+          "skill_tag": "dp"
+        }
+      ]
+    }
+  ]
+}

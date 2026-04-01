@@ -1,0 +1,84 @@
+{
+  "contest_id": 2031,
+  "index": "D",
+  "title": "Penchick and Desert Rabbit",
+  "difficulty": 1700,
+  "tags": [
+    "dsu",
+    "greedy",
+    "data structures"
+  ],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "There are n trees with heights a_1, a_2, ..., a_n. A rabbit can jump from tree i to tree j if exactly one of the following holds: j < i and a_j > a_i (jump backward to a taller tree), or j > i and a_j < a_i (jump forward to a shorter tree). For each i from 1 to n, determine the maximum height among all trees the rabbit can reach starting from tree i.",
+  "input_spec": "The first line contains the number of test cases t (1 <= t <= 5 * 10^5). Each test case has two lines: integer n (1 <= n <= 5 * 10^5) and n integers a_1, ..., a_n (1 <= a_i <= n). The sum of n over all test cases does not exceed 5 * 10^5.",
+  "output_spec": "For each test case, output n integers. The i-th integer is the maximum height among all trees reachable from tree i.",
+  "examples": [
+    {
+      "input": "5\n4\n2 3 1 4\n5\n5 4 3 2 1\n4\n2 1 1 3\n4\n1 1 3 1\n8\n2 4 1 6 3 8 5 7",
+      "output": "3 3 3 4\n5 5 5 5 5\n2 2 2 3\n1 1 3 3\n8 8 8 8 8 8 8 8"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Prefix-max / suffix-min boundary merging",
+      "description": "Two trees i < j are reachable from each other whenever a[i] > a[j] (an inversion). Reachability is transitive, partitioning the array into connected components. A boundary between positions i and i+1 separates components if and only if every element on the left is at most every element on the right, which is captured by comparing the prefix maximum to the suffix minimum. Scan once to find the components, then report the maximum height in each.",
+      "skill_tags": [
+        "greedy",
+        "data-structures"
+      ],
+      "observations": [
+        {
+          "title": "Reachability is equivalent to being connected through inversions",
+          "description": "Tree i and tree j (i < j) can directly reach each other precisely when a[i] > a[j]. Reachability is transitive: if i can reach k and k can reach j, then i can reach j. So the problem reduces to finding connected components under the relation 'i and j form an inversion', and answering the max height in each component.",
+          "hints": {
+            "nudge": "Restate the jump rules as a single condition on a pair (i, j) with i < j. What familiar concept does this remind you of?",
+            "question": "If i < j, the rabbit can go from i to j (forward to shorter) or from j to i (backward to taller) under the same condition. What is that condition? What does grouping all mutually reachable trees give you?",
+            "formal": "For i < j: the rabbit can jump i -> j iff a[i] > a[j], and j -> i iff a[j] < a[i]. Both are the same condition: a[i] > a[j], i.e., the pair is an inversion. Reachability partitions the array into connected components under transitive closure of the inversion relation."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "A component boundary at position i means all left elements are at most all right elements",
+          "description": "Consider splitting the array between positions i and i+1. No inversion crosses this split if and only if every element in positions 1..i is less than or equal to every element in positions i+1..n. This means the maximum of the left part is at most the minimum of the right part.",
+          "hints": {
+            "nudge": "For two positions on opposite sides of a split to be in different components, no inversion can cross that split. What must be true about the values on each side?",
+            "question": "If max(a[1..i]) > min(a[i+1..n]), does an inversion cross the boundary? What about the converse?",
+            "formal": "An inversion crosses the boundary at i iff there exist p <= i < q with a[p] > a[q]. This happens iff max(a[1..i]) > min(a[i+1..n]). So positions i and i+1 are in the same component iff prefix_max[i] > suffix_min[i+1]."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "One inversion crossing a boundary merges everything on both sides",
+          "description": "If a single inversion (p, q) crosses the boundary between positions i and i+1, then tree p is connected to tree q. But tree p can also reach every tree in its own left-side component, and tree q can reach every tree in its right-side component. By transitivity, all trees on both sides that were already in the same component as p and q now merge into one component. Repeated application means the entire contiguous block merges.",
+          "hints": {
+            "nudge": "If one inversion crosses a boundary, think about what else that drags along through transitivity.",
+            "question": "Suppose positions 1..i form one group and i+1..n form another, and we find a[p] > a[q] with p <= i < q. p is connected to everything in its group, and q to everything in its group. What happens to the two groups?",
+            "formal": "Any inversion (p, q) crossing boundary i connects p's component to q's component. Since components are contiguous blocks (proven inductively), the two blocks merge into one. Thus a single crossing inversion is sufficient to merge the blocks on either side."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Precompute prefix maximums and suffix minimums in O(n)",
+          "description": "Build prefix_max[i] = max(a[1], ..., a[i]) with a left-to-right pass and suffix_min[i] = min(a[i], ..., a[n]) with a right-to-left pass. Each takes O(n) time and O(n) space.",
+          "hints": {
+            "nudge": "You need max(a[1..i]) and min(a[i+1..n]) for every boundary. Can you precompute these efficiently?",
+            "question": "How does prefix_max[i] relate to prefix_max[i-1]? Can you compute the entire array in one pass?",
+            "formal": "prefix_max[1] = a[1]; prefix_max[i] = max(prefix_max[i-1], a[i]). suffix_min[n] = a[n]; suffix_min[i] = min(suffix_min[i+1], a[i]). Both are O(n)."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Scan boundaries to find components, then report the max per component",
+          "description": "Walk i from 1 to n-1. Position i is a component boundary (i.e., positions i and i+1 belong to different components) if and only if prefix_max[i] <= suffix_min[i+1]. Between consecutive boundaries lies one component. The answer for every tree in a component is the maximum height in that component, which equals prefix_max at the right endpoint of the component.",
+          "hints": {
+            "nudge": "You have prefix_max and suffix_min. How do you use them to determine where one component ends and the next begins?",
+            "question": "For each i, check whether prefix_max[i] <= suffix_min[i+1]. What does this tell you about the component structure? Once you know the components, what is the answer for each tree?",
+            "formal": "Boundaries occur at every i where prefix_max[i] <= suffix_min[i+1]. Each maximal interval [L, R] between boundaries is a component. The answer for each position in [L, R] is max(a[L..R]) = prefix_max[R] (since no boundary lies inside [L, R]). Total time: O(n)."
+          },
+          "skill_tag": "greedy"
+        }
+      ]
+    }
+  ]
+}

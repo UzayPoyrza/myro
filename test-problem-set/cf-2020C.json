@@ -1,0 +1,85 @@
+{
+  "contest_id": 2020,
+  "index": "C",
+  "title": "Bitwise Balancing",
+  "difficulty": 1400,
+  "tags": [
+    "bitmasks",
+    "math",
+    "implementation"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You are given three non-negative integers $$$b$$$, $$$c$$$, and $$$d$$$. Please find a non-negative integer $$$a \\in [0, 2^{61}]$$$ such that $$$(a\\, |\\, b)-(a\\, \\&\\, c)=d$$$, where $$$|$$$ and $$$\\&$$$ denote the bitwise OR operation and the bitwise AND operation , respectively. If such an $$$a$$$ exists, print its value. If there is no solution, print a single integer $$$-1$$$. If there are multiple solutions, print any of them.",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 10^5$$$). The description of the test cases follows. The only line of each test case contains three positive integers $$$b$$$, $$$c$$$, and $$$d$$$ ($$$0 \\le b, c, d \\le 10^{18}$$$).",
+  "output_spec": "For each test case, output the value of $$$a$$$, or $$$-1$$$ if there is no solution. Please note that $$$a$$$ must be non-negative and cannot exceed $$$2^{61}$$$.",
+  "examples": [
+    {
+      "input": "32 2 24 2 610 2 14",
+      "output": "0\n-1\n12"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Bit-independent case analysis",
+      "description": "Recognize that the equation (a|b) - (a&c) = d is independent at each bit position because OR, AND, and the resulting subtraction never interact across bits. Enumerate the four (b_bit, c_bit, d_bit) cases to determine a_bit or detect impossibility.",
+      "skill_tags": [
+        "dp",
+        "math",
+        "implementation"
+      ],
+      "observations": [
+        {
+          "title": "OR and AND are bitwise operations, so consider individual bits",
+          "description": "Both a|b and a&c are computed independently at each bit position. The value of bit i in (a|b) depends only on bit i of a and bit i of b. Likewise for (a&c). This suggests analyzing the equation one bit at a time.",
+          "hints": {
+            "nudge": "What is special about OR and AND that lets you decompose the problem?",
+            "question": "If you look at just bit position i of the expression (a|b) - (a&c), which bits of a, b, and c does it depend on?",
+            "formal": "Bit i of (a|b) equals a_i OR b_i, and bit i of (a&c) equals a_i AND c_i. These depend only on a_i, b_i, and c_i respectively, not on any other bit positions."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "The subtraction never produces a borrow across bits",
+          "description": "For the bit-by-bit approach to work, the subtraction (a|b) - (a&c) must also be independent per bit. This holds because at every bit position, (a_i OR b_i) is always greater than or equal to (a_i AND c_i). The OR result is 0 or 1, and the AND result is 0 or 1, but the combination never yields 0 - 1 = -1 at any bit. This means no borrow is ever generated, so the subtraction decomposes bitwise.",
+          "hints": {
+            "nudge": "For the bitwise decomposition to work for subtraction too, what must be true about the per-bit difference?",
+            "question": "Can (a_i OR b_i) ever be 0 while (a_i AND c_i) is 1? What would that require of a_i?",
+            "formal": "If a_i OR b_i = 0, then a_i = 0. But then a_i AND c_i = 0 AND c_i = 0, not 1. So the case (a|b)_i = 0 and (a&c)_i = 1 is impossible. The per-bit difference is always in {0, 1}, never -1, so no borrow propagates."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Build a truth table over (a_i, b_i, c_i) to find d_i",
+          "description": "Since each bit is independent, enumerate all 8 combinations of (a_i, b_i, c_i) in {0,1}^3 and compute d_i = (a_i OR b_i) - (a_i AND c_i). This gives a complete mapping from inputs to output for one bit. The table reveals which value of d_i each (a_i, b_i, c_i) produces.",
+          "hints": {
+            "nudge": "There are only 8 possible combinations of three bits. Can you just list them all?",
+            "question": "For each of the 8 combinations of (a_i, b_i, c_i), what is (a_i|b_i) - (a_i&c_i)? Write out the table.",
+            "formal": "(0,0,0)->0, (0,0,1)->0, (0,1,0)->1, (0,1,1)->1, (1,0,0)->1, (1,0,1)->0, (1,1,0)->1, (1,1,1)->0. So d_i=0 when (a,b,c)_i is (0,0,0),(0,0,1),(1,0,1),(1,1,1) and d_i=1 when it is (0,1,0),(0,1,1),(1,0,0),(1,1,0)."
+          },
+          "skill_tag": "dp"
+        },
+        {
+          "title": "Invert the table: given (b_i, c_i, d_i), determine a_i or detect impossibility",
+          "description": "The problem gives b, c, d and asks for a. Reorganize the truth table by the known quantities (b_i, c_i, d_i) and read off which value of a_i (if any) produces that combination. For most (b_i, c_i, d_i) triples there is exactly one valid a_i, but two triples are impossible.",
+          "hints": {
+            "nudge": "You have the truth table mapping (a_i, b_i, c_i) to d_i. Now flip it: given (b_i, c_i, d_i), what is a_i?",
+            "question": "Group the 8 rows of your truth table by (b_i, c_i). For each group, which d_i values are achievable with a_i=0 and a_i=1? Are there any (b_i, c_i, d_i) triples with no valid a_i?",
+            "formal": "b=0,c=0: a=0->d=0, a=1->d=1. b=0,c=1: a=0->d=0, a=1->d=0. b=1,c=0: a=0->d=1, a=1->d=1. b=1,c=1: a=0->d=1, a=1->d=0. So: (b,c,d)=(0,1,1) is impossible (both a values give d=0) and (b,c,d)=(1,0,0) is impossible (both a values give d=1). All other (b,c,d) triples have a unique a."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Iterate over all 61 bit positions and assemble a",
+          "description": "For each bit position from 0 to 60, extract b_i, c_i, d_i. Look up a_i from the case table. If any bit position hits an impossible case, output -1. Otherwise, set the corresponding bit in a and output the result. The total work per test case is O(61), easily handling 10^5 test cases.",
+          "hints": {
+            "nudge": "You have a rule for each bit. How do you combine them into the final answer?",
+            "question": "How do you extract bit i from b, c, d? How do you set bit i in a? What is the loop structure?",
+            "formal": "Initialize a = 0. For i = 0 to 60: extract b_i = (b >> i) & 1, c_i = (c >> i) & 1, d_i = (d >> i) & 1. Use the lookup to find a_i or detect impossibility. If valid, set a |= (a_i << i). After all bits, output a."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "contest_id": 1850,
+  "index": "G",
+  "title": "The Morning Star",
+  "difficulty": 1500,
+  "tags": ["math", "data-structures", "sorting", "implementation"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "A compass points directly toward the morning star. It can only point in one of eight directions: the four cardinal directions (N, S, E, W) or some combination (NW, NE, SW, SE). Otherwise, it will break. There are $$$n$$$ distinct points with integer coordinates on a plane. How many ways can you put a compass at one point and the morning star at another so that the compass does not break?",
+  "input_spec": "Each test contains multiple test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 10^4$$$). The description of the test cases follows. The first line of each test case contains a single integer $$$n$$$ ($$$2 \\leq n \\leq 2 \\cdot 10^5$$$) — the number of points. Then $$$n$$$ lines follow, each line containing two integers $$$x_i$$$, $$$y_i$$$ ($$$-10^9 \\leq x_i, y_i \\leq 10^9$$$) — the coordinates of each point, all points have distinct coordinates. It is guaranteed that the sum of $$$n$$$ over all test cases doesn't exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case, output a single integer — the number of pairs of points that don't break the compass.",
+  "examples": [
+    {
+      "input": "5\n3\n0 0\n-1 -1\n1 1\n4\n4 5\n5 7\n6 9\n10 13\n3\n-1000000000 1000000000\n0 0\n1000000000 -1000000000\n5\n0 0\n2 2\n-1 5\n-1 10\n2 11\n3\n0 0\n-1 2\n1 -2",
+      "output": "6\n2\n6\n8\n0"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Group by four line families using hash maps",
+      "description": "Observe that two points form a valid pair if and only if they share the same x-coordinate, same y-coordinate, same x-y value, or same x+y value. Group points by each of these four keys using hash maps, then for each group of size k, add k*(k-1) ordered pairs to the answer.",
+      "skill_tags": ["math", "data-structures", "implementation"],
+      "observations": [
+        {
+          "title": "Characterize the eight directions as four line families",
+          "description": "A compass at point A pointing to star B means B lies exactly N, S, E, W, NE, NW, SE, or SW of A. North and South require the same x-coordinate. East and West require the same y-coordinate. NE and SW require the same x-y diagonal (x-y is constant). NW and SE require the same x+y anti-diagonal (x+y is constant). These eight directions collapse into four line families: vertical (same x), horizontal (same y), main diagonal (same x-y), and anti-diagonal (same x+y).",
+          "hints": {
+            "nudge": "What geometric relationship must two points have so that one is directly north, south, east, west, or diagonally from the other?",
+            "question": "If point B is northeast of point A, what algebraic relationship holds between their coordinates? What about northwest? Can you group the eight directions into fewer categories?",
+            "formal": "Two points (x1,y1) and (x2,y2) form a valid pair iff at least one of: x1 = x2 (N/S), y1 = y2 (E/W), x1 - y1 = x2 - y2 (NE/SW), x1 + y1 = x2 + y2 (NW/SE). The eight directions reduce to four invariant families."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Count ordered pairs within each group",
+          "description": "For a given line family, if k points share the same key value, any ordered pair among them is valid. The number of ordered pairs from k points is k * (k - 1), since the compass and star are distinct roles (the pair is ordered).",
+          "hints": {
+            "nudge": "If three points lie on the same vertical line, how many valid compass-star pairs do they produce along that line?",
+            "question": "The problem asks for ordered pairs (compass position, star position). If k points share the same x-coordinate, how many ordered pairs is that?",
+            "formal": "For k points sharing a key, the number of ordered pairs is P(k,2) = k * (k - 1). This counts both (A as compass, B as star) and (B as compass, A as star)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Use hash maps to group points by each key",
+          "description": "For each point (x, y), insert it into four separate hash maps keyed by x, y, x-y, and x+y. After processing all points, iterate over each map and sum k*(k-1) for each group of size k. This runs in O(n) expected time per test case.",
+          "hints": {
+            "nudge": "You need to count how many points share each key value. What data structure lets you do this efficiently?",
+            "question": "If you maintain a map from key values to counts, how do you build it in one pass over the points, and how do you extract the answer afterward?",
+            "formal": "Maintain maps cx, cy, cd1, cd2. For each point (x,y): cx[x]++, cy[y]++, cd1[x-y]++, cd2[x+y]++. Answer = sum over all maps of k*(k-1) for each entry with count k."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "No double-counting occurs across the four families",
+          "description": "A natural concern is whether a pair counted in multiple families (e.g., two points sharing the same x and the same x-y) gets over-counted. This does not happen: the problem asks whether the compass breaks, and any pair that lies along at least one valid direction is a single valid pair. Since we group by the four families independently and each pair is either valid or not, we must be careful. But two distinct points can share at most one of the four keys (same x, same y, same x-y, same x+y) unless they are the same point, which is excluded. Actually, two points sharing both the same x and same y would be the same point. Two points sharing both x-y and x+y would also be the same point. Two points can share same x and same x+y (or same x and same x-y, etc.), which would mean they are the same point again. So no pair is counted twice.",
+          "hints": {
+            "nudge": "Could a pair of distinct points appear in more than one of your four groups? Think about what it would mean for two points to share two of the four keys simultaneously.",
+            "question": "If two distinct points have the same x-coordinate and the same x+y value, what does that imply about their y-coordinates? Are they still distinct?",
+            "formal": "If x1 = x2 and x1+y1 = x2+y2, then y1 = y2, so the points are identical — contradiction. Similarly for any pair of the four keys. Therefore each pair of distinct points shares at most one key, and summing over all four maps has no double-counting."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Use 64-bit integers to avoid overflow",
+          "description": "With up to 2*10^5 points, a single group could have up to n points, giving k*(k-1) up to ~4*10^10, and summing across four maps could reach ~1.6*10^11. This exceeds the 32-bit integer range, so the answer must be accumulated in a 64-bit integer type.",
+          "hints": {
+            "nudge": "What is the maximum possible answer, and does it fit in a 32-bit integer?",
+            "question": "If all n = 2*10^5 points share the same x-coordinate, what is k*(k-1)? Multiply by up to 4 maps. Does this fit in 32 bits?",
+            "formal": "Maximum answer per map: n*(n-1) = 2*10^5 * (2*10^5 - 1) ~ 4*10^10. Summing four maps: up to ~1.6*10^11. Use int64 / long long. 2^31 - 1 ~ 2.1*10^9 is insufficient."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    },
+    {
+      "name": "Sort-based grouping with coordinate transforms",
+      "description": "Instead of hash maps, sort points by each of the four keys (x, y, x-y, x+y) and count consecutive equal keys. For each run of length k, add k*(k-1) to the answer. This uses O(n log n) time and avoids hash map overhead.",
+      "skill_tags": ["math", "sorting", "implementation"],
+      "observations": [
+        {
+          "title": "Characterize the eight directions as four line families",
+          "description": "The eight compass directions reduce to four algebraic invariants: same x (N/S), same y (E/W), same x-y (NE/SW), same x+y (NW/SE). A pair is valid if and only if the two points share at least one of these four keys.",
+          "hints": {
+            "nudge": "What geometric relationship must two points have so that one is directly north, south, east, west, or diagonally from the other?",
+            "question": "For each of the eight directions, write the algebraic constraint on (x1,y1) and (x2,y2). How many distinct constraints remain?",
+            "formal": "Valid pair iff x1=x2 or y1=y2 or (x1-y1)=(x2-y2) or (x1+y1)=(x2+y2). Four line families, no overlap for distinct points."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Ordered pairs from a group of size k",
+          "description": "For k points sharing a key, the number of ordered (compass, star) pairs is k*(k-1). The pair is ordered because placing the compass at A pointing to B is different from compass at B pointing to A.",
+          "hints": {
+            "nudge": "If three points lie on the same line, how many ordered pairs do they contribute?",
+            "question": "The problem counts ordered pairs. For k collinear points, is the count k*(k-1)/2 or k*(k-1)?",
+            "formal": "Ordered pairs from k items choosing 2 distinct: P(k,2) = k!/(k-2)! = k*(k-1)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Sort by each key to find groups without hashing",
+          "description": "Compute the four key arrays (x, y, x-y, x+y). For each array, sort it and scan for runs of equal values. Each run of length k contributes k*(k-1). Sorting avoids hash collisions and is cache-friendly, at the cost of O(n log n) per key.",
+          "hints": {
+            "nudge": "If you don't want to use a hash map, how else can you count how many points share each key value?",
+            "question": "After sorting an array of key values, how do you count the size of each group of equal elements in a single pass?",
+            "formal": "For each of 4 key arrays: sort in O(n log n). Scan with two pointers: i = 0, while i < n, find j such that key[i..j) are equal, add (j-i)*(j-i-1) to answer, set i = j. Total: O(n log n) per key."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "No double-counting across the four families",
+          "description": "Two distinct points cannot share more than one of the four keys simultaneously. Sharing any two keys forces the points to be identical, which contradicts distinctness. Therefore, summing contributions from all four key arrays does not double-count any pair.",
+          "hints": {
+            "nudge": "Could a pair be counted in both the x-group and the (x-y)-group?",
+            "question": "If x1 = x2 and x1-y1 = x2-y2 for two distinct points, what can you conclude?",
+            "formal": "Any two of the four keys {x, y, x-y, x+y} uniquely determine the point. Sharing two keys implies identical points. So distinct pairs appear in exactly one family."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

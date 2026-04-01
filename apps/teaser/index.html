@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>myro</title>
+  <meta name="description" content="Myro is an adaptive competitive programming trainer. Coming soon.">
+  <meta name="theme-color" content="#030712">
+  <meta property="og:title" content="Myro">
+  <meta property="og:description" content="The shortest path to red.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80' fill='%23a78bfa'>◇</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    ::selection { background: #a78bfa30; color: #a78bfa; }
+    html, body { height: 100%; overflow: hidden; cursor: default; }
+    ::-webkit-scrollbar { display: none; }
+    html { scrollbar-width: none; }
+
+    body {
+      background: #08090a;
+      font-family: 'IBM Plex Mono', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* ── Full-page noise ── */
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0.03;
+    }
+    .noise svg { width: 100%; height: 100%; }
+
+    /* ── Full-page vignette ── */
+    .vignette {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.65) 100%);
+      z-index: 99;
+      pointer-events: none;
+    }
+
+    /* ── Terminal window ── */
+    .terminal {
+      position: relative;
+      z-index: 10;
+      width: min(720px, 92vw);
+      background: #0d1117;
+      border-radius: 6px;
+      border: 1px solid #14181f;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+      overflow: hidden;
+      opacity: 0;
+      animation: terminalIn 0.4s ease-out 0.15s forwards;
+    }
+
+    @keyframes terminalIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* (no title bar) */
+
+    /* ── Screen ── */
+    .screen {
+      position: relative;
+      padding: clamp(1rem, 3vw, 1.6rem);
+      padding-bottom: clamp(1.5rem, 4vw, 2.4rem);
+    }
+
+    /* Static CRT scanlines */
+    .screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 2px,
+        rgba(0, 0, 0, 0.05) 2px,
+        rgba(0, 0, 0, 0.05) 4px
+      );
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    /* Sweeping scanline */
+    .sweep {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, #a78bfa10 20%, #a78bfa18 50%, #a78bfa10 80%, transparent 100%);
+      z-index: 51;
+      pointer-events: none;
+      animation: sweep 7s linear infinite;
+    }
+
+    @keyframes sweep {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+
+    /* ── Content ── */
+    .content {
+      position: relative;
+      z-index: 10;
+      font-size: clamp(0.78rem, 1.6vw, 0.92rem);
+      line-height: 1.75;
+      color: #c9d1d9;
+    }
+
+    .line {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+      min-height: 1.75em;
+    }
+    .line.visible { opacity: 1; }
+
+    /* Terminal prompt */
+    .path { color: #f74c00; }
+    .dollar { color: #6e7681; }
+
+    /* Init lines */
+    .init-spinner { color: #a78bfa; display: inline-block; width: 1.2em; text-align: center; }
+    .init-dim { color: #6e7681; }
+    .init-done { color: #a78bfa; visibility: hidden; }
+
+    /* Centered brand area */
+    .center { text-align: center; }
+
+    .diamond {
+      font-size: 1.5rem;
+      color: #a78bfa;
+      display: inline-block;
+      text-shadow: 0 0 10px #a78bfa50, 0 0 25px #a78bfa20;
+    }
+
+    .myro-text {
+      font-size: clamp(2.2rem, 7vw, 4.2rem);
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-indent: 0.3em;
+      color: #a78bfa;
+      display: inline-block;
+    }
+
+    /* Glow animates in with the text */
+    #myro-line {
+      transition: none;
+    }
+    #myro-line.visible .myro-text {
+      animation: glowIn 1.2s ease-out forwards;
+    }
+
+    @keyframes glowIn {
+      0% {
+        opacity: 0;
+        text-shadow: 0 0 30px #a78bfaa0, 0 0 80px #a78bfa60, 0 0 140px #a78bfa30;
+      }
+      40% {
+        opacity: 1;
+        text-shadow: 0 0 20px #a78bfa90, 0 0 60px #a78bfa50, 0 0 120px #a78bfa25;
+      }
+      100% {
+        opacity: 1;
+        text-shadow: 0 0 7px #a78bfa80, 0 0 20px #a78bfa40, 0 0 50px #a78bfa20, 0 0 100px #a78bfa10;
+      }
+    }
+
+    .tagline { color: #8b949e; }
+    .tagline .red { color: #ef4444; }
+
+    /* Cursors */
+    .cursor {
+      color: #8b949e;
+      animation: blink 1s step-end infinite;
+      visibility: hidden;
+    }
+    .cursor.visible { visibility: visible; }
+
+    .cmd-cursor {
+      color: #c9d1d9;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .coming-soon {
+      color: #30363d;
+      letter-spacing: 0.1em;
+      font-size: 0.85em;
+    }
+
+    /* Spacers */
+    .spacer { height: 1.75em; }
+    .spacer-lg { height: 2.8em; }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .myro-text { letter-spacing: 0.2em; text-indent: 0.2em; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Full-page effects -->
+  <div class="noise">
+    <svg xmlns="http://www.w3.org/2000/svg">
+      <filter id="noise">
+        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+      </filter>
+      <rect width="100%" height="100%" filter="url(#noise)"/>
+    </svg>
+  </div>
+  <div class="vignette"></div>
+
+  <!-- Terminal -->
+  <div class="terminal">
+    <div class="screen">
+      <div class="sweep"></div>
+
+      <div class="content">
+        <!-- Prompt -->
+        <div class="line visible" id="prompt-line">
+          <span class="path">~</span> <span class="dollar">$</span> <span id="cmd-text"></span><span class="cmd-cursor" id="cmd-cursor">█</span>
+        </div>
+
+        <!-- Init sequence -->
+        <div class="line" id="init-1">
+          <span class="init-spinner" id="spin-1">◇</span> <span class="init-dim">training model loaded</span> <span class="init-done" id="done-1">✓</span>
+        </div>
+        <div class="line" id="init-2">
+          <span class="init-spinner" id="spin-2">◇</span> <span class="init-dim">challenge ready</span> <span class="init-done" id="done-2">✓</span>
+        </div>
+
+        <div class="spacer-lg"></div>
+
+        <!-- Brand -->
+        <div class="line center" id="diamond-line">
+          <span class="diamond" id="diamond">◇</span>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="line center" id="myro-line">
+          <span class="myro-text">myro</span>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="line center" id="tagline-line">
+          <span class="tagline" id="tagline"></span><span class="cursor" id="cursor">█</span>
+        </div>
+
+        <div class="spacer-lg"></div>
+
+        <div class="line center" id="coming-soon-line">
+          <span class="coming-soon">── coming soon ──</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const show = el => el.classList.add('visible');
+
+    const cmdText = $('cmd-text');
+    const cmdCursor = $('cmd-cursor');
+    const diamondEl = $('diamond');
+    const taglineEl = $('tagline');
+    const cursorEl = $('cursor');
+
+    const command = 'myro';
+    let cmdIdx = 0;
+
+    // Phase 1: Type the command
+    function typeCommand() {
+      if (cmdIdx < command.length) {
+        cmdText.textContent += command[cmdIdx];
+        cmdIdx++;
+        setTimeout(typeCommand, 60 + Math.random() * 50);
+      } else {
+        cmdCursor.style.display = 'none';
+        setTimeout(runInit, 300);
+      }
+    }
+
+    // Spinner helper — cycles shapes, returns stop function
+    const spinShapes = ['\u25C8', '\u25C7', '\u25C8', '\u25C6'];
+    function startSpinner(el) {
+      let idx = 0;
+      const iv = setInterval(() => {
+        idx = (idx + 1) % spinShapes.length;
+        el.textContent = spinShapes[idx];
+      }, 120);
+      return () => { clearInterval(iv); el.textContent = '\u25C7'; };
+    }
+
+    // Phase 2: Init sequence
+    function runInit() {
+      // Line 1: training model loaded
+      show($('init-1'));
+      const stop1 = startSpinner($('spin-1'));
+      setTimeout(() => { stop1(); $('done-1').style.visibility = 'visible'; }, 700);
+
+      // Line 2: challenge ready
+      setTimeout(() => {
+        show($('init-2'));
+        const stop2 = startSpinner($('spin-2'));
+        setTimeout(() => { stop2(); $('done-2').style.visibility = 'visible'; }, 600);
+      }, 800);
+
+      // Then brand
+      setTimeout(showBrand, 1800);
+    }
+
+    // Phase 3: Brand reveal
+    function showBrand() {
+      show($('diamond-line'));
+      setTimeout(() => show($('myro-line')), 400);
+      setTimeout(typeTagline, 1100);
+    }
+
+    // Phase 4: Typewriter tagline
+    function typeTagline() {
+      const fullText = 'the shortest path to red.';
+      const redStart = fullText.indexOf('red');
+      let i = 0;
+
+      $('tagline-line').classList.add('visible');
+      cursorEl.classList.add('visible');
+
+      function tick() {
+        if (i > fullText.length) return;
+        const visible = fullText.slice(0, i);
+        let html;
+        if (i <= redStart) {
+          html = visible;
+        } else if (i <= redStart + 3) {
+          html = fullText.slice(0, redStart) + '<span class="red">' + visible.slice(redStart) + '</span>';
+        } else {
+          html = fullText.slice(0, redStart) + '<span class="red">red</span>' + visible.slice(redStart + 3);
+        }
+        taglineEl.innerHTML = html;
+        i++;
+        if (i <= fullText.length) {
+          setTimeout(tick, 50);
+        } else {
+          setTimeout(() => show($('coming-soon-line')), 900);
+        }
+      }
+      tick();
+    }
+
+    // Diamond cycle
+    const shapes = ['\u25C8', '\u25C7', '\u25C8', '\u25C6'];
+    let shapeIdx = 0;
+    setInterval(() => {
+      shapeIdx = (shapeIdx + 1) % shapes.length;
+      diamondEl.textContent = shapes[shapeIdx];
+    }, 800);
+
+    // Go
+    setTimeout(typeCommand, 500);
+  </script>
+</body>
+</html>

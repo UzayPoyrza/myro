@@ -1,0 +1,77 @@
+{
+  "contest_id": 1968,
+  "index": "D",
+  "title": "Permutation Game",
+  "difficulty": 1300,
+  "tags": ["brute force", "greedy", "graphs", "math"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Bodya and Sasha found a permutation $$$p_1,\\dots,p_n$$$ and an array $$$a_1,\\dots,a_n$$$. They decided to play a well-known \"Permutation game\". A permutation of length $$$n$$$ is an array consisting of $$$n$$$ distinct integers from $$$1$$$ to $$$n$$$ in arbitrary order. For example, $$$[2,3,1,5,4]$$$ is a permutation, but $$$[1,2,2]$$$ is not a permutation ($$$2$$$ appears twice in the array), and $$$[1,3,4]$$$ is also not a permutation ($$$n=3$$$ but there is $$$4$$$ in the array). Both of them chose a starting position in the permutation. The game lasts $$$k$$$ turns. The players make moves simultaneously. On each turn, two things happen to each player: If the current position of the player is $$$x$$$, his score increases by $$$a_x$$$. Then the player either stays at his current position $$$x$$$ or moves from $$$x$$$ to $$$p_x$$$. The winner of the game is the player with the higher score after exactly $$$k$$$ turns. Knowing Bodya's starting position $$$P_B$$$ and Sasha's starting position $$$P_S$$$, determine who wins the game if both players are trying to win.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1\\le t\\le 10^4$$$) — the number of testcases. The first line of each testcase contains integers $$$n$$$, $$$k$$$, $$$P_B$$$, $$$P_S$$$ ($$$1\\le P_B,P_S\\le n\\le 2\\cdot 10^5$$$, $$$1\\le k\\le 10^9$$$) — length of the permutation, duration of the game, starting positions respectively. The next line contains $$$n$$$ integers $$$p_1,\\dots,p_n$$$ ($$$1 \\le p_i \\le n$$$) — elements of the permutation $$$p$$$. The next line contains $$$n$$$ integers $$$a_1,\\dots,a_n$$$ ($$$1\\le a_i\\le 10^9$$$) — elements of array $$$a$$$. It is guaranteed that the sum of values of $$$n$$$ over all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each testcase output: \"Bodya\" if Bodya wins the game. \"Sasha\" if Sasha wins the game. \"Draw\" if the players have the same score.",
+  "examples": [
+    {
+      "input": "104 2 3 24 1 2 37 2 5 610 8 2 103 1 4 5 2 7 8 10 6 95 10 5 1 3 7 10 15 4 32 1000000000 1 21 24 48 10 4 15 1 4 3 2 8 6 71 1 2 1 2 100 101 1025 1 2 51 2 4 5 34 6 9 4 24 2 3 14 1 3 26 8 5 36 9 5 46 1 3 5 2 46 9 8 9 5 104 8 4 22 3 4 15 2 8 74 2 3 14 1 3 26 8 5 32 1000000000 1 21 21000000000 2",
+      "output": "Bodya\nSasha\nDraw\nDraw\nBodya\nSasha\nSasha\nSasha\nSasha\nBodya"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Simulate path and maximize stopping score",
+      "description": "Each player's problem is independent: follow the permutation from the starting position, and at each step consider 'what if I stay here for all remaining turns?' Track the maximum such score over the path. Since the permutation forms cycles of length at most n, you only need to check min(k, n) positions. Compare the two players' best scores.",
+      "skill_tags": ["greedy", "graphs", "math"],
+      "observations": [
+        {
+          "title": "The two players are independent",
+          "description": "Each player's score depends only on their own starting position, the permutation, and the array. The players never interact — they cannot block each other or affect each other's path. Therefore you can compute each player's optimal score separately and compare at the end.",
+          "hints": {
+            "nudge": "Do Bodya's moves affect Sasha's options in any way?",
+            "question": "Since the players move simultaneously and on the same permutation but from different starting positions, can one player's choices ever influence the other's score? What does that let you do?",
+            "formal": "The score functions are independent: score_B depends on (p, a, P_B, k) and score_S depends on (p, a, P_S, k). Compute each separately with a function best_score(start) and compare."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Following the permutation creates a path that enters a cycle",
+          "description": "Starting at position x, the sequence x, p[x], p[p[x]], ... follows a functional graph of a permutation. Since the permutation has n elements, this path must revisit a position within at most n steps, forming a cycle. So the distinct positions a player can ever visit number at most n.",
+          "hints": {
+            "nudge": "If you keep applying p to your position, how many distinct positions can you visit before repeating?",
+            "question": "A permutation is a bijection on {1..n}. If you start at some position and repeatedly apply p, what structure does the sequence of visited positions form? How long until it repeats?",
+            "formal": "The functional graph of a permutation consists of disjoint cycles. Starting at any vertex, the sequence x, p[x], p[p[x]], ... enters its cycle immediately (since every node has in-degree 1 in a permutation). The cycle length is at most n, so the path visits at most n distinct positions."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "At each position, consider staying forever",
+          "description": "The key greedy insight: the optimal strategy is to walk some number of steps along the path collecting a[pos] at each visited position, then stop at some position and stay there for all remaining turns. The score for stopping at step j (0-indexed) is: (sum of a values collected in steps 0..j-1) + (k - j) * a[pos_j]. The answer is the maximum over all valid stopping points.",
+          "hints": {
+            "nudge": "Once a player decides to stay at a position, their score from that point onward is predictable. What is it?",
+            "question": "Suppose a player walks for j steps collecting rewards, then stays at their current position for the remaining k - j turns. What total score do they get? Why is 'walk then stay' always optimal?",
+            "formal": "Let pos_0 = start, pos_{i+1} = p[pos_i]. If the player moves for j steps then stays, score = sum(a[pos_i] for i in 0..j-1) + (k - j) * a[pos_j]. Any strategy is equivalent to 'walk j steps then stay' for some j, because after deciding to stay, every subsequent turn just adds a[current]. Maximize over j in {0, 1, ..., min(k, n) - 1}."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Only check min(k, n) stopping points",
+          "description": "The path revisits a position after at most n steps (permutation cycle). Once you revisit, you are considering the same positions again — so checking beyond the first cycle adds no new candidates. Also, you cannot walk more than k steps total. Therefore you only need to simulate min(k, n) steps, making the per-player work O(n) regardless of how large k is.",
+          "hints": {
+            "nudge": "k can be up to 10^9 but n is at most 2*10^5. Do you really need to simulate all k steps?",
+            "question": "After at most n steps along the permutation, the positions start repeating. If you have already seen a position, would stopping there again give a better score than when you first visited it? Why or why not?",
+            "formal": "After at most n steps the path cycles. For any position revisited at step j' > j, the 'stay' score is sum(a[0..j'-1]) + (k-j')*a[pos] > sum(a[0..j-1]) + (k-j)*a[pos] is NOT guaranteed — in fact the extra a-values collected could be small while (k-j') < (k-j). However, the maximum over the first cycle pass already covers all distinct positions with the most remaining turns. Formally, use a visited set and stop walking when a position repeats, or after k steps. This bounds the loop to min(k, n) iterations."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Use 64-bit integers to avoid overflow",
+          "description": "The values a[i] can be up to 10^9 and k can be up to 10^9, so (k - j) * a[pos_j] alone can reach approximately 10^18, which exceeds the 32-bit integer range. The running sum of collected a-values can also be up to n * 10^9 ~ 2*10^14. All score computations must use 64-bit integers.",
+          "hints": {
+            "nudge": "What is the maximum possible score? Does it fit in a 32-bit integer?",
+            "question": "If k = 10^9 and a[pos] = 10^9, what is (k - j) * a[pos]? What integer type do you need?",
+            "formal": "Maximum score is bounded by k * max(a) = 10^9 * 10^9 = 10^18, which exceeds 2^31 - 1 ~ 2.1*10^9 and even 2^32 ~ 4.3*10^9. Use 64-bit integers (long long in C++, or Python's arbitrary precision int). This applies to the running sum, the per-step candidate score, and the maximum."
+          },
+          "skill_tag": "math"
+        }
+      ]
+    }
+  ]
+}

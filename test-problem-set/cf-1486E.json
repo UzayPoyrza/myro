@@ -1,0 +1,136 @@
+{
+  "contest_id": 1486,
+  "index": "E",
+  "title": "Paired Payment",
+  "difficulty": 2200,
+  "tags": [
+    "binary search",
+    "brute force",
+    "constructive algorithms",
+    "dp",
+    "flows",
+    "graphs",
+    "shortest paths"
+  ],
+  "time_limit": "4 seconds",
+  "memory_limit": "512 megabytes",
+  "description": "There are $$$n$$$ cities and $$$m$$$ bidirectional roads in the country. The roads in the country form an undirected weighted graph. The graph is not guaranteed to be connected . Each road has it's own parameter $$$w$$$. You can travel through the roads, but the government made a new law: you can only go through two roads at a time (go from city $$$a$$$ to city $$$b$$$ and then from city $$$b$$$ to city $$$c$$$) and you will have to pay $$$(w_{ab} + w_{bc})^2$$$ money to go through those roads. Find out whether it is possible to travel from city $$$1$$$ to every other city $$$t$$$ and what's the minimum amount of money you need to get from $$$1$$$ to $$$t$$$.",
+  "input_spec": "First line contains two integers $$$n$$$, $$$m$$$ ($$$2 \\leq n \\leq 10^5$$$, $$$1 \\leq m \\leq min(\\frac{n \\cdot (n - 1)}{2}, 2 \\cdot 10^5)$$$). Next $$$m$$$ lines each contain three integers $$$v_i$$$, $$$u_i$$$, $$$w_i$$$ ($$$1 \\leq v_i, u_i \\leq n$$$, $$$1 \\leq w_i \\leq 50$$$, $$$u_i \\neq v_i$$$). It's guaranteed that there are no multiple edges, i.e. for any edge $$$(u_i, v_i)$$$ there are no other edges $$$(u_i, v_i)$$$ or $$$(v_i, u_i)$$$.",
+  "output_spec": "For every city $$$t$$$ print one integer. If there is no correct path between $$$1$$$ and $$$t$$$ output $$$-1$$$. Otherwise print out the minimum amount of money needed to travel from $$$1$$$ to $$$t$$$.",
+  "examples": [
+    {
+      "input": "5 6\n1 2 3\n2 3 4\n3 4 5\n4 5 6\n1 5 1\n2 4 2",
+      "output": "0 98 49 25 114"
+    },
+    {
+      "input": "3 2\n1 2 1\n2 3 2",
+      "output": "0 -1 9"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Auxiliary graph with Dijkstra",
+      "description": "Expand each vertex into auxiliary states encoding the weight of the last edge used, then run Dijkstra on the augmented graph to handle the paired-edge constraint.",
+      "skill_tags": ["graphs", "shortest-paths", "data-structures"],
+      "observations": [
+        {
+          "title": "Paired traversal means you must track mid-step state",
+          "description": "Because you pay for two edges at a time, you are always in one of two states at any vertex: either you just arrived via a complete pair (ready to start a new pair), or you are mid-pair (having taken one edge and needing a second). A standard shortest-path algorithm does not distinguish these states, so you need to augment the state space.",
+          "hints": {
+            "nudge": "When you arrive at some vertex v after taking just one edge of a pair, what extra information do you need before you can take the second edge?",
+            "question": "How many distinct 'modes' can you be in at a given vertex? What distinguishes them?",
+            "formal": "At any vertex v you are either in a 'clean' state (ready to begin a new pair) or a 'pending' state parameterized by the weight w of the first edge you already crossed. This gives two kinds of states: (v, clean) and (v, w)."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Small edge weights make the state space manageable",
+          "description": "The pending state (v, w) records the weight of the first edge in the current pair. Since w is at most 50, each vertex v spawns at most 50 auxiliary states. This keeps the total state count at O(n * maxW), which is feasible given the constraints.",
+          "hints": {
+            "nudge": "Look at the constraint on edge weights. What does w <= 50 imply about the number of possible pending states per vertex?",
+            "question": "If you expand each vertex into states (v, w) for every possible pending weight w, how many total states could there be? Is this small enough?",
+            "formal": "With n <= 10^5 and w <= 50, auxiliary states total at most 50 * n = 5 * 10^6. In practice the number is bounded by O(M) since a state (v, w) only exists if some edge of weight w is incident to v."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Constructing the auxiliary graph edges",
+          "description": "From a clean state at vertex u, taking an edge (u, v) of weight w transitions to the pending state (v, w) at zero cost (the cost is not paid until the pair is complete). From a pending state (u, w_prev), taking an edge (u, v) of weight w completes the pair: transition to the clean state at v with cost (w_prev + w)^2. Only clean states represent actual arrivals at a city.",
+          "hints": {
+            "nudge": "Think about what happens when you take the first edge of a pair versus the second edge. When is the cost actually charged?",
+            "question": "If you are at clean state u and cross edge (u, v, w), what state do you enter and at what cost? Then from pending state (v, w_prev), if you cross edge (v, x, w2), what is the transition?",
+            "formal": "Edge types: (1) u_clean -> (v, w) with cost 0 for each edge (u,v,w). (2) (u, w_prev) -> v_clean with cost (w_prev + w)^2 for each edge (u,v,w). The answer for city t is dist[t_clean]."
+          },
+          "skill_tag": "shortest-paths"
+        },
+        {
+          "title": "Dijkstra on the auxiliary graph yields the answer",
+          "description": "All edge costs in the auxiliary graph are non-negative (they are either 0 or a perfect square), so Dijkstra's algorithm correctly finds shortest paths. Initialize dist[1_clean] = 0, run Dijkstra, and read off dist[t_clean] for each target city t. Unreachable cities (infinite distance in clean state) get -1.",
+          "hints": {
+            "nudge": "What standard shortest-path algorithm works when all edge weights are non-negative?",
+            "question": "After building the auxiliary graph, what is the source node and what nodes give you the answer for each city?",
+            "formal": "Run Dijkstra from state (1, clean) with initial distance 0. For each city t, answer is dist[(t, clean)] if finite, else -1. Complexity is O(M * maxW * log(M * maxW))."
+          },
+          "skill_tag": "shortest-paths"
+        },
+        {
+          "title": "Odd-length paths require special handling at the source",
+          "description": "City 1 starts in the clean state with distance 0. If a target is reachable only via an odd number of edges, it can never be reached in clean state (since each pair consumes exactly two edges). The algorithm naturally handles this: such cities will have infinite clean-state distance and output -1.",
+          "hints": {
+            "nudge": "What happens if the shortest path to some city uses an odd number of edges? Can you complete all pairs?",
+            "question": "A path of odd length means you end mid-pair. Does the auxiliary graph ever let a pending state count as a final answer?",
+            "formal": "Only clean-state distances are reported as answers. A city reachable only via odd-length paths stays at infinite clean distance, correctly yielding -1. This matches the problem's pairing constraint."
+          },
+          "skill_tag": "graphs"
+        }
+      ]
+    },
+    {
+      "name": "Two-hop edge precomputation with Dijkstra",
+      "description": "Directly build a new graph where each edge represents two consecutive original edges (a two-hop), with weight (w1 + w2)^2, then run Dijkstra on this compressed graph.",
+      "skill_tags": ["graphs", "shortest-paths"],
+      "observations": [
+        {
+          "title": "Each valid move is a two-hop through an intermediate vertex",
+          "description": "A paired move goes a -> b -> c paying (w_ab + w_bc)^2. This is equivalent to a single weighted edge from a to c with weight (w_ab + w_bc)^2 in a new graph. If you enumerate all such two-hops, standard shortest paths on the new graph solve the problem for even-length paths.",
+          "hints": {
+            "nudge": "Can you rephrase the paired traversal as a single step in a transformed graph?",
+            "question": "For every intermediate vertex b, how many two-hop edges does b generate? What is the total number of two-hop edges?",
+            "formal": "For each vertex b and each pair of edges (a, b, w1), (b, c, w2) incident to b, create an edge a -> c with weight (w1 + w2)^2. This yields O(sum of deg(b)^2) edges."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Small weights let you deduplicate two-hop edges",
+          "description": "Multiple paths a -> b -> c might exist through different intermediate vertices b, each with different cost. Since w <= 50, the cost (w1 + w2)^2 is at most 100^2 = 10000. For each pair (a, c), you only need to keep the minimum-cost two-hop edge. But more importantly, the w <= 50 constraint bounds the degree contribution through the auxiliary-state approach.",
+          "hints": {
+            "nudge": "Can different intermediate vertices produce different costs for the same (a, c) pair? Do you need all of them?",
+            "question": "If (a, b1, c) and (a, b2, c) are two different two-hops between the same pair, which one matters for shortest paths?",
+            "formal": "For each pair (a, c), keep only the two-hop with minimum (w1 + w2)^2. Since only the minimum matters for Dijkstra, duplicates can be discarded."
+          },
+          "skill_tag": "shortest-paths"
+        },
+        {
+          "title": "Degree-squared blowup is controlled by the edge and weight constraints",
+          "description": "Naively, vertex b with degree d generates d*(d-1) two-hop edges. This could be O(M^2/n) in the worst case. However, with M <= 2*10^5 and the 4-second time limit, the total number of two-hop edges is manageable. Alternatively, the auxiliary-state formulation from Route 1 avoids the quadratic blowup entirely by keeping O(M * maxW) edges.",
+          "hints": {
+            "nudge": "What is the worst-case number of two-hop edges? Is it within time limits?",
+            "question": "If a vertex has degree d, how many ordered pairs of incident edges exist? What does summing d^2 over all vertices look like for M = 2*10^5?",
+            "formal": "Total two-hop edges = sum of d_b * (d_b - 1) over all b. By Cauchy-Schwarz, this is at most M^2/n in the worst case, but with M = 2*10^5 the constant factors and 4s time limit make it feasible for most graphs."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Dijkstra on the two-hop graph gives even-length path answers",
+          "description": "Run Dijkstra from vertex 1 on the two-hop graph. The distance to vertex t is the minimum cost using an even number of original edges. Vertices only reachable by odd-length paths get -1. The output for vertex 1 is always 0.",
+          "hints": {
+            "nudge": "After building the two-hop graph, what standard algorithm finds the answer?",
+            "question": "Each edge in the two-hop graph represents exactly two original edges. What does a path of length k in the two-hop graph correspond to in the original graph?",
+            "formal": "A path of k edges in the two-hop graph uses 2k original edges. Dijkstra from vertex 1 gives the minimum paired-payment cost. dist[t] = -1 if t is unreachable. Complexity: O(E' * log(E')) where E' is the number of two-hop edges."
+          },
+          "skill_tag": "shortest-paths"
+        }
+      ]
+    }
+  ]
+}

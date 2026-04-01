@@ -1,0 +1,54 @@
+{
+  "contest_id": 546,
+  "index": "A",
+  "title": "Soldier and Bananas",
+  "difficulty": 800,
+  "tags": ["math", "implementation"],
+  "time_limit": "1 second",
+  "memory_limit": "256 megabytes",
+  "description": "A soldier wants to buy w bananas from a shop. The cost of the first banana is k dollars, the second banana costs 2*k dollars, the third costs 3*k dollars, and so on -- the i-th banana costs i*k dollars. The soldier currently has n dollars. How many more dollars does he need to borrow to buy all w bananas? If he has enough money, he doesn't need to borrow (output 0).",
+  "input_spec": "The first line contains three integers k, n, and w (1 <= k, n, w <= 1000) -- the base price, the soldier's current money, and the number of bananas.",
+  "output_spec": "Print a single integer -- the amount the soldier needs to borrow. If he doesn't need to borrow, print 0.",
+  "examples": [
+    {"input": "3 17 4", "output": "13"}
+  ],
+  "routes": [
+    {
+      "name": "Sum formula",
+      "description": "Compute the total cost using the arithmetic series formula, then determine the shortfall.",
+      "skill_tags": ["math", "implementation"],
+      "observations": [
+        {
+          "title": "Total cost is k * (1 + 2 + ... + w)",
+          "description": "The i-th banana costs i*k, so the total cost for w bananas is k * (1 + 2 + ... + w).",
+          "hints": {
+            "nudge": "Write out the cost of each banana. Do you see a pattern?",
+            "question": "If banana i costs i*k, what is the sum of all banana costs from i=1 to i=w?",
+            "formal": "Total = k * sum(1..w) = k * (1 + 2 + ... + w)."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Use the arithmetic series formula",
+          "description": "The sum 1 + 2 + ... + w equals w*(w+1)/2. This is Gauss's formula for the sum of the first w positive integers.",
+          "hints": {
+            "nudge": "There's a well-known formula for the sum of 1 through w. Do you remember it?",
+            "question": "What is 1 + 2 + 3 + ... + w? Can you express it in closed form?",
+            "formal": "1 + 2 + ... + w = w*(w+1)/2. So total cost = k * w * (w+1) / 2."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Compute the shortfall (but not negative)",
+          "description": "The amount to borrow is total_cost - n, but if the soldier already has enough money, the answer is 0 (not a negative number).",
+          "hints": {
+            "nudge": "What if the soldier has more money than the total cost?",
+            "question": "How do you ensure the answer is never negative?",
+            "formal": "borrow = max(0, total_cost - n). For the example: total = 3 * 4 * 5 / 2 = 30, borrow = max(0, 30 - 17) = 13."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

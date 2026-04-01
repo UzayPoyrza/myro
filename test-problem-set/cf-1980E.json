@@ -1,0 +1,138 @@
+{
+  "contest_id": 1980,
+  "index": "E",
+  "title": "Permutation of Rows and Columns",
+  "difficulty": 1600,
+  "tags": [
+    "constructive algorithms",
+    "hashing",
+    "implementation",
+    "math",
+    "matrices"
+  ],
+  "time_limit": "3 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "You have been given a matrix $$$a$$$ of size $$$n$$$ by $$$m$$$, containing a permutation of integers from $$$1$$$ to $$$n \\cdot m$$$. A permutation of $$$n$$$ integers is an array containing all numbers from $$$1$$$ to $$$n$$$ exactly once. For example, the arrays $$$[1]$$$, $$$[2, 1, 3]$$$, $$$[5, 4, 3, 2, 1]$$$ are permutations, while the arrays $$$[1, 1]$$$, $$$[100]$$$, $$$[1, 2, 4, 5]$$$ are not. A matrix contains a permutation if, when all its elements are written out, the resulting array is a permutation. Matrices $$$[[1, 2], [3, 4]]$$$, $$$[[1]]$$$, $$$[[1, 5, 3], [2, 6, 4]]$$$ contain permutations, while matrices $$$[[2]]$$$, $$$[[1, 1], [2, 2]]$$$, $$$[[1, 2], [100, 200]]$$$ do not. You can perform one of the following two actions in one operation: choose columns $$$c$$$ and $$$d$$$ ($$$1 \\le c, d \\le m$$$, $$$c \\ne d$$$) and swap these columns; choose rows $$$c$$$ and $$$d$$$ ($$$1 \\le c, d \\le n$$$, $$$c \\ne d$$$) and swap these rows. You can perform any number of operations. You are given the original matrix $$$a$$$ and the matrix $$$b$$$. Your task is to determine whether it is possible to transform matrix $$$a$$$ into matrix $$$b$$$ using the given operations.",
+  "input_spec": "The first line contains an integer $$$t$$$ ($$$1 \\le t \\le 10^4$$$) — the number of test cases. The descriptions of the test cases follow. The first line of each test case description contains $$$2$$$ integers $$$n$$$ and $$$m$$$ ($$$1 \\le n, m \\le n \\cdot m \\le 2 \\cdot 10^5$$$) — the sizes of the matrix. The next $$$n$$$ lines contain $$$m$$$ integers $$$a_{ij}$$$ each ($$$1 \\le a_{ij} \\le n \\cdot m$$$). It is guaranteed that matrix $$$a$$$ is a permutation. The next $$$n$$$ lines contain $$$m$$$ integers $$$b_{ij}$$$ each ($$$1 \\le b_{ij} \\le n \\cdot m$$$). It is guaranteed that matrix $$$b$$$ is a permutation. It is guaranteed that the sum of the values $$$n \\cdot m$$$ for all test cases does not exceed $$$2 \\cdot 10^5$$$.",
+  "output_spec": "For each test case, output \" YES \" if the second matrix can be obtained from the first, and \" NO \" otherwise. You can output each letter in any case (lowercase or uppercase). For example, the strings \" yEs \", \" yes \", \" Yes \", and \" YES \" will be accepted as a positive answer.",
+  "examples": [
+    {
+      "input": "71 1112 21 23 44 32 12 21 23 44 31 23 41 5 9 612 10 4 87 11 3 21 5 9 612 10 4 87 11 3 23 31 5 96 4 23 8 79 5 12 4 67 8 32 31 2 65 4 36 1 23 4 51 55 1 2 3 44 2 5 1 3",
+      "output": "YES\nYES\nNO\nYES\nYES\nNO\nYES"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Value-position mapping consistency check",
+      "description": "Record each value's (row, col) in both matrices. Row swaps and column swaps act independently, so every value originally in row i of a must land in the same row of b, and every value originally in column j of a must land in the same column of b. Check that these row and column mappings are each consistent (no conflicts).",
+      "skill_tags": [
+        "math",
+        "implementation",
+        "matrices"
+      ],
+      "observations": [
+        {
+          "title": "Row and column swaps compose into independent permutations",
+          "description": "Any sequence of row swaps produces some permutation sigma of the rows, and any sequence of column swaps produces some permutation tau of the columns. These act independently: the element at (i, j) in a ends up at (sigma(i), tau(j)) in the result. Every possible pair (sigma, tau) is achievable.",
+          "hints": {
+            "nudge": "What does a sequence of row swaps do to the set of row indices? Can it produce any rearrangement?",
+            "question": "If you apply row swaps and column swaps, each element at position (i, j) moves to some position (i', j'). How do i' and j' depend on the swaps? Are the row movements and column movements coupled or independent?",
+            "formal": "Row swaps generate the full symmetric group S_n on row indices, and column swaps generate S_m on column indices. The combined effect on element a[i][j] is to send it to position (sigma(i), tau(j)) where sigma in S_n and tau in S_m are arbitrary. The two permutations are chosen independently."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "All values in the same row of a must map to the same row of b",
+          "description": "Since sigma is a function of the row index alone, every element that shares row i in matrix a must share the single row sigma(i) in matrix b. If value v is at row i in a and row r_v in b, and value w is also at row i in a but row r_w != r_v in b, then no single sigma(i) can satisfy both, so the answer is NO.",
+          "hints": {
+            "nudge": "A row swap moves an entire row as a unit. What does that imply about elements that start in the same row?",
+            "question": "If two values share row i in matrix a, where must they both appear in matrix b for a valid row permutation to exist?",
+            "formal": "For a valid sigma to exist, the mapping i -> {row of v in b : v is in row i of a} must be a singleton set for every i. If any row i in a has its elements scattered across two or more rows of b, the answer is NO."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "The same consistency must hold for columns",
+          "description": "By identical reasoning applied to tau, every element that shares column j in matrix a must share a single column tau(j) in matrix b. If two values in the same column of a appear in different columns of b, no valid column permutation exists.",
+          "hints": {
+            "nudge": "You checked row consistency. What analogous check is needed for columns?",
+            "question": "Column swaps move entire columns as a unit. If two values share column j in a, what must be true about their columns in b?",
+            "formal": "For a valid tau to exist, the mapping j -> {col of v in b : v is in column j of a} must be a singleton set for every j. If any column j in a has its elements scattered across two or more columns of b, the answer is NO."
+          },
+          "skill_tag": "math"
+        },
+        {
+          "title": "Build position lookup arrays indexed by value",
+          "description": "Since every value from 1 to n*m appears exactly once in each matrix, create arrays pos_a_row[v], pos_a_col[v] and pos_b_row[v], pos_b_col[v] storing the row and column of value v in matrices a and b respectively. This lets you look up any value's position in O(1) and avoids searching the matrices repeatedly.",
+          "hints": {
+            "nudge": "Each value appears exactly once. How can you quickly find where a given value sits in each matrix?",
+            "question": "If you scan each matrix once and record (row, col) for each value, what data structure do you get? How large is it?",
+            "formal": "Allocate arrays of size n*m. While reading a[i][j], set pos_a_row[a[i][j]] = i and pos_a_col[a[i][j]] = j. Same for b. Total time and space: O(n*m)."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "Check consistency by scanning all values once",
+          "description": "For each value v, its row in a induces a required row mapping: pos_a_row[v] -> pos_b_row[v]. Store this in a row_map array. If row_map[pos_a_row[v]] was already set to a different value, there is a conflict and the answer is NO. Do the same for columns with col_map. If no conflicts are found, the answer is YES.",
+          "hints": {
+            "nudge": "You have the position of every value in both matrices. How do you check that the row mapping is consistent in a single pass?",
+            "question": "If you iterate over all values and for each one record 'row i of a maps to row r of b', how do you detect a contradiction? What data structure stores this mapping?",
+            "formal": "Initialize row_map[0..n-1] = -1, col_map[0..m-1] = -1. For each v in 1..n*m: let ri = pos_a_row[v], ro = pos_b_row[v], ci = pos_a_col[v], co = pos_b_col[v]. If row_map[ri] == -1, set row_map[ri] = ro. Else if row_map[ri] != ro, output NO. Same for col_map[ci] vs co. If no conflict after all values, output YES. Total O(n*m) per test case."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    },
+    {
+      "name": "Row-set fingerprinting via a single anchor element",
+      "description": "Use one element to determine the row and column permutation, then verify the entire matrix is consistent. Pick element a[0][0], find it in b to determine sigma(0) and tau(0), then extend to the full row and column permutations by tracing other elements in row 0 and column 0 of a.",
+      "skill_tags": [
+        "constructive",
+        "hashing",
+        "matrices"
+      ],
+      "observations": [
+        {
+          "title": "One anchor element fixes its row and column mapping",
+          "description": "Pick any element, say v = a[0][0]. Since v must appear at (sigma(0), tau(0)) in b, finding v's position in b immediately determines sigma(0) and tau(0). This is the starting point for reconstructing both permutations.",
+          "hints": {
+            "nudge": "If you know where a specific value moves, what does that tell you about the row and column it was in?",
+            "question": "Let v = a[0][0] and suppose b[r][c] = v. What must sigma(0) and tau(0) be?",
+            "formal": "If a[0][0] = v and b[r][c] = v, then sigma(0) = r and tau(0) = c. This follows directly from the rule that a[i][j] moves to (sigma(i), tau(j))."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Tracing row 0 of a determines the full column permutation",
+          "description": "Every element a[0][j] must appear in row sigma(0) of b (since all elements of row 0 map to row sigma(0)). Find a[0][j] in row sigma(0) of b at some column c_j. Then tau(j) = c_j. This determines tau for every column index j.",
+          "hints": {
+            "nudge": "All elements from row 0 of a end up in the same row of b. You already know which row. How does this determine the column permutation?",
+            "question": "For each element a[0][j], if it appears at b[sigma(0)][c_j], what is tau(j)? What if a[0][j] is not found in row sigma(0) of b at all?",
+            "formal": "For j = 0..m-1: find position of a[0][j] in b. If its row is not sigma(0), answer is NO. Otherwise tau(j) = its column in b. This fully determines tau. If any value is not in row sigma(0), the transformation is impossible."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Tracing column 0 of a determines the full row permutation",
+          "description": "Similarly, every element a[i][0] must appear in column tau(0) of b. Find a[i][0] in column tau(0) of b at some row r_i. Then sigma(i) = r_i. This determines sigma for every row index i.",
+          "hints": {
+            "nudge": "You used row 0 to find the column permutation. What analogous step finds the row permutation?",
+            "question": "For each element a[i][0], where must it appear in b? What does that tell you about sigma(i)?",
+            "formal": "For i = 0..n-1: find position of a[i][0] in b. If its column is not tau(0), answer is NO. Otherwise sigma(i) = its row in b. This fully determines sigma."
+          },
+          "skill_tag": "constructive"
+        },
+        {
+          "title": "Verify by checking all remaining elements",
+          "description": "With both sigma and tau fully determined, verify the entire matrix: for every (i, j), check that b[sigma(i)][tau(j)] == a[i][j]. If all cells match, the answer is YES; any mismatch means NO. The total verification is O(n*m).",
+          "hints": {
+            "nudge": "You have reconstructed the two permutations. How do you confirm they actually work?",
+            "question": "Is it enough to just reconstruct sigma and tau, or do you need to verify that the mapping is correct for every cell?",
+            "formal": "For all i in 0..n-1, j in 0..m-1: if b[sigma(i)][tau(j)] != a[i][j], output NO. Otherwise output YES. Total time O(n*m) per test case."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

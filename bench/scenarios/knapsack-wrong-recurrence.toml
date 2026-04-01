@@ -1,0 +1,36 @@
+[scenario]
+name = "Knapsack — 2D DP with += instead of max"
+problem = "cf-730J"
+route = 0
+trigger = "test failure on test 1"
+elapsed_secs = 300
+observations_found = 0
+
+[scenario.code]
+text = """
+n, W = map(int, input().split())
+items = []
+for _ in range(n):
+    w, v = map(int, input().split())
+    items.append((w, v))
+
+dp = [[0] * (W + 1) for _ in range(n + 1)]
+for i in range(1, n + 1):
+    w, v = items[i - 1]
+    for c in range(W + 1):
+        dp[i][c] = dp[i-1][c]
+        if c >= w:
+            dp[i][c] += v  # BUG: should be max, not +=
+print(dp[n][W])
+"""
+
+[[scenario.recent_messages]]
+role = "user"
+content = "My DP gives way too large a value, not sure what's wrong"
+
+[expect]
+state = "approaching"
+obs_id = "cf:730J:route:1:obs:1"
+min_confidence = 0.5
+must_be_socratic = true
+banned_patterns = ["dp[i][c] = max(dp[i-1][c]"]

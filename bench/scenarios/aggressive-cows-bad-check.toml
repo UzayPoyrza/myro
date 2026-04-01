@@ -1,0 +1,50 @@
+[scenario]
+name = "Aggressive Cows — binary search with O(k^2) check"
+problem = "cf-760B"
+route = 0
+trigger = "user idle for 45s"
+elapsed_secs = 300
+observations_found = 1
+
+[scenario.obs_states]
+0 = "found"
+
+[scenario.code]
+text = """
+n, k = map(int, input().split())
+stalls = list(map(int, input().split()))
+stalls.sort()
+
+def can_place(min_dist):
+    # Try all combinations to place k cows - O(n^k) in worst case
+    positions = [stalls[0]]
+    for s in stalls[1:]:
+        ok = True
+        for p in positions:   # BUG: checking against ALL placed, not just last
+            if abs(s - p) < min_dist:
+                ok = False
+                break
+        if ok:
+            positions.append(s)
+    return len(positions) >= k
+
+lo, hi = 1, stalls[-1] - stalls[0]
+while lo <= hi:
+    mid = (lo + hi) // 2
+    if can_place(mid):
+        lo = mid + 1
+    else:
+        hi = mid - 1
+print(hi)
+"""
+
+[[scenario.recent_messages]]
+role = "user"
+content = "I have binary search working but it's too slow for large inputs"
+
+[expect]
+valid_states = ["approaching", "moving_away"]
+obs_id = "cf:760B:route:1:obs:2"
+min_confidence = 0.4
+must_be_socratic = true
+banned_patterns = []

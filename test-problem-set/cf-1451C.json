@@ -1,0 +1,67 @@
+{
+  "contest_id": 1451,
+  "index": "C",
+  "title": "String Equality",
+  "difficulty": 1400,
+  "tags": ["greedy", "hashing", "implementation", "strings"],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Ashish has two strings $$$a$$$ and $$$b$$$, each of length $$$n$$$, and an integer $$$k$$$. The strings only contain lowercase English letters. He wants to convert string $$$a$$$ into string $$$b$$$ by performing some (possibly zero) operations on $$$a$$$. In one move, he can either choose an index $$$i$$$ ($$$1 \\leq i\\leq n-1$$$) and swap $$$a_i$$$ and $$$a_{i+1}$$$, or choose an index $$$i$$$ ($$$1 \\leq i \\leq n-k+1$$$) and if $$$a_i, a_{i+1}, \\ldots, a_{i+k-1}$$$ are all equal to some character $$$c$$$ ($$$c \\neq$$$ ' z '), replace each one with the next character $$$(c+1)$$$, that is, ' a ' is replaced by ' b ', ' b ' is replaced by ' c ' and so on. Note that he can perform any number of operations, and the operations can only be performed on string $$$a$$$. Help Ashish determine if it is possible to convert string $$$a$$$ into $$$b$$$ after performing some (possibly zero) operations on it.",
+  "input_spec": "The first line contains a single integer $$$t$$$ ($$$1 \\leq t \\leq 10^5$$$) — the number of test cases. The description of each test case is as follows. The first line of each test case contains two integers $$$n$$$ ($$$2 \\leq n \\leq 10^6$$$) and $$$k$$$ ($$$1 \\leq k \\leq n$$$). The second line of each test case contains the string $$$a$$$ of length $$$n$$$ consisting of lowercase English letters. The third line of each test case contains the string $$$b$$$ of length $$$n$$$ consisting of lowercase English letters. It is guaranteed that the sum of values $$$n$$$ among all test cases does not exceed $$$10^6$$$.",
+  "output_spec": "For each test case, print \" Yes \" if Ashish can convert $$$a$$$ into $$$b$$$ after some moves, else print \" No \". You may print the letters of the answer in any case (upper or lower).",
+  "examples": [
+    {
+      "input": "4\n3 3\nabc\nbcd\n4 2\nabba\nazza\n2 1\nzz\naa\n6 2\naaabba\nddddcc",
+      "output": "No\nYes\nNo\nYes"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Frequency sweep with carry",
+      "description": "Since unlimited adjacent swaps make position irrelevant, reduce the problem to character frequencies. Process letters from 'a' to 'z', carrying excess counts forward in multiples of k.",
+      "skill_tags": ["greedy", "strings"],
+      "observations": [
+        {
+          "title": "Unlimited swaps make positions irrelevant",
+          "description": "Adjacent swaps can be applied any number of times, which means we can rearrange the string into any permutation. Therefore the positions of characters do not matter at all -- only the frequency of each letter matters.",
+          "hints": {
+            "nudge": "What can you achieve with unlimited adjacent swaps? Think about what sorting algorithms do.",
+            "question": "If you can swap any two adjacent elements as many times as you want, can you always reach any permutation of the string? What does that simplify?",
+            "formal": "Repeated adjacent swaps are equivalent to bubble sort, so any permutation is reachable. The problem reduces to: can we transform the character frequency array of a into that of b using the increment operation?"
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Characters can only increase, never decrease",
+          "description": "The increment operation replaces k copies of character c with k copies of c+1. There is no operation to decrease a character. This means we can only move character counts upward in the alphabet, never downward.",
+          "hints": {
+            "nudge": "Look at both operations carefully. Is there any way to turn a 'b' back into an 'a'?",
+            "question": "If string a has more 'z's than string b needs, can you ever get rid of the excess? What does this imply about the direction characters can flow?",
+            "formal": "The only way to change character values is the increment operation, which strictly increases them. So if at any letter we have fewer characters in a than b requires, and there is no surplus from earlier letters to promote, it is impossible."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Excess characters must come in multiples of k",
+          "description": "The increment operation converts exactly k copies of a letter into k copies of the next letter. This means any surplus of a letter that we want to promote must be a multiple of k -- we cannot promote a partial group.",
+          "hints": {
+            "nudge": "How many characters does the increment operation affect at once? What constraint does that place on leftovers?",
+            "question": "If you have 5 extra 'a's and k = 3, can you promote all 5 of them to 'b'? What happens to the remainder?",
+            "formal": "Since each increment operation converts exactly k characters, the difference (count_a[c] - count_b[c]) at each letter, after accounting for carry from previous letters, must be a non-negative multiple of k. If it is negative or not divisible by k, output NO."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Sweep from 'a' to 'z' carrying surplus forward",
+          "description": "Process letters in alphabetical order. At each letter c, compute the surplus: have[c] - need[c]. If the surplus is negative or not divisible by k, the answer is NO. Otherwise, carry the surplus forward by adding it to have[c+1], since promoting k copies of c produces k copies of c+1.",
+          "hints": {
+            "nudge": "If you process the smallest letter first and handle its excess, where does that excess go?",
+            "question": "After you decide to promote the surplus of letter c, which letter's count increases? How would you check all 26 letters systematically?",
+            "formal": "For c = 'a' to 'z': compute diff = have[c] - need[c]. If diff < 0 or diff % k != 0, answer is NO. Otherwise set have[c+1] += diff. If all 26 letters pass, answer is YES."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

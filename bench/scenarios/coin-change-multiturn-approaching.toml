@@ -1,0 +1,43 @@
+[scenario]
+name = "Coin Change — multi-turn, approaching base case insight"
+problem = "cf-996B"
+route = 0
+trigger = "user idle for 30s"
+elapsed_secs = 360
+observations_found = 0
+
+[scenario.obs_states]
+0 = "approaching"
+
+[scenario.code]
+text = """
+n, S = map(int, input().split())
+coins = list(map(int, input().split()))
+dp = [0] * (S + 1)
+for i in range(1, S + 1):
+    best = S + 1
+    for c in coins:
+        if i >= c:
+            best = min(best, dp[i - c] + 1)
+    dp[i] = best
+print(dp[S])
+"""
+
+[[scenario.recent_messages]]
+role = "assistant"
+content = "What happens if you already know the best way to make amount S-c for some coin c?"
+
+[[scenario.recent_messages]]
+role = "user"
+content = "Oh, then I just add 1 more coin! So I need to try all coins and pick the minimum?"
+
+[[scenario.recent_messages]]
+role = "assistant"
+content = "Exactly! How would you store these intermediate results as you build up to S?"
+
+[expect]
+state = "approaching"
+obs_id = "cf:996B:route:1:obs:2"
+min_confidence = 0.4
+must_be_socratic = true
+banned_patterns = []

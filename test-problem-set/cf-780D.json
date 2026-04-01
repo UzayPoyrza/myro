@@ -1,0 +1,151 @@
+{
+  "contest_id": 780,
+  "index": "D",
+  "title": "Innokenty and a Football League",
+  "difficulty": 1900,
+  "tags": [
+    "2-sat",
+    "graphs",
+    "greedy",
+    "implementation",
+    "shortest paths",
+    "strings"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Innokenty is a president of a new football league in Byteland. The first task he should do is to assign short names to all clubs to be shown on TV next to the score. Of course, the short names should be distinct, and Innokenty wants that all short names consist of three letters. Each club's full name consist of two words: the team's name and the hometown's name, for example, \"DINAMO BYTECITY\". Innokenty doesn't want to assign strange short names, so he wants to choose such short names for each club that: the short name is the same as three first letters of the team's name, for example, for the mentioned club it is \"DIN\", or, the first two letters of the short name should be the same as the first two letters of the team's name, while the third letter is the same as the first letter in the hometown's name. For the mentioned club it is \"DIB\". Apart from this, there is a rule that if for some club x the second option of short name is chosen, then there should be no club, for which the first option is chosen which is the same as the first option for the club x. For example, if the above mentioned club has short name \"DIB\", then no club for which the first option is chosen can have short name equal to \"DIN\". However, it is possible that some club have short name \"DIN\", where \"DI\" are the first two letters of the team's name, and \"N\" is the first letter of hometown's name. Of course, no two teams can have the same short name. Help Innokenty to choose a short name for each of the teams. If this is impossible, report that. If there are multiple answers, any of them will suit Innokenty. If for some team the two options of short name are equal, then Innokenty will formally think that only one of these options is chosen.",
+  "input_spec": "The first line contains a single integer n (1 <= n <= 1000) -- the number of clubs in the league. Each of the next n lines contains two words -- the team's name and the hometown's name for some club. Both team's name and hometown's name consist of uppercase English letters and have length at least 3 and at most 20.",
+  "output_spec": "If it is not possible to choose short names and satisfy all constraints, print a single line \"NO\". Otherwise, in the first line print \"YES\". Then print n lines, in each line print the chosen short name for the corresponding club.",
+  "examples": [
+    {
+      "input": "2\nDINAMO BYTECITY\nFOOTBALL MOSCOW",
+      "output": "YES\nDIN\nFOO"
+    },
+    {
+      "input": "2\nDINAMO BYTECITY\nDINAMO BITECITY",
+      "output": "NO"
+    },
+    {
+      "input": "3\nPLAYFOOTBALL MOSCOW\nPLAYVOLLEYBALL SPB\nGOGO TECHNOCUP",
+      "output": "YES\nPLM\nPLS\nGOG"
+    },
+    {
+      "input": "3\nABC DEF\nABC EFG\nABD OOO",
+      "output": "YES\nABD\nABE\nABO"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Bipartite matching (clubs to short names)",
+      "description": "Model each club as a node on one side and each possible short name as a node on the other side. Add edges from each club to its valid short name candidates (respecting the constraint rule). Find a perfect matching using augmenting paths.",
+      "skill_tags": [
+        "graphs",
+        "graphs",
+        "implementation"
+      ],
+      "observations": [
+        {
+          "title": "Each club has at most two candidate short names",
+          "description": "Option A is the first 3 letters of the team name. Option B is the first 2 letters of the team name plus the first letter of the city name. If options A and B produce the same string, the club effectively has only one candidate. This small branching factor is the key structural property of the problem.",
+          "hints": {
+            "nudge": "Start by listing every possible short name each club could receive. How many are there per club?",
+            "question": "Given the two naming rules, how many distinct short names can a single club have? When would it have fewer?",
+            "formal": "Option A = team[0:3]. Option B = team[0:2] + city[0]. If A == B (i.e., team[2] == city[0]), the club has 1 candidate; otherwise it has 2. With at most 2 choices per club and n <= 1000, this is a highly constrained assignment problem."
+          },
+          "skill_tag": "implementation"
+        },
+        {
+          "title": "The extra constraint links clubs that share option A",
+          "description": "If club x uses option B, then no club sharing the same option A as x may use option A. Equivalently, group clubs by their option A string. Within such a group, either every club uses option A (and they must all produce distinct strings, which is impossible if there are 2+ clubs since they share the same option A), or no club in the group uses option A. So if two or more clubs share the same option A, all of them are forced to use option B.",
+          "hints": {
+            "nudge": "What happens if two clubs have the same first 3 letters in their team name? Can both use option A?",
+            "question": "If clubs x and y share the same option A string, can one of them use option A and the other option B? What does the constraint say?",
+            "formal": "If clubs x and y share the same option A, they cannot both use option A (same short name). If x uses option B, y cannot use option A (by the rule). By symmetry, if y uses option B, x cannot use option A. So neither can use option A -- both are forced to use option B."
+          },
+          "skill_tag": "greedy"
+        },
+        {
+          "title": "Frame as a bipartite matching problem",
+          "description": "Create a bipartite graph: clubs on the left, possible short name strings on the right. Add an edge from each club to its valid candidates (option A if allowed, option B always). A valid assignment is a perfect matching in this bipartite graph -- every club is matched to a distinct short name.",
+          "hints": {
+            "nudge": "Each club needs exactly one short name, and no two clubs can share one. What classic graph problem is this?",
+            "question": "If you have a set of clubs and a set of short names, each club connected to its valid options, what does finding a valid assignment correspond to in graph theory?",
+            "formal": "Build bipartite graph G = (Clubs, Names, E). For each club i, add edge (i, optionA_i) if option A is allowed for i, and edge (i, optionB_i) always. A perfect matching in G (if it exists) gives a valid assignment. If no perfect matching exists, output NO."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Hungarian/Kuhn's algorithm finds the matching in O(n^2)",
+          "description": "With n <= 1000 clubs, each having at most 2 candidates, use Kuhn's algorithm (augmenting paths) for bipartite matching. For each unmatched club, attempt to find an augmenting path via DFS. The small degree (at most 2 per club) makes this very efficient in practice.",
+          "hints": {
+            "nudge": "You need a maximum matching in a bipartite graph. What algorithm finds this?",
+            "question": "With n up to 1000 and at most 2 edges per club, what is the time complexity of a standard augmenting-path matching algorithm?",
+            "formal": "Use Kuhn's algorithm: for each club, run DFS to find an augmenting path. Each DFS visits O(n) nodes in the worst case, so total is O(n^2). With degree at most 2, it is much faster in practice. If the matching size equals n, output YES and the assignment; otherwise output NO."
+          },
+          "skill_tag": "graphs"
+        }
+      ]
+    },
+    {
+      "name": "2-SAT formulation",
+      "description": "Assign a boolean variable to each club (true = option A, false = option B). Encode the distinctness and constraint rules as 2-SAT implications. Solve with Tarjan's SCC algorithm.",
+      "skill_tags": [
+        "graphs",
+        "graphs",
+        "implementation"
+      ],
+      "observations": [
+        {
+          "title": "Each club's choice is a boolean variable",
+          "description": "Let x_i be true if club i uses option A, and false if club i uses option B. If option A and option B are identical for a club, it effectively has one candidate and the variable is free (but the resulting name is the same either way). The problem reduces to finding a satisfying assignment to these boolean variables.",
+          "hints": {
+            "nudge": "Each club makes a binary choice between two options. What type of variable captures this?",
+            "question": "If you assign a boolean variable x_i to club i (true = option A, false = option B), what kind of constraint system are you building?",
+            "formal": "Define x_i in {true, false} for each club i. true means club i takes name optA_i, false means club i takes name optB_i. We need to express all constraints as implications between pairs of literals -- this is 2-SAT."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Same-name conflicts become mutual exclusion clauses",
+          "description": "If two clubs i and j would get the same short name under certain choices, those choices cannot both be true. For example, if optA_i == optA_j, then NOT(x_i AND x_j), which becomes (NOT x_i OR NOT x_j). Similarly for optB_i == optB_j, optA_i == optB_j, and optB_i == optA_j. Each pair of conflicting assignments generates one 2-SAT clause.",
+          "hints": {
+            "nudge": "If two clubs could end up with the same short name, what constraint must you add?",
+            "question": "If club i's option A and club j's option B produce the same string, what implication does this give?",
+            "formal": "For each pair (i,j) with a name collision: if optA_i == optA_j, add clause (NOT x_i OR NOT x_j). If optA_i == optB_j, add (NOT x_i OR x_j). If optB_i == optA_j, add (x_i OR NOT x_j). If optB_i == optB_j, add (x_i OR x_j). Each is a standard 2-SAT clause."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "The option-A blocking rule adds forced implications",
+          "description": "If clubs i and j share the same option A string and club i uses option B, then club j cannot use option A. Since they share option A, they also cannot both use option A (same name). Together this forces both to use option B: add unit clauses NOT x_i and NOT x_j, or equivalently the implications x_i => false and x_j => false.",
+          "hints": {
+            "nudge": "The special rule says: if club x uses option B, no club with the same option A as x can use option A. What if two clubs share the same option A?",
+            "question": "If clubs i and j have the same option A, can either of them use option A? What clauses do you add?",
+            "formal": "If optA_i == optA_j (i != j): they can't both use A (same name), and if either uses B the other can't use A (blocking rule). So both are forced to B. Add implications x_i => false and x_j => false. In 2-SAT this is the unit clause (NOT x_i) and (NOT x_j)."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Solve with Tarjan's SCC on the implication graph",
+          "description": "Build the implication graph: for each 2-SAT clause (a OR b), add edges NOT a => b and NOT b => a. Run Tarjan's SCC algorithm. If any variable x_i and NOT x_i are in the same SCC, the formula is unsatisfiable (output NO). Otherwise, assign each variable based on the topological order of its SCC: x_i is true iff the SCC of x_i comes after the SCC of NOT x_i.",
+          "hints": {
+            "nudge": "2-SAT is solvable in linear time using a specific graph algorithm. Which one?",
+            "question": "After building the implication graph, how do you detect unsatisfiability? How do you extract the assignment?",
+            "formal": "Run Tarjan's SCC on the 2n-node implication graph. UNSAT iff exists i such that x_i and NOT x_i are in the same SCC. For SAT, assign x_i = true iff comp(x_i) > comp(NOT x_i) in reverse topological order. Output the corresponding short names."
+          },
+          "skill_tag": "graphs"
+        },
+        {
+          "title": "Complexity is O(n^2) for clause generation, O(n) for solving",
+          "description": "Generating all conflict clauses requires checking all pairs of clubs for name collisions, which takes O(n^2) time (or O(n) with hash maps). The 2-SAT solving step (Tarjan's SCC) runs in O(n + number of clauses). With n <= 1000, O(n^2) is well within time limits.",
+          "hints": {
+            "nudge": "How many clause-generating pairs could there be? Is that efficient enough for n = 1000?",
+            "question": "You can group clubs by their candidate names using a hash map. How many clauses does this produce?",
+            "formal": "Group clubs by each candidate name in a hash map. For each name appearing k times, generate O(k^2) clauses. Total clauses are O(n^2) worst case. Tarjan's SCC runs in O(V + E) = O(n + n^2) = O(n^2). For n = 1000, this is roughly 10^6 operations -- fast enough."
+          },
+          "skill_tag": "implementation"
+        }
+      ]
+    }
+  ]
+}

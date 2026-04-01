@@ -1,0 +1,83 @@
+{
+  "contest_id": 1461,
+  "index": "D",
+  "title": "Divide and Summarize",
+  "difficulty": 1600,
+  "tags": [
+    "binary search",
+    "brute force",
+    "data structures",
+    "divide and conquer",
+    "implementation",
+    "sortings"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "256 megabytes",
+  "description": "Mike received an array $$$a$$$ of length $$$n$$$ as a birthday present and decided to test how pretty it is. An array would pass the $$$i$$$-th prettiness test if there is a way to get an array with a sum of elements totaling $$$s_i$$$, using some number (possibly zero) of slicing operations. An array slicing operation is conducted in the following way: assume $$$mid = \\lfloor\\frac{max(array) + min(array)}{2}\\rfloor$$$, where $$$max$$$ and $$$min$$$ — are functions that find the maximum and the minimum array elements. In other words, $$$mid$$$ is the sum of the maximum and the minimum element of $$$array$$$ divided by $$$2$$$ rounded down. Then the array is split into two parts $$$\\mathit{left}$$$ and $$$right$$$. The $$$\\mathit{left}$$$ array contains all elements which are less than or equal $$$mid$$$, and the $$$right$$$ array contains all elements which are greater than $$$mid$$$. Elements in $$$\\mathit{left}$$$ and $$$right$$$ keep their relative order from $$$array$$$. During the third step we choose which of the $$$\\mathit{left}$$$ and $$$right$$$ arrays we want to keep. The chosen array replaces the current one and the other is permanently discarded. You need to help Mike find out the results of $$$q$$$ prettiness tests. Note that you test the prettiness of the array $$$a$$$, so you start each prettiness test with the primordial (initial) array $$$a$$$. Thus, the first slice (if required) is always performed on the array $$$a$$$.",
+  "input_spec": "Each test contains one or more test cases. The first line contains the number of test cases $$$t$$$ ($$$1 \\le t \\le 100$$$). The first line of each test case contains two integers $$$n$$$ and $$$q$$$ $$$(1 \\le n, q \\le 10^5)$$$ — the length of the array $$$a$$$ and the total number of prettiness tests. The second line of each test case contains $$$n$$$ integers $$$a_1, a_2, ..., a_n$$$ $$$(1 \\le a_i \\le 10^6)$$$ — the contents of the array $$$a$$$. Next $$$q$$$ lines of each test case contain a single integer $$$s_i$$$ $$$(1 \\le s_i \\le 10^9)$$$ — the sum of elements which Mike wants to get in the $$$i$$$-th test. It is guaranteed that the sum of $$$n$$$ and the sum of $$$q$$$ does not exceed $$$10^5$$$ ($$$\\sum n, \\sum q \\le 10^5$$$).",
+  "output_spec": "Print $$$q$$$ lines, each containing either a \" Yes \" if the corresponding prettiness test is passed and \" No \" in the opposite case.",
+  "examples": [
+    {
+      "input": "2\n5 5\n1 2 3 4 5\n1\n8\n9\n12\n6\n5 5\n3 1 3 1 3\n1\n2\n3\n9\n11",
+      "output": "Yes\nNo\nYes\nNo\nYes\nNo\nYes\nNo\nYes\nYes"
+    }
+  ],
+  "routes": [
+    {
+      "name": "Sort + recursive split precomputation",
+      "description": "Sort the array once, then recursively simulate all possible splits to collect every reachable sum into a set. Answer each query with a set lookup.",
+      "skill_tags": ["sorting", "binary-search", "data-structures"],
+      "observations": [
+        {
+          "title": "Sorting makes the split operation act on contiguous segments",
+          "description": "The split partitions elements into those <= mid and those > mid. If the array is sorted, both halves are contiguous subarrays. So every array reachable by any sequence of splits corresponds to some contiguous segment of the sorted array.",
+          "hints": {
+            "nudge": "The split separates small elements from large elements. What happens to their positions if the array were sorted?",
+            "question": "After sorting, where do the elements <= mid and > mid live relative to each other? What shape does each half take in the sorted order?",
+            "formal": "In a sorted array, elements <= mid form a prefix and elements > mid form a suffix. Every reachable subarray is a contiguous segment a[l..r] of the sorted array."
+          },
+          "skill_tag": "sorting"
+        },
+        {
+          "title": "The split point is determined entirely by the segment's endpoints",
+          "description": "For a contiguous segment a[l..r] of the sorted array, min = a[l] and max = a[r], so mid = floor((a[l] + a[r]) / 2). The split point within the segment is fully determined by just the two extreme values, and can be found with binary search.",
+          "hints": {
+            "nudge": "Once the array is sorted and you know which segment you have, what determines mid?",
+            "question": "Given a sorted segment a[l..r], how do you compute mid, and how do you find where to cut the segment into left and right halves?",
+            "formal": "mid = floor((a[l] + a[r]) / 2). Use binary search (upper_bound of mid) to find the split index m such that a[l..m] <= mid and a[m+1..r] > mid."
+          },
+          "skill_tag": "binary-search"
+        },
+        {
+          "title": "The recursion tree of splits is finite and small",
+          "description": "Each split strictly reduces the range max - min of the segment. When all elements are equal (or the segment has length 1), no further split is possible. Since values are bounded by 10^6 and each split roughly halves the value range, the recursion depth is O(log(max_val)) and the total number of distinct reachable segments is O(n log(max_val)).",
+          "hints": {
+            "nudge": "Can the splitting go on forever, or does it have to stop? Think about what quantity decreases with each split.",
+            "question": "After a split, how does the range (max - min) of each child segment compare to the parent's range? What does this imply about the total number of segments?",
+            "formal": "Each split produces children whose value range is at most half the parent's. The recursion has depth O(log(max_val)) and visits O(n log(max_val)) segments total, which is manageable."
+          }
+        },
+        {
+          "title": "Precompute all reachable sums with prefix sums and DFS",
+          "description": "Build a prefix sum array on the sorted array so that the sum of any segment a[l..r] is computable in O(1). Then recursively explore all splits starting from the full segment, recording each segment's sum in a hash set. Base case: when min == max (all elements equal) or the segment has length 1, no more splits are possible.",
+          "hints": {
+            "nudge": "You need the sum of many different contiguous segments efficiently. What classic technique gives O(1) range sums?",
+            "question": "If you have prefix sums and you DFS through the recursion tree of splits, what do you store at each node? When do you stop recursing?",
+            "formal": "Compute prefix[i] = a[0] + ... + a[i-1]. Sum of a[l..r] = prefix[r+1] - prefix[l]. DFS from (0, n-1): record the sum, compute mid, binary search for split index, recurse on both halves. Stop when a[l] == a[r]."
+          },
+          "skill_tag": "data-structures"
+        },
+        {
+          "title": "Each query is a constant-time set membership check",
+          "description": "After collecting all reachable sums into a hash set, each query s_i is answered by checking whether s_i is in the set. This gives O(1) per query.",
+          "hints": {
+            "nudge": "Once you have all possible sums, how quickly can you answer each query?",
+            "question": "What data structure supports O(1) membership queries? How does total query time compare to the precomputation?",
+            "formal": "Store all reachable sums in a HashSet. For each query s_i, output 'Yes' if s_i is in the set, 'No' otherwise. Total time: O(n log(max_val) log(n)) for precomputation + O(q) for queries."
+          },
+          "skill_tag": "data-structures"
+        }
+      ]
+    }
+  ]
+}

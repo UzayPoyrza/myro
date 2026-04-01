@@ -1,0 +1,91 @@
+{
+  "contest_id": 1681,
+  "index": "D",
+  "title": "Required Length",
+  "difficulty": 1700,
+  "tags": [
+    "brute force",
+    "dfs and similar",
+    "dp",
+    "hashing",
+    "shortest paths"
+  ],
+  "time_limit": "2 seconds",
+  "memory_limit": "512 megabytes",
+  "description": "You are given two integer numbers, $$$n$$$ and $$$x$$$. You may perform several operations with the integer $$$x$$$. Each operation you perform is the following one: choose any digit $$$y$$$ that occurs in the decimal representation of $$$x$$$ at least once, and replace $$$x$$$ by $$$x \\cdot y$$$. You want to make the length of decimal representation of $$$x$$$ (without leading zeroes) equal to $$$n$$$. What is the minimum number of operations required to do that?",
+  "input_spec": "The only line of the input contains two integers $$$n$$$ and $$$x$$$ ($$$2 \\le n \\le 19$$$; $$$1 \\le x  \\lt  10^{n-1}$$$).",
+  "output_spec": "Print one integer — the minimum number of operations required to make the length of decimal representation of $$$x$$$ (without leading zeroes) equal to $$$n$$$, or $$$-1$$$ if it is impossible.",
+  "examples": [
+    {
+      "input": "2 1",
+      "output": "-1"
+    },
+    {
+      "input": "3 2",
+      "output": "4"
+    },
+    {
+      "input": "13 42",
+      "output": "12"
+    }
+  ],
+  "routes": [
+    {
+      "name": "BFS on reachable values",
+      "description": "Model each distinct value of x as a node in an implicit graph, with edges for each valid digit multiplication. BFS from the starting value finds the minimum number of operations to reach any value with exactly n digits.",
+      "skill_tags": ["bfs", "shortest-paths", "hashing"],
+      "observations": [
+        {
+          "title": "Each state is a concrete value of x",
+          "description": "After any sequence of operations, the only thing that matters is the current numeric value of x. Two different operation sequences that produce the same value are interchangeable. This means the problem has a natural state space: the set of all reachable integer values.",
+          "hints": {
+            "nudge": "What information fully determines your future options at any point? Is the path you took to get here relevant?",
+            "question": "If two different sequences of multiplications both produce the value 864, do they differ in what you can do next? What does this say about the state?",
+            "formal": "The state is simply the current value of x. The set of available digit choices and the goal condition (number of digits = n) depend only on this value, not on the history of operations."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "Transitions are multiply-by-digit edges",
+          "description": "From any state x, you can transition to x*y for each distinct non-zero digit y appearing in x's decimal representation. Multiplying by 0 produces 0 which can never grow, so it is useless and should be skipped. Each state has at most 9 outgoing edges (digits 1 through 9).",
+          "hints": {
+            "nudge": "How many choices do you have from a given value of x? Are some choices obviously useless?",
+            "question": "If x = 96, which digits can you multiply by? What values do you reach? Why would multiplying by 0 never help?",
+            "formal": "From state x, the neighbors are {x * y : y is a digit of x, y != 0}. Multiplying by 1 is also useless (produces x again), but BFS handles this naturally since x is already visited. At most 9 edges per state."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "Minimum operations means BFS, not DFS",
+          "description": "The problem asks for the minimum number of operations. Since every operation costs exactly 1 step, this is an unweighted shortest-path problem. BFS explores states in order of increasing distance from the source, guaranteeing the first time we reach a goal state it is via a shortest path.",
+          "hints": {
+            "nudge": "You want to minimize the number of steps. What graph traversal guarantees finding the shortest path in an unweighted graph?",
+            "question": "DFS might find a path to an n-digit number, but would it be the shortest? What traversal order ensures optimality when all edge weights are 1?",
+            "formal": "BFS on the implicit graph with source node x. The first time we dequeue a value with exactly n digits, its BFS distance is the answer. If the queue empties without finding such a value, the answer is -1."
+          },
+          "skill_tag": "shortest-paths"
+        },
+        {
+          "title": "The state space is finite and manageable",
+          "description": "Values only grow (multiplying by a digit >= 2 strictly increases x). Since n <= 19, the target is at most 19 digits, meaning all relevant values are below 10^19 which fits in a 64-bit integer. Values that reach n digits stop expanding. The number of distinct reachable values is large but bounded, and in practice BFS terminates quickly because values grow fast with each multiplication.",
+          "hints": {
+            "nudge": "Will BFS ever loop forever? Think about whether values can decrease or cycle.",
+            "question": "If you multiply x by a digit >= 2, does x grow or shrink? What is the maximum value x can reach before hitting the n-digit target? Can x ever revisit a previous value?",
+            "formal": "Multiplying by d >= 2 gives x*d > x, so values strictly increase (ignoring d=1 which is a self-loop handled by visited check). All values are bounded by 10^19. The number of reachable states is at most on the order of millions, which BFS handles within the time and memory limits."
+          },
+          "skill_tag": "bfs"
+        },
+        {
+          "title": "Use a hash map for visited tracking",
+          "description": "Since the state space consists of arbitrary 64-bit integers (not a contiguous range), a visited array indexed by value is impractical. Instead, use a hash map (or hash set) mapping each visited value to its BFS distance. This allows O(1) amortized lookups to avoid revisiting states.",
+          "hints": {
+            "nudge": "Values can be very large (up to 10^18). Can you use a simple array to track which values you have visited?",
+            "question": "What data structure lets you efficiently check whether a specific large integer has been seen before, and store its distance?",
+            "formal": "Maintain a hash map dist: int64 -> int. When generating neighbor x*y, check if x*y is already in dist. If not, set dist[x*y] = dist[x] + 1 and enqueue x*y. This gives O(1) amortized per state."
+          },
+          "skill_tag": "hashing"
+        }
+      ]
+    }
+  ]
+}
