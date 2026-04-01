@@ -65,6 +65,13 @@ pub(crate) fn render_home(frame: &mut Frame, app: &App, area: Rect) {
         chunks[1],
     );
 
+    // Check if API key is set
+    let has_api_key = app
+        .coach_config
+        .api_key
+        .as_ref()
+        .map_or(false, |k| !k.is_empty());
+
     // Menu items with symbols
     let menu_icons = ["\u{1F525}", "\u{1F3AF}", "\u{1F4DA}", "\u{1F527}"];
     let mut lines = vec![Line::raw("")];
@@ -84,6 +91,23 @@ pub(crate) fn render_home(frame: &mut Frame, app: &App, area: Rect) {
             ]));
         }
     }
+
+    // API key nudge: animated arrow pointing at settings + hint on the right
+    if !has_api_key {
+        // Find the settings menu item line index (it's the last menu item)
+        // Overwrite settings line to append animated arrow and hint
+        let settings_idx = MENU_ITEMS.len(); // +1 for the leading Line::raw("")
+        if settings_idx < lines.len() {
+            let arrow_frames = ["\u{25C0}", "\u{25C1}"]; // ◀ ◁
+            let arrow = arrow_frames[(app.tick / 4) as usize % arrow_frames.len()];
+            let settings_line = &lines[settings_idx];
+            let mut spans: Vec<Span> = settings_line.spans.clone();
+            spans.push(Span::styled(format!(" {}", arrow), theme::accent_style()));
+            spans.push(Span::styled("  set api key for ai coach", theme::dim_style()));
+            lines[settings_idx] = Line::from(spans);
+        }
+    }
+
     frame.render_widget(Paragraph::new(lines), chunks[2]);
 
     // Update notification (above footer)

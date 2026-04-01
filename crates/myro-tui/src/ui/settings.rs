@@ -72,11 +72,12 @@ pub(crate) fn render_settings(frame: &mut Frame, app: &App, area: Rect) {
             }
             SettingsItem::EditableSensitive { label, field } => {
                 if i == selected && editing.is_some() {
-                    // Show actual characters while typing (not masked)
                     render_editing_item(&mut lines, label, editing.unwrap_or(""), app.tick);
                 } else {
                     let display = app.read_setting_display(field);
-                    render_display_item(&mut lines, i == selected, label, &display);
+                    let needs_attention = *field == "coach.api_key"
+                        && app.coach_config.api_key.as_ref().map_or(true, |k| k.is_empty());
+                    render_display_item_with_dot(&mut lines, i == selected, label, &display, needs_attention);
                 }
             }
             SettingsItem::Action { label, action } => {
@@ -141,6 +142,35 @@ pub(crate) fn render_settings(frame: &mut Frame, app: &App, area: Rect) {
         ]),
         chunks[3],
     );
+}
+
+fn render_display_item_with_dot(
+    lines: &mut Vec<Line<'static>>,
+    selected: bool,
+    label: &str,
+    display: &str,
+    needs_attention: bool,
+) {
+    let dot = if needs_attention {
+        Span::styled("\u{25CF} ", theme::fail_style()) // ● red dot
+    } else {
+        Span::raw("  ")
+    };
+    if selected {
+        lines.push(Line::from(vec![
+            Span::styled(format!("  {} ", ARROW_RIGHT), theme::accent_style()),
+            dot,
+            Span::styled(format!("{}: ", label), theme::bold_style()),
+            Span::styled(display.to_string(), theme::dim_style()),
+        ]));
+    } else {
+        lines.push(Line::from(vec![
+            Span::raw("  "),
+            dot,
+            Span::styled(format!("{}: ", label), theme::muted_style()),
+            Span::styled(display.to_string(), theme::dim_style()),
+        ]));
+    }
 }
 
 fn render_display_item(lines: &mut Vec<Line<'static>>, selected: bool, label: &str, display: &str) {
