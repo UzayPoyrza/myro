@@ -5,6 +5,14 @@ use std::sync::Arc;
 
 const CF_BASE: &str = "https://codeforces.com";
 
+fn default_user_agent() -> &'static str {
+    if cfg!(target_os = "macos") {
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; rv:128.0) Gecko/20100101 Firefox/128.0"
+    } else {
+        "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
+    }
+}
+
 pub struct CfAuthClient {
     client: reqwest::Client,
     #[allow(dead_code)]
@@ -27,7 +35,7 @@ impl CfAuthClient {
         let jar = Arc::new(Jar::default());
         let client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
-            .user_agent("Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0")
+            .user_agent(default_user_agent())
             .cookie_provider(jar.clone())
             .default_headers({
                 let mut h = reqwest::header::HeaderMap::new();
@@ -44,7 +52,7 @@ impl CfAuthClient {
             jar,
             handle: None,
             raw_cookies: Vec::new(),
-            raw_user_agent: "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0".to_string(),
+            raw_user_agent: default_user_agent().to_string(),
         }
     }
 

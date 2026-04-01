@@ -127,12 +127,12 @@ pub fn import_cookies(
     recommender: &mut RecommenderState,
     handle: String,
 ) -> Result<CookieImportSuccess, String> {
-    let cookies = browser::import_cf_cookies()?;
-    let count = cookies.len();
-    let ua = browser::detect_firefox_ua();
+    let result = browser::import_cf_cookies()?;
+    let count = result.cookies.len();
+    let ua = browser::detect_browser_ua(result.browser);
 
     app_config.codeforces.handle = Some(handle.clone());
-    app_config.codeforces.cookies = cookies;
+    app_config.codeforces.cookies = result.cookies;
     app_config.codeforces.user_agent = Some(ua);
     app_config
         .save()
@@ -148,22 +148,22 @@ pub fn import_cookies(
     });
 
     Ok(CookieImportSuccess {
-        status_message: format!("\u{2713} Imported {} cookies from Firefox", count),
+        status_message: format!("\u{2713} Imported {} cookies from {}", count, result.browser),
     })
 }
 
 pub fn reimport_cookies(app_config: &mut AppConfig) -> Result<String, String> {
-    let cookies = browser::import_cf_cookies()?;
-    let count = cookies.len();
-    let ua = browser::detect_firefox_ua();
+    let result = browser::import_cf_cookies()?;
+    let count = result.cookies.len();
+    let ua = browser::detect_browser_ua(result.browser);
 
-    app_config.codeforces.cookies = cookies;
+    app_config.codeforces.cookies = result.cookies;
     app_config.codeforces.user_agent = Some(ua);
     app_config
         .save()
         .map_err(|e| format!("failed to save config: {}", e))?;
 
-    Ok(format!("\u{2713} Imported {} cookies from Firefox", count))
+    Ok(format!("\u{2713} Imported {} cookies from {}", count, result.browser))
 }
 
 pub fn logout(

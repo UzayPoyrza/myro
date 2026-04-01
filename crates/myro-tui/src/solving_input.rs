@@ -561,7 +561,7 @@ impl App {
                 .codeforces
                 .user_agent
                 .clone()
-                .unwrap_or_else(crate::browser::detect_firefox_ua);
+                .unwrap_or_else(|| crate::browser::detect_browser_ua(crate::browser::Browser::Firefox));
 
             self.track_event("submission_sent", serde_json::json!({
                 "contest_id": problem.contest_id,

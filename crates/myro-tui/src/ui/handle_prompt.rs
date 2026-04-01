@@ -71,7 +71,7 @@ pub(crate) fn render_handle_prompt(frame: &mut Frame, app: &App, area: Rect) {
 
     // Step prompt
     let (step, prompt_text) = if is_cookie_import {
-        ("step 2/2", "import cookies from firefox")
+        ("step 2/2", "import cookies from browser")
     } else {
         ("step 1/2", "enter your codeforces handle")
     };
@@ -90,7 +90,7 @@ pub(crate) fn render_handle_prompt(frame: &mut Frame, app: &App, area: Rect) {
         let instruction = Line::from(vec![
             Span::raw("  "),
             Span::styled(
-                "log into codeforces.com in firefox, then press enter to import",
+                "log into codeforces.com in your browser, then press enter to import",
                 theme::muted_style(),
             ),
         ]);
