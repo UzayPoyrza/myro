@@ -14,11 +14,8 @@
 
 <br>
 
-<!-- TODO: Replace with your asciinema recording -->
 <p align="center">
-  <a href="https://asciinema.org/a/REPLACE_ME">
-    <img src="https://asciinema.org/a/REPLACE_ME.svg" width="700" alt="myro demo" />
-  </a>
+  <img src="assets/demo.gif" width="700" alt="myro demo" />
 </p>
 
 <br>
