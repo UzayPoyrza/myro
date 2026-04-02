@@ -253,6 +253,7 @@ pub enum AppState {
     Settings {
         selected: usize,
         editing: Option<String>,
+        dropdown: Option<usize>,
     },
     Past {
         scroll: usize,
@@ -298,6 +299,7 @@ pub enum SettingsItem {
     Editable { label: &'static str, field: &'static str },
     EditableSensitive { label: &'static str, field: &'static str },
     Action { label: &'static str, action: &'static str },
+    Dropdown { label: &'static str, field: &'static str, options: &'static [&'static str] },
 }
 
 impl SettingsItem {
@@ -306,10 +308,12 @@ impl SettingsItem {
     }
 }
 
+pub const LLM_PROVIDERS: &[&str] = &["OpenRouter", "Anthropic", "OpenAI", "Google"];
+
 pub const SETTINGS_ITEMS: &[SettingsItem] = &[
     // LLM / Coach
     SettingsItem::Section { label: "ai coach" },
-    SettingsItem::Editable { label: "llm endpoint", field: "coach.base_url" },
+    SettingsItem::Dropdown { label: "llm provider", field: "coach.provider", options: LLM_PROVIDERS },
     SettingsItem::EditableSensitive { label: "api key", field: "coach.api_key" },
     SettingsItem::Editable { label: "model", field: "coach.model" },
     // Codeforces
@@ -652,6 +656,7 @@ impl App {
                         self.state = AppState::Settings {
                             selected: 1,
                             editing: None,
+                            dropdown: None,
                         };
                     }
                     _ => {}
@@ -660,6 +665,7 @@ impl App {
                     self.state = AppState::Settings {
                         selected: 1,
                         editing: None,
+                        dropdown: None,
                     };
                 }
                 _ => {}
@@ -795,6 +801,7 @@ impl App {
         self.state = AppState::Settings {
             selected: 1,
             editing: None,
+            dropdown: None,
         };
 
         // Background sync of local data
@@ -920,6 +927,7 @@ impl App {
                         self.state = AppState::Settings {
                             selected: 1,
                             editing: None,
+                            dropdown: None,
                         };
                     }
                     _ => {}

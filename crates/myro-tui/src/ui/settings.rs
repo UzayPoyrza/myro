@@ -13,8 +13,8 @@ use crate::{
 use super::shared::{separator, ARROW_RIGHT, DIAMOND};
 
 pub(crate) fn render_settings(frame: &mut Frame, app: &App, area: Rect) {
-    let (selected, editing) = match &app.state {
-        AppState::Settings { selected, editing } => (*selected, editing.as_deref()),
+    let (selected, editing, dropdown) = match &app.state {
+        AppState::Settings { selected, editing, dropdown } => (*selected, editing.as_deref(), *dropdown),
         _ => return,
     };
 
@@ -80,6 +80,23 @@ pub(crate) fn render_settings(frame: &mut Frame, app: &App, area: Rect) {
                     render_display_item_with_dot(&mut lines, i == selected, label, &display, needs_attention);
                 }
             }
+            SettingsItem::Dropdown { label, field, .. } => {
+                let display = app.read_setting_display(field);
+                if i == selected {
+                    lines.push(Line::from(vec![
+                        Span::styled(format!("  {} ", ARROW_RIGHT), theme::accent_style()),
+                        Span::styled(format!("{}: ", label), theme::bold_style()),
+                        Span::styled(display, theme::accent_style()),
+                        Span::styled("  \u{25C0}\u{25B6}", theme::dim_style()),
+                    ]));
+                } else {
+                    lines.push(Line::from(vec![
+                        Span::raw("    "),
+                        Span::styled(format!("{}: ", label), theme::muted_style()),
+                        Span::styled(display, theme::dim_style()),
+                    ]));
+                }
+            }
             SettingsItem::Action { label, action } => {
                 // Dynamic label for sign_in based on auth state
                 let display_label = if *action == "sign_in" && app.is_signed_in() {
@@ -142,6 +159,47 @@ pub(crate) fn render_settings(frame: &mut Frame, app: &App, area: Rect) {
         ]),
         chunks[3],
     );
+
+    // Dropdown popup
+    if let Some(dropdown_sel) = dropdown {
+        if let Some(SettingsItem::Dropdown { options, .. }) = SETTINGS_ITEMS.get(selected) {
+            render_dropdown_popup(frame, area, options, dropdown_sel);
+        }
+    }
+}
+
+fn render_dropdown_popup(frame: &mut Frame, area: Rect, options: &[&str], selected: usize) {
+    use ratatui::widgets::{Block, Borders, Clear};
+
+    let overlay_w = 40u16.min(area.width.saturating_sub(4));
+    let overlay_h = (options.len() as u16 + 2).min(area.height.saturating_sub(2));
+    let x = (area.width.saturating_sub(overlay_w)) / 2;
+    let y = (area.height.saturating_sub(overlay_h)) / 2;
+    let overlay_area = Rect::new(x, y, overlay_w, overlay_h);
+
+    frame.render_widget(Clear, overlay_area);
+
+    let mut lines: Vec<Line> = Vec::new();
+    for (i, option) in options.iter().enumerate() {
+        if i == selected {
+            lines.push(Line::from(vec![
+                Span::styled(format!("  {} ", ARROW_RIGHT), theme::accent_style()),
+                Span::styled(*option, theme::bold_style()),
+            ]));
+        } else {
+            lines.push(Line::from(vec![
+                Span::raw("    "),
+                Span::styled(*option, theme::muted_style()),
+            ]));
+        }
+    }
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(theme::dim_style())
+        .title(Span::styled(" llm provider ", theme::accent_bold()));
+
+    frame.render_widget(Paragraph::new(lines).block(block), overlay_area);
 }
 
 fn render_display_item_with_dot(

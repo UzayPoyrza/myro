@@ -39,7 +39,7 @@ impl Default for CoachConfig {
         Self {
             enabled: true,
             mock: false,
-            base_url: Some("https://mega4090.taild22ffc.ts.net:8081/v1".to_string()),
+            base_url: None,
             api_key: None,
             model: None,
             stall_threshold_secs: 90,

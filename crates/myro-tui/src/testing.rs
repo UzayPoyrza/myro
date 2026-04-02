@@ -152,6 +152,7 @@ impl TestApp {
         TestAppBuilder::new(AppState::Settings {
             selected: 1,
             editing: None,
+            dropdown: None,
         })
     }
 

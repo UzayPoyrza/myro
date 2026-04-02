@@ -5,6 +5,12 @@ use crate::onboarding;
 
 impl App {
     pub(crate) fn handle_settings_key(&mut self, key: KeyEvent) {
+        // Handle dropdown mode first
+        if self.settings_in_dropdown_mode() {
+            self.handle_settings_dropdown_key(key);
+            return;
+        }
+
         if self.settings_in_edit_mode() {
             if self.handle_settings_edit_key(key) {
                 return;
@@ -18,11 +24,53 @@ impl App {
         matches!(&self.state, AppState::Settings { editing: Some(_), .. })
     }
 
+    fn settings_in_dropdown_mode(&self) -> bool {
+        matches!(&self.state, AppState::Settings { dropdown: Some(_), .. })
+    }
+
+    fn handle_settings_dropdown_key(&mut self, key: KeyEvent) {
+        let (selected, dropdown_idx) = match &self.state {
+            AppState::Settings { selected, dropdown: Some(idx), .. } => (*selected, *idx),
+            _ => return,
+        };
+
+        let options = match &SETTINGS_ITEMS[selected] {
+            SettingsItem::Dropdown { options, .. } => *options,
+            _ => return,
+        };
+
+        match key.code {
+            KeyCode::Char('j') | KeyCode::Down => {
+                if let AppState::Settings { dropdown, .. } = &mut self.state {
+                    *dropdown = Some((dropdown_idx + 1) % options.len());
+                }
+            }
+            KeyCode::Char('k') | KeyCode::Up => {
+                if let AppState::Settings { dropdown, .. } = &mut self.state {
+                    *dropdown = Some(if dropdown_idx == 0 { options.len() - 1 } else { dropdown_idx - 1 });
+                }
+            }
+            KeyCode::Enter => {
+                self.apply_provider(options[dropdown_idx]);
+                if let AppState::Settings { dropdown, .. } = &mut self.state {
+                    *dropdown = None;
+                }
+            }
+            KeyCode::Esc => {
+                if let AppState::Settings { dropdown, .. } = &mut self.state {
+                    *dropdown = None;
+                }
+            }
+            _ => {}
+        }
+    }
+
     fn handle_settings_edit_key(&mut self, key: KeyEvent) -> bool {
         let (selected, field_value) = match &mut self.state {
             AppState::Settings {
                 selected,
                 editing: Some(buf),
+                ..
             } => match key.code {
                 KeyCode::Char(c) => {
                     buf.push(c);
@@ -84,6 +132,16 @@ impl App {
                     let current = self.read_setting(field);
                     if let AppState::Settings { editing, .. } = &mut self.state {
                         *editing = Some(current);
+                    }
+                }
+                SettingsItem::Dropdown { options, .. } => {
+                    let current = self.read_setting_display("coach.provider");
+                    let current_idx = options
+                        .iter()
+                        .position(|&o| o == current)
+                        .unwrap_or(0);
+                    if let AppState::Settings { dropdown, .. } = &mut self.state {
+                        *dropdown = Some(current_idx);
                     }
                 }
                 SettingsItem::Action { action, .. } => {
@@ -178,15 +236,11 @@ impl App {
             "recommender.target_probability" => {
                 format!("{}", self.app_config.recommender.target_probability)
             }
-            "coach.base_url" => self
-                .coach_config
-                .base_url
-                .clone()
+            "coach.provider" => detect_provider(self.coach_config.base_url.as_deref())
                 .unwrap_or_else(|| "(not set)".into()),
             "coach.api_key" => {
                 match &self.coach_config.api_key {
                     Some(key) if !key.is_empty() => {
-                        // Show masked key: first 4 chars + dots
                         let visible: String = key.chars().take(4).collect();
                         format!("{}...", visible)
                     }
@@ -207,6 +261,14 @@ impl App {
         self.api.is_some()
     }
 
+    fn apply_provider(&mut self, provider: &str) {
+        let (url, model) = provider_config(provider);
+        self.coach_config.base_url = Some(url.to_string());
+        self.coach_config.model = Some(model.to_string());
+        self.save_coach_config();
+        self.set_status(format!("\u{2713} provider set to {}", provider));
+    }
+
     fn apply_setting(&mut self, field: &str, value: &str) -> bool {
         match field {
             "recommender.target_probability" => {
@@ -218,17 +280,6 @@ impl App {
                 }
                 self.set_status("target probability must be 0.1-0.9");
                 false
-            }
-            "coach.base_url" => {
-                let trimmed = value.trim();
-                if trimmed.is_empty() {
-                    self.coach_config.base_url = None;
-                    self.set_status("llm endpoint cleared");
-                } else {
-                    self.coach_config.base_url = Some(trimmed.to_string());
-                    self.set_status(format!("\u{2713} llm endpoint set"));
-                }
-                true
             }
             "coach.api_key" => {
                 let trimmed = value.trim();
@@ -294,6 +345,33 @@ impl App {
         if let Ok(contents) = toml::to_string_pretty(&doc) {
             let _ = std::fs::write(&path, contents);
         }
+    }
+}
+
+/// Map provider name to (base_url, default_model).
+fn provider_config(provider: &str) -> (&'static str, &'static str) {
+    match provider {
+        "OpenRouter" => ("https://openrouter.ai/api/v1", "anthropic/claude-sonnet-4"),
+        "Anthropic" => ("https://api.anthropic.com/v1", "claude-sonnet-4-20250514"),
+        "OpenAI" => ("https://api.openai.com/v1", "gpt-4o"),
+        "Google" => ("https://generativelanguage.googleapis.com/v1beta/openai", "gemini-2.0-flash"),
+        _ => ("https://openrouter.ai/api/v1", "anthropic/claude-sonnet-4"),
+    }
+}
+
+/// Detect which provider is currently configured from the base_url.
+fn detect_provider(base_url: Option<&str>) -> Option<String> {
+    let url = base_url?;
+    if url.contains("openrouter.ai") {
+        Some("OpenRouter".into())
+    } else if url.contains("api.anthropic.com") {
+        Some("Anthropic".into())
+    } else if url.contains("api.openai.com") {
+        Some("OpenAI".into())
+    } else if url.contains("generativelanguage.googleapis.com") {
+        Some("Google".into())
+    } else {
+        Some(url.to_string())
     }
 }
 
