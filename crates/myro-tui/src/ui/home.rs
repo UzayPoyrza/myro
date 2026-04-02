@@ -73,7 +73,7 @@ pub(crate) fn render_home(frame: &mut Frame, app: &App, area: Rect) {
         .map_or(false, |k| !k.is_empty());
 
     // Menu items with symbols
-    let menu_icons = ["\u{25C8}", "\u{25C6}", "\u{25C7}", "\u{25CB}"];
+    let menu_icons = ["\u{1F525}", "\u{1F3AF}", "\u{1F4DA}", "\u{1F527}"];
     let mut lines = vec![Line::raw("")];
     for (i, item) in MENU_ITEMS.iter().enumerate() {
         let icon = menu_icons.get(i).unwrap_or(&" ");
