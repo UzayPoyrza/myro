@@ -46,7 +46,23 @@ Think of it as Anki meets Codeforces, inside a terminal.
 curl -fsSL https://raw.githubusercontent.com/UzayPoyrza/myro/main/scripts/install.sh | bash
 ```
 
-This detects your OS and architecture, downloads a pre-built binary, and installs it to `~/.local/bin`.
+This detects your OS and architecture, downloads a pre-built binary, installs it to `~/.local/bin`, and adds it to your PATH.
+
+### Update
+
+Run the same command — it skips if you're already on the latest version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/UzayPoyrza/myro/main/scripts/install.sh | bash
+```
+
+### Uninstall
+
+Removes the binary, config, data, and PATH entries:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/UzayPoyrza/myro/main/scripts/install.sh | bash -s -- --uninstall
+```
 
 <details>
 <summary><strong>Other install methods</strong></summary>
