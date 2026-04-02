@@ -157,7 +157,5 @@ case ":${PATH}:" in
 esac
 
 echo ""
-info "run this to start using myro now:"
-echo ""
-echo "    exec \$SHELL && myro"
+info "restart your terminal and run 'myro' to get started!"
 echo ""
