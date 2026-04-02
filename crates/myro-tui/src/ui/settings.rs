@@ -132,7 +132,7 @@ pub(crate) fn render_settings(frame: &mut Frame, app: &App, area: Rect) {
     }
     frame.render_widget(Paragraph::new(lines), chunks[2]);
 
-    // Footer
+    // Footer — show status message when present, otherwise key hints
     let footer = if editing.is_some() {
         Line::from(vec![
             Span::raw("  "),
@@ -140,6 +140,11 @@ pub(crate) fn render_settings(frame: &mut Frame, app: &App, area: Rect) {
             Span::styled(" save  ", theme::dim_style()),
             Span::styled("esc", theme::accent_dim_style()),
             Span::styled(" cancel", theme::dim_style()),
+        ])
+    } else if let Some(msg) = &app.status_message {
+        Line::from(vec![
+            Span::raw("  "),
+            Span::styled(msg.clone(), theme::warn_style()),
         ])
     } else {
         Line::from(vec![
