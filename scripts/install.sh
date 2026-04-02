@@ -116,27 +116,47 @@ if [ "$os" = "macos" ]; then
     xattr -d com.apple.quarantine "${INSTALL_DIR}/myro" 2>/dev/null || true
 fi
 
-# ── PATH hint ─────────────────────────────────────────────────────────
+# ── Add to PATH automatically ─────────────────────────────────────────
+EXPORT_LINE="export PATH=\"${INSTALL_DIR}:\$PATH\""
+
 case ":${PATH}:" in
     *":${INSTALL_DIR}:"*)
         ;;
     *)
-        echo ""
-        warn "${INSTALL_DIR} is not in your PATH. Add it:"
-        echo ""
-        echo "    export PATH=\"${INSTALL_DIR}:\$PATH\""
-        echo ""
-        # Try to detect shell and suggest rc file
         SHELL_NAME="$(basename "${SHELL:-/bin/bash}")"
         case "$SHELL_NAME" in
-            zsh)  echo "    # add to ~/.zshrc to make it permanent" ;;
-            bash) echo "    # add to ~/.bashrc to make it permanent" ;;
-            fish) echo "    # or: fish_add_path ${INSTALL_DIR}" ;;
+            zsh)  RC_FILE="$HOME/.zshrc" ;;
+            bash)
+                # Prefer .bash_profile on macOS, .bashrc on Linux
+                if [ "$os" = "macos" ]; then
+                    RC_FILE="$HOME/.bash_profile"
+                else
+                    RC_FILE="$HOME/.bashrc"
+                fi
+                ;;
+            fish) RC_FILE="" ;;
+            *)    RC_FILE="$HOME/.profile" ;;
         esac
-        echo ""
+
+        if [ "$SHELL_NAME" = "fish" ]; then
+            fish -c "fish_add_path ${INSTALL_DIR}" 2>/dev/null || true
+            info "added ${INSTALL_DIR} to fish PATH"
+        elif [ -n "$RC_FILE" ]; then
+            # Only add if not already present
+            if ! grep -qF "$INSTALL_DIR" "$RC_FILE" 2>/dev/null; then
+                echo "" >> "$RC_FILE"
+                echo "# myro" >> "$RC_FILE"
+                echo "$EXPORT_LINE" >> "$RC_FILE"
+                info "added ${INSTALL_DIR} to PATH in ${RC_FILE}"
+            fi
+        fi
+
+        # Make it available in the current session hint
+        export PATH="${INSTALL_DIR}:$PATH"
         ;;
 esac
 
 echo ""
 info "run 'myro' to get started!"
+info "restart your terminal or run: source ${RC_FILE:-~/.profile}"
 echo ""
