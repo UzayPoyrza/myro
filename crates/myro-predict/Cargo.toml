@@ -1,6 +1,6 @@
 [package]
 name = "myro-predict"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Codeforces solve probability prediction using logistic matrix factorization"
 license = "AGPL-3.0"
