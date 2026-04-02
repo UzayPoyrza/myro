@@ -96,6 +96,18 @@ TAG="$(echo "$RELEASE_JSON" | grep -o '"tag_name"\s*:\s*"[^"]*"' | head -1 | cut
 VERSION="${TAG#v}"
 info "latest version: ${VERSION}"
 
+# ── Check if already up to date ──────────────────────────────────────
+if [ -x "${INSTALL_DIR}/myro" ]; then
+    CURRENT="$("${INSTALL_DIR}/myro" --version 2>/dev/null | awk '{print $NF}')" || CURRENT=""
+    if [ "$CURRENT" = "$VERSION" ]; then
+        info "myro v${VERSION} is already installed and up to date."
+        echo ""
+        exit 0
+    elif [ -n "$CURRENT" ]; then
+        info "updating myro v${CURRENT} → v${VERSION}"
+    fi
+fi
+
 # ── Find download URL for our target ──────────────────────────────────
 TARBALL="myro-${TAG}-${target}.tar.gz"
 DOWNLOAD_URL="$(echo "$RELEASE_JSON" | grep -o '"browser_download_url"\s*:\s*"[^"]*'"${TARBALL}"'"' | head -1 | cut -d'"' -f4)"
@@ -144,7 +156,11 @@ mkdir -p "$INSTALL_DIR"
 mv "${TMPDIR}/myro" "${INSTALL_DIR}/myro"
 chmod +x "${INSTALL_DIR}/myro"
 
-info "installed myro v${VERSION} to ${INSTALL_DIR}/myro"
+if [ -n "${CURRENT:-}" ]; then
+    info "updated myro to v${VERSION}"
+else
+    info "installed myro v${VERSION} to ${INSTALL_DIR}/myro"
+fi
 
 # ── macOS: remove quarantine attribute ────────────────────────────────
 if [ "$os" = "macos" ]; then
