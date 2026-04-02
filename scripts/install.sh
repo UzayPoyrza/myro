@@ -101,12 +101,17 @@ if [ -x "${INSTALL_DIR}/myro" ]; then
     CURRENT="$("${INSTALL_DIR}/myro" --version 2>/dev/null | awk '{print $NF}')" || CURRENT=""
     if [ "$CURRENT" = "$VERSION" ]; then
         info "myro v${VERSION} is already installed and up to date."
-        echo ""
-        exit 0
+        ALREADY_CURRENT=1
     elif [ -n "$CURRENT" ]; then
         info "updating myro v${CURRENT} → v${VERSION}"
     fi
 fi
+
+# ── Skip download if already current ─────────────────────────────────
+if [ "${ALREADY_CURRENT:-0}" = "1" ]; then
+    # Still need to run PATH setup below, so jump past download/install
+    :
+else
 
 # ── Find download URL for our target ──────────────────────────────────
 TARBALL="myro-${TAG}-${target}.tar.gz"
@@ -166,6 +171,8 @@ fi
 if [ "$os" = "macos" ]; then
     xattr -d com.apple.quarantine "${INSTALL_DIR}/myro" 2>/dev/null || true
 fi
+
+fi  # end of ALREADY_CURRENT skip
 
 # ── Add to PATH automatically ─────────────────────────────────────────
 EXPORT_LINE="export PATH=\"${INSTALL_DIR}:\$PATH\""
