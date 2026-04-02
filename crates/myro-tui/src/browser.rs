@@ -153,13 +153,14 @@ pub fn import_cf_cookies() -> Result<CookieImportResult, String> {
     // Try Firefox
     match import_firefox_cookies() {
         Ok(cookies) if !cookies.is_empty() => {
-            if cookies.iter().any(|(n, _)| n == "JSESSIONID") {
+            // Accept if we have either JSESSIONID or cf_clearance — both indicate an active session
+            if cookies.iter().any(|(n, _)| n == "JSESSIONID" || n == "cf_clearance") {
                 return Ok(CookieImportResult {
                     cookies,
                     browser: Browser::Firefox,
                 });
             }
-            errors.push("Firefox: no active session (missing JSESSIONID)".to_string());
+            errors.push("Firefox: no active session cookies found".to_string());
         }
         Ok(_) => errors.push("Firefox: no Codeforces cookies found".to_string()),
         Err(e) => errors.push(format!("Firefox: {}", e)),
