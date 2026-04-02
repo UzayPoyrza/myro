@@ -1,27 +1,37 @@
 #!/usr/bin/env bash
-# Myro installer — curl -fsSL <url>/install.sh | bash
+# Myro installer — one-line setup:
+#   curl -fsSL https://raw.githubusercontent.com/UzayPoyrza/myro/main/scripts/install.sh | bash
 set -euo pipefail
 
-REPO_API="${MYRO_REPO_API:-https://server.taild22ffc.ts.net/api/v1/repos/kalpturer/myro}"
+GITHUB_REPO="UzayPoyrza/myro"
 INSTALL_DIR="${MYRO_INSTALL_DIR:-$HOME/.local/bin}"
 
-info() { printf '\033[0;34m%s\033[0m\n' "$1"; }
-error() { printf '\033[0;31merror: %s\033[0m\n' "$1" >&2; exit 1; }
+info()  { printf '\033[0;34m  %s\033[0m\n' "$1"; }
+warn()  { printf '\033[0;33m  %s\033[0m\n' "$1"; }
+error() { printf '\033[0;31m  error: %s\033[0m\n' "$1" >&2; exit 1; }
 
-# Detect OS
+echo ""
+echo "  ╔══════════════════════════════╗"
+echo "  ║     myro — cp trainer        ║"
+echo "  ╚══════════════════════════════╝"
+echo ""
+
+# ── Detect OS ──────────────────────────────────────────────────────────
 OS="$(uname -s)"
 case "$OS" in
     Linux)  os="linux" ;;
     Darwin) os="macos" ;;
+    MINGW*|MSYS*|CYGWIN*) error "Windows is not supported yet. Use WSL." ;;
     *)      error "unsupported OS: $OS" ;;
 esac
 
-# Detect arch (with Rosetta 2 detection on macOS)
+# ── Detect arch (with Rosetta 2 detection on macOS) ───────────────────
 ARCH="$(uname -m)"
 case "$ARCH" in
     x86_64|amd64)
         if [ "$os" = "macos" ] && sysctl -n sysctl.proc_translated 2>/dev/null | grep -q 1; then
             arch="aarch64"
+            info "detected Rosetta 2 — installing native arm64 binary"
         else
             arch="x86_64"
         fi
@@ -36,36 +46,38 @@ case "$os" in
     macos) target="${arch}-apple-darwin" ;;
 esac
 
-info "detected: ${target}"
+info "platform: ${os} ${arch} (${target})"
 
-# Fetch latest release tag
+# ── Fetch latest release from GitHub ──────────────────────────────────
 info "fetching latest release..."
-RELEASE_JSON="$(curl -fsSL "${REPO_API}/releases/latest")"
+API_URL="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
+RELEASE_JSON="$(curl -fsSL "$API_URL" 2>/dev/null)" \
+    || error "failed to fetch release info from GitHub. Check your internet connection."
 
 # Parse tag_name (no jq dependency)
 TAG="$(echo "$RELEASE_JSON" | grep -o '"tag_name"\s*:\s*"[^"]*"' | head -1 | cut -d'"' -f4)"
-[ -z "$TAG" ] && error "could not determine latest version"
+[ -z "$TAG" ] && error "could not determine latest version. Have you published a release?"
 
 VERSION="${TAG#v}"
 info "latest version: ${VERSION}"
 
-# Find download URL for our target
+# ── Find download URL for our target ──────────────────────────────────
 TARBALL="myro-${TAG}-${target}.tar.gz"
 DOWNLOAD_URL="$(echo "$RELEASE_JSON" | grep -o '"browser_download_url"\s*:\s*"[^"]*'"${TARBALL}"'"' | head -1 | cut -d'"' -f4)"
-[ -z "$DOWNLOAD_URL" ] && error "no release artifact for ${target}"
+[ -z "$DOWNLOAD_URL" ] && error "no pre-built binary for ${target}. File an issue at github.com/${GITHUB_REPO}/issues"
 
-# Also try to find checksums
 CHECKSUM_URL="$(echo "$RELEASE_JSON" | grep -o '"browser_download_url"\s*:\s*"[^"]*checksums\.sha256"' | head -1 | cut -d'"' -f4)"
 
-# Download tarball
+# ── Download ──────────────────────────────────────────────────────────
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
 info "downloading ${TARBALL}..."
-curl -fsSL -o "${TMPDIR}/${TARBALL}" "$DOWNLOAD_URL"
+curl -fsSL -o "${TMPDIR}/${TARBALL}" "$DOWNLOAD_URL" \
+    || error "download failed"
 
-# Verify checksum if available
-if [ -n "$CHECKSUM_URL" ]; then
+# ── Verify checksum ──────────────────────────────────────────────────
+if [ -n "${CHECKSUM_URL:-}" ]; then
     info "verifying checksum..."
     curl -fsSL -o "${TMPDIR}/checksums.sha256" "$CHECKSUM_URL"
 
@@ -74,38 +86,57 @@ if [ -n "$CHECKSUM_URL" ]; then
     elif command -v shasum >/dev/null 2>&1; then
         ACTUAL="$(shasum -a 256 "${TMPDIR}/${TARBALL}" | cut -d' ' -f1)"
     else
-        info "warning: no sha256sum found, skipping checksum verification"
+        warn "no sha256sum found, skipping checksum verification"
         ACTUAL=""
     fi
 
     if [ -n "$ACTUAL" ]; then
         EXPECTED="$(grep "${TARBALL}" "${TMPDIR}/checksums.sha256" | cut -d' ' -f1)"
         if [ -n "$EXPECTED" ] && [ "$ACTUAL" != "$EXPECTED" ]; then
-            error "checksum mismatch: expected ${EXPECTED}, got ${ACTUAL}"
+            error "checksum mismatch — download may be corrupted"
         fi
+        info "checksum ok"
     fi
+else
+    warn "no checksums published for this release, skipping verification"
 fi
 
-# Extract
+# ── Extract & install ─────────────────────────────────────────────────
 info "extracting..."
 tar -xzf "${TMPDIR}/${TARBALL}" -C "${TMPDIR}"
 
-# Install
 mkdir -p "$INSTALL_DIR"
 mv "${TMPDIR}/myro" "${INSTALL_DIR}/myro"
 chmod +x "${INSTALL_DIR}/myro"
 
 info "installed myro v${VERSION} to ${INSTALL_DIR}/myro"
 
-# PATH hint
+# ── macOS: remove quarantine attribute ────────────────────────────────
+if [ "$os" = "macos" ]; then
+    xattr -d com.apple.quarantine "${INSTALL_DIR}/myro" 2>/dev/null || true
+fi
+
+# ── PATH hint ─────────────────────────────────────────────────────────
 case ":${PATH}:" in
-    *":${INSTALL_DIR}:"*) ;;
+    *":${INSTALL_DIR}:"*)
+        ;;
     *)
         echo ""
-        info "add ${INSTALL_DIR} to your PATH:"
-        echo "  export PATH=\"${INSTALL_DIR}:\$PATH\""
+        warn "${INSTALL_DIR} is not in your PATH. Add it:"
+        echo ""
+        echo "    export PATH=\"${INSTALL_DIR}:\$PATH\""
+        echo ""
+        # Try to detect shell and suggest rc file
+        SHELL_NAME="$(basename "${SHELL:-/bin/bash}")"
+        case "$SHELL_NAME" in
+            zsh)  echo "    # add to ~/.zshrc to make it permanent" ;;
+            bash) echo "    # add to ~/.bashrc to make it permanent" ;;
+            fish) echo "    # or: fish_add_path ${INSTALL_DIR}" ;;
+        esac
         echo ""
         ;;
 esac
 
+echo ""
 info "run 'myro' to get started!"
+echo ""
