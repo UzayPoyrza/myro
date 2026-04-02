@@ -3,6 +3,43 @@ use serde::{Deserialize, Serialize};
 
 use super::{CompletionRequest, LlmProvider};
 
+/// Send a lightweight test request to verify the API key and model work.
+/// Returns Ok(()) on success, Err with a user-friendly message on failure.
+pub fn test_connection(base_url: &str, api_key: Option<&str>, model: &str) -> Result<()> {
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .unwrap_or_else(|_| reqwest::blocking::Client::new());
+
+    let url = format!("{}/chat/completions", base_url.trim_end_matches('/'));
+
+    let body = serde_json::json!({
+        "model": model,
+        "messages": [{"role": "user", "content": "Say hi"}],
+        "max_tokens": 3,
+    });
+
+    let mut req = client.post(&url).json(&body);
+    if let Some(key) = api_key {
+        req = req.header("Authorization", format!("Bearer {}", key));
+    }
+
+    let resp = req.send().context("connection failed")?;
+    let status = resp.status();
+    if !status.is_success() {
+        let body = resp.text().unwrap_or_default();
+        // Try to extract a short error message from JSON
+        if let Ok(json) = serde_json::from_str::<serde_json::Value>(&body) {
+            if let Some(msg) = json["error"]["message"].as_str() {
+                anyhow::bail!("{}", msg);
+            }
+        }
+        anyhow::bail!("HTTP {}", status);
+    }
+
+    Ok(())
+}
+
 pub struct OpenAiCompatibleProvider {
     client: reqwest::Client,
     base_url: String,

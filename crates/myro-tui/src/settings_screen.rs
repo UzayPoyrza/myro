@@ -1,6 +1,7 @@
 use crossterm::event::{KeyCode, KeyEvent};
+use std::sync::mpsc;
 
-use crate::app::{App, AppState, ConfirmPopup, LoginPhase, SettingsItem, SETTINGS_ITEMS};
+use crate::app::{App, AppState, ConfirmPopup, LoginPhase, SettingsItem, SETTINGS_ITEMS, models_for_provider};
 use crate::onboarding;
 
 impl App {
@@ -34,10 +35,12 @@ impl App {
             _ => return,
         };
 
-        let options = match &SETTINGS_ITEMS[selected] {
-            SettingsItem::Dropdown { options, .. } => *options,
+        let field = match &SETTINGS_ITEMS[selected] {
+            SettingsItem::Dropdown { field, .. } => *field,
             _ => return,
         };
+
+        let options = self.dropdown_options(field);
 
         match key.code {
             KeyCode::Char('j') | KeyCode::Down => {
@@ -51,7 +54,11 @@ impl App {
                 }
             }
             KeyCode::Enter => {
-                self.apply_provider(options[dropdown_idx]);
+                if field == "coach.model" {
+                    self.apply_model(options[dropdown_idx]);
+                } else {
+                    self.apply_provider(options[dropdown_idx]);
+                }
                 if let AppState::Settings { dropdown, .. } = &mut self.state {
                     *dropdown = None;
                 }
@@ -62,6 +69,20 @@ impl App {
                 }
             }
             _ => {}
+        }
+    }
+
+    /// Get the correct dropdown options, using dynamic model list for coach.model.
+    pub fn dropdown_options(&self, field: &str) -> &'static [&'static str] {
+        if field == "coach.model" {
+            let provider = detect_provider(self.coach_config.base_url.as_deref())
+                .unwrap_or_else(|| "OpenRouter".into());
+            models_for_provider(&provider)
+        } else {
+            match SETTINGS_ITEMS.iter().find(|item| matches!(item, SettingsItem::Dropdown { field: f, .. } if *f == field)) {
+                Some(SettingsItem::Dropdown { options, .. }) => options,
+                _ => &[],
+            }
         }
     }
 
@@ -134,11 +155,12 @@ impl App {
                         *editing = Some(current);
                     }
                 }
-                SettingsItem::Dropdown { options, .. } => {
-                    let current = self.read_setting_display("coach.provider");
+                SettingsItem::Dropdown { field, .. } => {
+                    let options = self.dropdown_options(field);
+                    let display = self.read_setting_display(field);
                     let current_idx = options
                         .iter()
-                        .position(|&o| o == current)
+                        .position(|&o| o == display)
                         .unwrap_or(0);
                     if let AppState::Settings { dropdown, .. } = &mut self.state {
                         *dropdown = Some(current_idx);
@@ -267,6 +289,41 @@ impl App {
         self.coach_config.model = Some(model.to_string());
         self.save_coach_config();
         self.set_status(format!("\u{2713} provider set to {}", provider));
+        self.spawn_connection_test();
+    }
+
+    fn apply_model(&mut self, model: &str) {
+        self.coach_config.model = Some(model.to_string());
+        self.save_coach_config();
+        self.set_status(format!("\u{2713} model set to {}", model));
+        self.spawn_connection_test();
+    }
+
+    fn spawn_connection_test(&mut self) {
+        let base_url = match &self.coach_config.base_url {
+            Some(url) => url.clone(),
+            None => return,
+        };
+        let api_key = self.coach_config.api_key.clone();
+        let model = self.coach_config.model.clone().unwrap_or_default();
+
+        if api_key.is_none() || model.is_empty() {
+            return;
+        }
+
+        self.set_status("testing connection...");
+
+        let (tx, rx) = mpsc::channel();
+        self.connection_test_rx = Some(rx);
+
+        std::thread::spawn(move || {
+            let result = myro_coach::llm::openai_compat::test_connection(
+                &base_url,
+                api_key.as_deref(),
+                &model,
+            );
+            let _ = tx.send(result.map_err(|e| e.to_string()));
+        });
     }
 
     fn apply_setting(&mut self, field: &str, value: &str) -> bool {
@@ -289,17 +346,7 @@ impl App {
                 } else {
                     self.coach_config.api_key = Some(trimmed.to_string());
                     self.set_status(format!("\u{2713} api key set"));
-                }
-                true
-            }
-            "coach.model" => {
-                let trimmed = value.trim();
-                if trimmed.is_empty() {
-                    self.coach_config.model = None;
-                    self.set_status("model cleared (auto)");
-                } else {
-                    self.coach_config.model = Some(trimmed.to_string());
-                    self.set_status(format!("\u{2713} model set to {}", trimmed));
+                    self.spawn_connection_test();
                 }
                 true
             }

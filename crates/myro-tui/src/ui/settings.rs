@@ -162,16 +162,20 @@ pub(crate) fn render_settings(frame: &mut Frame, app: &App, area: Rect) {
 
     // Dropdown popup
     if let Some(dropdown_sel) = dropdown {
-        if let Some(SettingsItem::Dropdown { options, .. }) = SETTINGS_ITEMS.get(selected) {
-            render_dropdown_popup(frame, area, options, dropdown_sel);
+        if let Some(SettingsItem::Dropdown { field, .. }) = SETTINGS_ITEMS.get(selected) {
+            let options = app.dropdown_options(field);
+            let title = if *field == "coach.model" { " model " } else { " llm provider " };
+            render_dropdown_popup(frame, area, options, dropdown_sel, title);
         }
     }
 }
 
-fn render_dropdown_popup(frame: &mut Frame, area: Rect, options: &[&str], selected: usize) {
+fn render_dropdown_popup(frame: &mut Frame, area: Rect, options: &[&str], selected: usize, title: &str) {
     use ratatui::widgets::{Block, Borders, Clear};
 
-    let overlay_w = 40u16.min(area.width.saturating_sub(4));
+    // Size to fit longest option
+    let max_option_len = options.iter().map(|o| o.len()).max().unwrap_or(10);
+    let overlay_w = ((max_option_len + 8) as u16).max(title.len() as u16 + 4).min(area.width.saturating_sub(4));
     let overlay_h = (options.len() as u16 + 2).min(area.height.saturating_sub(2));
     let x = (area.width.saturating_sub(overlay_w)) / 2;
     let y = (area.height.saturating_sub(overlay_h)) / 2;
@@ -197,7 +201,7 @@ fn render_dropdown_popup(frame: &mut Frame, area: Rect, options: &[&str], select
     let block = Block::default()
         .borders(Borders::ALL)
         .border_style(theme::dim_style())
-        .title(Span::styled(" llm provider ", theme::accent_bold()));
+        .title(Span::styled(title.to_string(), theme::accent_bold()));
 
     frame.render_widget(Paragraph::new(lines).block(block), overlay_area);
 }

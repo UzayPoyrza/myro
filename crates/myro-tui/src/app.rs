@@ -203,6 +203,8 @@ pub struct App {
     // --- Self-update ---
     pub update_rx: Option<mpsc::Receiver<crate::updater::UpdateEvent>>,
     pub update_available: Option<String>,
+    // --- LLM connection test ---
+    pub connection_test_rx: Option<mpsc::Receiver<Result<(), String>>>,
 }
 
 pub enum OnboardingPhase {
@@ -310,12 +312,49 @@ impl SettingsItem {
 
 pub const LLM_PROVIDERS: &[&str] = &["OpenRouter", "Anthropic", "OpenAI", "Google"];
 
+pub const MODELS_OPENROUTER: &[&str] = &[
+    "anthropic/claude-sonnet-4",
+    "google/gemini-2.0-flash",
+    "google/gemini-2.5-pro-preview",
+    "openai/gpt-4o",
+    "openai/gpt-4o-mini",
+    "deepseek/deepseek-chat-v3",
+    "anthropic/claude-haiku-4",
+];
+
+pub const MODELS_ANTHROPIC: &[&str] = &[
+    "claude-sonnet-4-20250514",
+    "claude-haiku-4-5-20251001",
+];
+
+pub const MODELS_OPENAI: &[&str] = &[
+    "gpt-4o",
+    "gpt-4o-mini",
+    "o3-mini",
+];
+
+pub const MODELS_GOOGLE: &[&str] = &[
+    "gemini-2.0-flash",
+    "gemini-2.5-pro-preview",
+    "gemini-2.0-flash-lite",
+];
+
+pub fn models_for_provider(provider: &str) -> &'static [&'static str] {
+    match provider {
+        "OpenRouter" => MODELS_OPENROUTER,
+        "Anthropic" => MODELS_ANTHROPIC,
+        "OpenAI" => MODELS_OPENAI,
+        "Google" => MODELS_GOOGLE,
+        _ => MODELS_OPENROUTER,
+    }
+}
+
 pub const SETTINGS_ITEMS: &[SettingsItem] = &[
     // LLM / Coach
     SettingsItem::Section { label: "ai coach" },
     SettingsItem::Dropdown { label: "llm provider", field: "coach.provider", options: LLM_PROVIDERS },
     SettingsItem::EditableSensitive { label: "api key", field: "coach.api_key" },
-    SettingsItem::Editable { label: "model", field: "coach.model" },
+    SettingsItem::Dropdown { label: "model", field: "coach.model", options: MODELS_OPENROUTER },
     // Codeforces
     SettingsItem::Section { label: "codeforces" },
     SettingsItem::Display { label: "cf handle", field: "codeforces.handle" },
@@ -407,6 +446,7 @@ impl App {
             events,
             update_rx,
             update_available: None,
+            connection_test_rx: None,
         })
     }
 
@@ -463,6 +503,7 @@ impl App {
             events: None,
             update_rx: None,
             update_available: None,
+            connection_test_rx: None,
         })
     }
 

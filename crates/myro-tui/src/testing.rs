@@ -126,6 +126,7 @@ impl TestAppBuilder {
             events: None,
             update_rx: None,
             update_available: None,
+            connection_test_rx: None,
         };
 
         let backend = TestBackend::new(self.width, self.height);

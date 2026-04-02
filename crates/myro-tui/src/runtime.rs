@@ -14,6 +14,7 @@ impl App {
 
         self.tick_status_message(current_tick);
         self.tick_update_check();
+        self.tick_connection_test();
         self.tick_auth();
         self.tick_onboarding();
         self.tick_solving_runtime(current_tick, &mut debug_msgs);
@@ -33,6 +34,25 @@ impl App {
             }
         } else {
             self.status_clear_tick = 0;
+        }
+    }
+
+    fn tick_connection_test(&mut self) {
+        if let Some(ref rx) = self.connection_test_rx {
+            match rx.try_recv() {
+                Ok(Ok(())) => {
+                    self.set_status("\u{2713} connected successfully");
+                    self.connection_test_rx = None;
+                }
+                Ok(Err(e)) => {
+                    self.set_status(format!("\u{2717} connection failed: {}", e));
+                    self.connection_test_rx = None;
+                }
+                Err(std::sync::mpsc::TryRecvError::Empty) => {}
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    self.connection_test_rx = None;
+                }
+            }
         }
     }
 
