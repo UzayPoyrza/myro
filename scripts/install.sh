@@ -10,6 +10,41 @@ info()  { printf '\033[0;34m  %s\033[0m\n' "$1"; }
 warn()  { printf '\033[0;33m  %s\033[0m\n' "$1"; }
 error() { printf '\033[0;31m  error: %s\033[0m\n' "$1" >&2; exit 1; }
 
+# ── Uninstall mode ────────────────────────────────────────────────────
+if [ "${1:-}" = "--uninstall" ] || [ "${1:-}" = "uninstall" ]; then
+    echo ""
+    if [ -f "${INSTALL_DIR}/myro" ]; then
+        rm -f "${INSTALL_DIR}/myro"
+        info "removed ${INSTALL_DIR}/myro"
+    else
+        warn "myro not found at ${INSTALL_DIR}/myro"
+    fi
+
+    # Clean up config and data
+    if [ -d "$HOME/.config/myro" ]; then
+        rm -rf "$HOME/.config/myro"
+        info "removed ~/.config/myro"
+    fi
+    if [ -d "$HOME/.local/share/myro" ]; then
+        rm -rf "$HOME/.local/share/myro"
+        info "removed ~/.local/share/myro"
+    fi
+
+    # Remove PATH line from shell rc files
+    for rc in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile"; do
+        if [ -f "$rc" ] && grep -q "# myro" "$rc" 2>/dev/null; then
+            sed -i.bak '/# myro/d;/\.local\/bin/{ /PATH/d; }' "$rc"
+            rm -f "${rc}.bak"
+            info "cleaned PATH entry from $(basename "$rc")"
+        fi
+    done
+
+    echo ""
+    info "myro has been uninstalled."
+    echo ""
+    exit 0
+fi
+
 echo ""
 echo "  ╔══════════════════════════════╗"
 echo "  ║     myro — cp trainer        ║"
