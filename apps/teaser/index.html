@@ -422,7 +422,7 @@
       <div class="install-label">install</div>
       <div class="install-row">
         <span class="install-dollar">$</span>
-        <span class="install-cmd">npm install -g myro</span>
+        <span class="install-cmd">curl -fsSL https://raw.githubusercontent.com/UzayPoyrza/myro/main/scripts/install.sh|bash</span>
         <button class="copy-btn" id="copy-btn">copy</button>
       </div>
 
@@ -444,21 +444,16 @@
 
       <div class="step">
         <span class="step-num">2</span>
-        <div class="step-body">sign in with <a href="https://github.com" target="_blank" rel="noopener">github</a></div>
-      </div>
-
-      <div class="step">
-        <span class="step-num">3</span>
         <div class="step-body">connect your <a href="https://codeforces.com" target="_blank" rel="noopener">codeforces</a> account</div>
       </div>
 
       <div class="step">
-        <span class="step-num">4</span>
+        <span class="step-num">3</span>
         <div class="step-body">connect your LLM API key <span class="feat-detail">(bring your own key)</span></div>
       </div>
 
       <div class="step">
-        <span class="step-num">5</span>
+        <span class="step-num">4</span>
         <div class="step-body">start training</div>
       </div>
     </div>
@@ -484,7 +479,7 @@
     <div class="foot f f7">
       <a href="https://github.com/UzayPoyrza/myro" target="_blank" rel="noopener">github</a>
       <span class="dot">·</span>
-      <span>agpl-3.0</span>
+      <span>polyform noncommercial</span>
     </div>
 
   </div>
@@ -502,7 +497,7 @@
     // Copy main install command
     const btn = document.getElementById('copy-btn');
     btn.addEventListener('click', () => {
-      navigator.clipboard.writeText('npm install -g myro').then(() => {
+      navigator.clipboard.writeText('curl -fsSL https://raw.githubusercontent.com/UzayPoyrza/myro/main/scripts/install.sh|bash').then(() => {
         btn.textContent = 'copied!';
         btn.classList.add('copied');
         setTimeout(() => {
