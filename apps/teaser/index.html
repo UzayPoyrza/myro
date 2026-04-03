@@ -188,9 +188,10 @@
       border: 1px solid #a78bfa20;
       border-radius: 8px;
       padding: 0.9rem 1.2rem;
-      font-size: clamp(0.88rem, 2vw, 1.02rem);
+      font-size: clamp(0.62rem, 1.5vw, 0.78rem);
       transition: border-color 0.35s, box-shadow 0.35s;
       box-shadow: 0 0 30px #a78bfa06;
+      overflow: hidden;
     }
     .install-row:hover {
       border-color: #a78bfa38;
@@ -206,8 +207,12 @@
     .install-cmd {
       color: #e6edf3;
       flex: 1;
+      min-width: 0;
       user-select: all;
       font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .copy-btn {
