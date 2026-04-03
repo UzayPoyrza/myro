@@ -3,7 +3,7 @@ name = "myro-tui"
 version = "0.1.3"
 edition = "2021"
 description = "Terminal-native competitive programming trainer"
-license = "AGPL-3.0"
+license = "PolyForm-Noncommercial-1.0.0"
 
 [lib]
 name = "myro_tui"

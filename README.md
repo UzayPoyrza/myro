@@ -285,4 +285,4 @@ Environment variable overrides:
 
 ## License
 
-AGPL-3.0. See [LICENSE](LICENSE) for details.
+[PolyForm Noncommercial 1.0.0](LICENSE). Free for personal, academic, and non-commercial use. See [LICENSE](LICENSE) for details.

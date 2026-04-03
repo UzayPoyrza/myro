@@ -215,7 +215,7 @@ Evaluates coaching LLM responses against frozen scenarios. 39 scenarios across 1
 - **Hierarchical skill taxonomy** as a DAG (e.g., `dp.bitmask`, `graph.shortest_path.dijkstra`) with ~50+ skills and prerequisite enforcement
 - **XDG-compliant paths**: config in `~/.config/myro/`, data in `~/.local/share/myro/`
 - **rustls-tls** for reqwest — no OpenSSL dependency. Always use `default-features = false, features = ["json", "rustls-tls"]`
-- **AGPL-3.0** license
+- **PolyForm Noncommercial 1.0.0** license
 
 ## edtui Gotchas
 
